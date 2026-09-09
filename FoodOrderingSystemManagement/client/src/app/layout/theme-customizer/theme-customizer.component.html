@@ -1,0 +1,184 @@
+<!-- Floating gear button -->
+<button class="tc-fab" [class.open]="open()" (click)="toggle()" matTooltip="Theme Customizer" matTooltipPosition="left">
+  <mat-icon class="gear-icon">settings</mat-icon>
+</button>
+
+<!-- Backdrop -->
+<div class="tc-backdrop" [class.visible]="open()" (click)="close()"></div>
+
+<!-- Panel -->
+<div class="tc-panel" [class.open]="open()">
+
+  <!-- Header -->
+  <div class="tc-head">
+    <div class="tc-head-text">
+      <h3>Theme Customizer</h3>
+      <p>Choose your themes &amp; layouts etc.</p>
+    </div>
+    <button class="tc-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="tc-body">
+
+    <!-- ── Theme Colors ────────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Theme Colors</div>
+      <div class="tc-swatches">
+        @for (t of themes; track t.id) {
+          <button class="swatch"
+                  [class.active]="ts.activeThemeId() === t.id"
+                  [style.background]="t.primary"
+                  (click)="ts.apply(t)"
+                  [matTooltip]="t.name">
+            @if (ts.activeThemeId() === t.id) {
+              <mat-icon>check</mat-icon>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Dark Mode ───────────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Mode</div>
+      <div class="tc-mode-row">
+        <button class="mode-btn" [class.active]="!ts.darkMode()" (click)="ts.setDarkMode(false)">
+          <mat-icon>light_mode</mat-icon>
+          <span>Light</span>
+        </button>
+        <button class="mode-btn" [class.active]="ts.darkMode()" (click)="ts.setDarkMode(true)">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Top Bar Color ──────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Top Bar Color</div>
+      <div class="tc-swatches">
+        @for (p of ts.topBarPresets; track p.id) {
+          <button class="swatch"
+                  [class.active]="ts.topBarColorId() === p.id"
+                  [style.background]="p.bg || 'linear-gradient(135deg,var(--primary-dark),var(--primary))'"
+                  (click)="ts.setTopBarColor(p.id)"
+                  [matTooltip]="p.id">
+            @if (ts.topBarColorId() === p.id) {
+              <mat-icon>check</mat-icon>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Sidebar Color ──────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Sidebar Color</div>
+      <div class="tc-swatches">
+        @for (p of ts.sidebarPresets; track p.id) {
+          <button class="swatch"
+                  [class.active]="ts.sidebarColorId() === p.id"
+                  [style.background]="p.bg"
+                  (click)="ts.setSidebarColor(p.id)"
+                  [matTooltip]="p.id">
+            @if (ts.sidebarColorId() === p.id) {
+              <mat-icon>check</mat-icon>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Card Layout ────────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Card Layout</div>
+      <div class="tc-thumbs">
+        <button class="thumb-btn" [class.active]="ts.cardStyle() === 'bordered'" (click)="setCardStyle('bordered')">
+          <div class="thumb">
+            <div class="thumb-header"></div>
+            <div class="thumb-body">
+              <div class="thumb-sidebar"></div>
+              <div class="thumb-content bordered-preview"></div>
+            </div>
+          </div>
+          <span>Bordered</span>
+        </button>
+        <button class="thumb-btn" [class.active]="ts.cardStyle() === 'borderless'" (click)="setCardStyle('borderless')">
+          <div class="thumb">
+            <div class="thumb-header"></div>
+            <div class="thumb-body">
+              <div class="thumb-sidebar"></div>
+              <div class="thumb-content borderless-preview"></div>
+            </div>
+          </div>
+          <span>Borderless</span>
+        </button>
+        <button class="thumb-btn" [class.active]="ts.cardStyle() === 'shadow'" (click)="setCardStyle('shadow')">
+          <div class="thumb">
+            <div class="thumb-header"></div>
+            <div class="thumb-body">
+              <div class="thumb-sidebar"></div>
+              <div class="thumb-content shadow-preview"></div>
+            </div>
+          </div>
+          <span>Only Shadow</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Layout Width ───────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Layout Width</div>
+      <div class="tc-radio-row">
+        <button class="radio-btn" [class.active]="ts.layoutWidth() === 'fluid'" (click)="setLayoutWidth('fluid')">
+          <span class="radio-dot"></span> Fluid Layout
+        </button>
+        <button class="radio-btn" [class.active]="ts.layoutWidth() === 'boxed'" (click)="setLayoutWidth('boxed')">
+          <span class="radio-dot"></span> Boxed Layout
+        </button>
+      </div>
+    </div>
+
+    <div class="tc-divider"></div>
+
+    <!-- ── Sidebar Size ───────────────────────────────── -->
+    <div class="tc-section">
+      <div class="tc-section-title">Sidebar Size</div>
+      <div class="tc-thumbs">
+        <button class="thumb-btn" [class.active]="ts.sidebarSize() === 'default'" (click)="setSidebarSize('default')">
+          <div class="thumb">
+            <div class="thumb-header"></div>
+            <div class="thumb-body">
+              <div class="thumb-sidebar wide"></div>
+              <div class="thumb-content"></div>
+            </div>
+          </div>
+          <span>Default</span>
+        </button>
+        <button class="thumb-btn" [class.active]="ts.sidebarSize() === 'compact'" (click)="setSidebarSize('compact')">
+          <div class="thumb">
+            <div class="thumb-header"></div>
+            <div class="thumb-body">
+              <div class="thumb-sidebar narrow"></div>
+              <div class="thumb-content"></div>
+            </div>
+          </div>
+          <span>Compact</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,60 @@
+.home {
+  max-width: 720px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.home__header {
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--ls-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--ls-text-secondary);
+  }
+}
+
+.home__status-card,
+.home__notice {
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.status {
+  margin: 0;
+  font-weight: 500;
+}
+
+.status--checking {
+  color: var(--ls-text-secondary);
+}
+
+.status--up {
+  color: var(--ls-status-safe);
+}
+
+.status--down {
+  color: var(--ls-status-critical);
+}
+
+.status__timestamp {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ls-text-secondary);
+}
+
+.home__notice p {
+  margin: 0;
+  color: var(--ls-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

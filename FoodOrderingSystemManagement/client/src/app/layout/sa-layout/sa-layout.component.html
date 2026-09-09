@@ -1,0 +1,93 @@
+<div class="sa-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
+
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
+  <aside class="sa-sidebar">
+    <div class="sa-sidebar-brand">
+      <div class="brand-logo">
+        <mat-icon>admin_panel_settings</mat-icon>
+      </div>
+      @if (!sidebarCollapsed()) {
+        <div class="brand-text">
+          <span class="brand-name">Super Admin</span>
+          <span class="brand-sub">Control Panel</span>
+        </div>
+      }
+    </div>
+
+    <nav class="sa-nav">
+      <a class="sa-nav-item" routerLink="/sa/monitor" routerLinkActive="active"
+         [matTooltip]="sidebarCollapsed() ? 'Monitor' : ''" matTooltipPosition="right">
+        <mat-icon>dashboard</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Monitor</span> }
+      </a>
+      <div class="sa-nav-divider"></div>
+      <a class="sa-nav-item" routerLink="/sa/organizations" routerLinkActive="active"
+         [matTooltip]="sidebarCollapsed() ? 'Organizations' : ''" matTooltipPosition="right">
+        <mat-icon>corporate_fare</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Organizations</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/branches"      routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'Organization Settings' : ''" matTooltipPosition="right">
+        <mat-icon>settings_applications</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Organization Settings</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/reports"       routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'Organization Reports' : ''" matTooltipPosition="right">
+        <mat-icon>bar_chart</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Organization Reports</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/licenses"      routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'Licenses' : ''" matTooltipPosition="right">
+        <mat-icon>verified</mat-icon>
+        @if (!sidebarCollapsed()) { <span>License Management</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/system-health" routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'System Health' : ''" matTooltipPosition="right">
+        <mat-icon>monitor_heart</mat-icon>
+        @if (!sidebarCollapsed()) { <span>System Health</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/backup"        routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'Backup & Restore' : ''" matTooltipPosition="right">
+        <mat-icon>backup</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Backup &amp; Restore</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/api-config"       routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'API Configuration' : ''" matTooltipPosition="right">
+        <mat-icon>api</mat-icon>
+        @if (!sidebarCollapsed()) { <span>API Configuration</span> }
+      </a>
+      <a class="sa-nav-item" routerLink="/sa/platform-modules" routerLinkActive="active" [matTooltip]="sidebarCollapsed() ? 'Platform Modules' : ''" matTooltipPosition="right">
+        <mat-icon>apps</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Platform Modules</span> }
+      </a>
+    </nav>
+
+    <div class="sa-sidebar-footer">
+      <button class="sa-collapse-btn" (click)="toggleSidebar()"
+              [matTooltip]="sidebarCollapsed() ? 'Expand' : 'Collapse'" matTooltipPosition="right">
+        <mat-icon>{{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main area ─────────────────────────────────────────── -->
+  <div class="sa-main">
+
+    <!-- Header -->
+    <header class="sa-header">
+      <div class="sa-header-left">
+        <mat-icon class="sa-header-icon">admin_panel_settings</mat-icon>
+        <span class="sa-header-title">Platform Control Panel</span>
+      </div>
+      <div class="sa-header-right">
+        <div class="sa-user-chip">
+          <div class="sa-user-avatar">{{ userName.charAt(0).toUpperCase() }}</div>
+          <span class="sa-user-name">{{ userName }}</span>
+        </div>
+        <button mat-icon-button class="sa-logout-btn" (click)="logout()" matTooltip="Sign Out">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="sa-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

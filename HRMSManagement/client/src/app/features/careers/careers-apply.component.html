@@ -1,0 +1,106 @@
+<div class="careers-page">
+  <a [routerLink]="['/careers', orgCode]" class="back-link">← Back to all jobs</a>
+
+  @if (loading) {
+    <div class="loading">Loading job details…</div>
+  } @else if (notFound) {
+    <div class="empty-state">
+      <h2>Job not found</h2>
+      <p>This position may have closed or the link is incorrect.</p>
+    </div>
+  } @else if (opening) {
+
+    @if (!submitted) {
+      <div class="job-detail-card">
+        <h1>{{ opening.title }}</h1>
+        <div class="job-meta">
+          <span>{{ opening.departmentName }}</span>
+          @if (opening.location) { <span>· {{ opening.location }}</span> }
+          <span>· {{ opening.employmentType }}</span>
+          <span>· {{ experienceRange() }}</span>
+        </div>
+        @if (salaryRange()) { <div class="salary">{{ salaryRange() }}</div> }
+
+        @if (opening.description) {
+          <div class="description">
+            <h3>About this role</h3>
+            <p>{{ opening.description }}</p>
+          </div>
+        }
+
+        @if (!showApplyForm) {
+          <button class="cta-button" (click)="showApplyForm = true">Apply Now</button>
+        }
+
+        @if (showApplyForm) {
+          <form class="apply-form" (ngSubmit)="submit()" #f="ngForm">
+            <h3>Apply for this position</h3>
+            <div class="field-row">
+              <div class="field">
+                <label>Full Name *</label>
+                <input name="name" [(ngModel)]="form.name" required />
+              </div>
+              <div class="field">
+                <label>Email *</label>
+                <input name="email" type="email" [(ngModel)]="form.email" required />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Phone</label>
+                <input name="phone" [(ngModel)]="form.phone" />
+              </div>
+              <div class="field">
+                <label>Current Company</label>
+                <input name="currentCompany" [(ngModel)]="form.currentCompany" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Total Experience (years)</label>
+                <input name="exp" type="number" step="0.5" [(ngModel)]="form.totalExperienceYears" />
+              </div>
+              <div class="field">
+                <label>Expected Salary (₹ p.a.)</label>
+                <input name="salary" type="number" [(ngModel)]="form.expectedSalary" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Resume URL (Google Drive / Dropbox link)</label>
+              <input name="resumeUrl" [(ngModel)]="form.resumeUrl" placeholder="https://…" />
+            </div>
+            <div class="field">
+              <label>How did you hear about this role?</label>
+              <select name="source" [(ngModel)]="form.source">
+                @for (s of sourceOptions; track s) { <option [value]="s">{{ s }}</option> }
+              </select>
+            </div>
+            <div class="field">
+              <label>Cover Note</label>
+              <textarea name="coverNote" rows="3" [(ngModel)]="form.coverNote"></textarea>
+            </div>
+
+            @if (resultMessage && !submitted) {
+              <div class="error-message">{{ resultMessage }}</div>
+            }
+
+            <button type="submit" class="cta-button" [disabled]="f.invalid || submitting">
+              {{ submitting ? 'Submitting…' : 'Submit Application' }}
+            </button>
+          </form>
+        }
+      </div>
+    } @else {
+      <div class="confirmation-card">
+        <div class="check-icon">✓</div>
+        <h2>{{ resultMessage }}</h2>
+        <p>Save this link to check your application status any time — HR will update it as your application progresses.</p>
+        <div class="tracking-link-box">
+          <input readonly [value]="trackingUrl()" />
+          <button (click)="copyTrackingLink()">Copy</button>
+        </div>
+        <a [routerLink]="['/careers/track', trackingToken]" class="track-now-link">Check my status now →</a>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,65 @@
+<h1>Dashboard</h1>
+
+@if (loading()) {
+  <mat-spinner diameter="36" />
+} @else {
+  <div class="summary-grid">
+    <mat-card class="summary-card">
+      <mat-icon>corporate_fare</mat-icon>
+      <div>
+        <div class="value">{{ organizations().length }}</div>
+        <div class="label">Organizations ({{ activeOrgCount }} active)</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-icon>apps</mat-icon>
+      <div>
+        <div class="value">{{ platformModules().length }}</div>
+        <div class="label">Platform Modules</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-icon>dns</mat-icon>
+      <div>
+        <div class="value">{{ serviceStatuses().length }}</div>
+        <div class="label">Registered Services</div>
+      </div>
+    </mat-card>
+  </div>
+
+  <h2>Microservice Health</h2>
+  <div class="service-grid">
+    @for (item of serviceStatuses(); track item.service.id) {
+      <mat-card class="service-card">
+        <div class="service-header">
+          <span class="service-name">{{ item.service.name }}</span>
+          @switch (item.status) {
+            @case ('checking') {
+              <mat-chip class="status-chip checking">Checking…</mat-chip>
+            }
+            @case ('online') {
+              <mat-chip class="status-chip online">Online</mat-chip>
+            }
+            @case ('offline') {
+              <mat-chip class="status-chip offline">Unreachable</mat-chip>
+            }
+            @case ('unconfigured') {
+              <mat-chip class="status-chip unconfigured">No health check</mat-chip>
+            }
+          }
+        </div>
+        <div class="service-meta">
+          <span>{{ item.service.baseUrl }}</span>
+          <span>Modules: {{ item.service.moduleKeys || '—' }}</span>
+        </div>
+      </mat-card>
+    } @empty {
+      <p class="empty-hint">
+        No microservices registered yet. Add one on the
+        <a routerLink="/admin/registered-services">Registered Services</a> page.
+      </p>
+    }
+  </div>
+}

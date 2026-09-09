@@ -1,0 +1,6 @@
+@AIO_Systems_HostAddress = http://localhost:5284
+
+GET {{AIO_Systems_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

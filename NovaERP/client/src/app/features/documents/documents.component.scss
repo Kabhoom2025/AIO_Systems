@@ -1,0 +1,13 @@
+.upload-row {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actions-cell { display: flex; gap: 0.25rem; }
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}

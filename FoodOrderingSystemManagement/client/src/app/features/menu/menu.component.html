@@ -1,0 +1,488 @@
+<!-- Customer-facing public menu — no login required -->
+<div class="menu-app">
+
+  <!-- Header -->
+  <header class="menu-header">
+    <div class="header-inner">
+      <div class="restaurant-info">
+        <div class="logo-icon">🍽️</div>
+        <div>
+          <h1 class="restaurant-name">{{ menu()?.restaurantName || 'Our Menu' }}</h1>
+          @if (tableNumber()) {
+            <span class="table-badge">Table {{ tableNumber() }}</span>
+          } @else {
+            <span class="table-badge takeaway">Dine In / Takeaway</span>
+          }
+        </div>
+      </div>
+      @if (cartItemCount() > 0) {
+        <button class="header-cart-btn" (click)="showCart.set(true)">
+          🛒
+          <span class="header-cart-badge">{{ cartItemCount() }}</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading menu...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @else if (error()) {
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="ngOnInit()">Try Again</button>
+    </div>
+  }
+
+  <!-- Menu content -->
+  @else if (menu()) {
+
+    <!-- ── Recommended section ── -->
+    @if (recommended().length > 0) {
+      <section class="recommended-section">
+        <div class="section-header">
+          <span class="section-title-emoji">⭐</span>
+          <div>
+            <h2 class="section-title">Top Picks</h2>
+            <p class="section-sub">Loved by our guests — most rated & ordered</p>
+          </div>
+        </div>
+        <div class="rec-scroll">
+          @for (rec of recommended(); track rec.foodItemId) {
+            <div class="rec-card">
+              <div class="rec-img-wrap">
+                @if (rec.image) {
+                  <img class="rec-img" [src]="rec.image" [alt]="rec.itemName" loading="lazy" />
+                } @else {
+                  <div class="rec-img-placeholder">🍽️</div>
+                }
+                <span class="rec-badge">{{ rec.categoryName }}</span>
+              </div>
+              <div class="rec-body">
+                <p class="rec-name">{{ rec.itemName }}</p>
+                <div class="rec-stars">
+                  @for (s of starRange; track s) {
+                    <span class="star-icon" [class.filled]="avgStarFill(rec.averageRating, s) === 'full'" [class.half]="avgStarFill(rec.averageRating, s) === 'half'">★</span>
+                  }
+                  <span class="rec-rating-val">{{ rec.averageRating | number:'1.1-1' }}</span>
+                  <span class="rec-rating-count">({{ rec.ratingCount }})</span>
+                </div>
+                <p class="rec-price">₹{{ rec.price | number:'1.0-0' }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Category tabs -->
+    <div class="category-tabs-wrap">
+      <div class="category-tabs">
+        <button class="cat-tab" [class.active]="activeCategory() === null" (click)="activeCategory.set(null)">
+          🍽️ All
+        </button>
+        @for (cat of menu()!.categories; track cat.id) {
+          <button class="cat-tab" [class.active]="activeCategory() === cat.id" (click)="activeCategory.set(cat.id)">
+            {{ getCategoryIcon(cat.categoryName) }} {{ cat.categoryName }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Items grid -->
+    <main class="items-section">
+      @if (visibleItems().length === 0) {
+        <div class="empty-cat">
+          <span>No items available in this category right now.</span>
+        </div>
+      }
+
+      <div class="items-grid">
+        @for (item of visibleItems(); track item.id) {
+          <div class="item-card" [class.unavailable]="!item.isAvailable">
+
+            <!-- Image -->
+            <div class="item-img-wrap">
+              @if (item.image) {
+                <img class="item-img" [src]="item.image" [alt]="item.itemName" loading="lazy" />
+              } @else {
+                <div class="item-img-placeholder">🍽️</div>
+              }
+              @if (!item.isAvailable) {
+                <div class="unavailable-badge">Unavailable</div>
+              }
+              @if (getRatingCount(item.id) > 0) {
+                <div class="item-rating-badge">
+                  ★ {{ getAvgRating(item.id) | number:'1.1-1' }}
+                </div>
+              }
+            </div>
+
+            <!-- Details -->
+            <div class="item-details">
+              <h3 class="item-name">{{ item.itemName }}</h3>
+              @if (item.description) {
+                <p class="item-desc">{{ item.description }}</p>
+              }
+
+              <!-- Stars row -->
+              <div class="item-stars-row">
+                @for (s of starRange; track s) {
+                  <span class="star-sm" [class.filled]="starFill(item.id, s) === 'full'" [class.half]="starFill(item.id, s) === 'half'">★</span>
+                }
+                @if (getRatingCount(item.id) > 0) {
+                  <span class="stars-count">{{ getRatingCount(item.id) }} rating{{ getRatingCount(item.id) !== 1 ? 's' : '' }}</span>
+                } @else {
+                  <span class="stars-count no-ratings">Be the first to rate!</span>
+                }
+              </div>
+
+              <div class="item-footer">
+                <span class="item-price">₹{{ item.price | number:'1.0-0' }}</span>
+                <div class="item-footer-actions">
+                  <!-- Rate button -->
+                  <button class="rate-btn"
+                    [class.rated]="hasRated(item.id)"
+                    [disabled]="hasRated(item.id)"
+                    (click)="openRatingModal(item, $event)"
+                    [title]="hasRated(item.id) ? 'You have already rated this item' : 'Rate this item'">
+                    {{ hasRated(item.id) ? '✓ Rated' : '☆ Rate' }}
+                  </button>
+                  <!-- Add button -->
+                  <button class="add-btn" [disabled]="!item.isAvailable" (click)="openAddOnsModal(item)">
+                    @if (cartQtyOf(item.id) > 0) {
+                      <span class="add-btn-qty">{{ cartQtyOf(item.id) }}</span>
+                    } @else {
+                      <span class="plus-icon">+</span>
+                    }
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+    </main>
+  }
+
+  <!-- ── Rating Modal ── -->
+  @if (ratingItem()) {
+    <div class="modal-overlay" (click)="closeRatingModal()">
+      <div class="rating-modal" (click)="$event.stopPropagation()">
+
+        @if (ratingDone()) {
+          <!-- Success state -->
+          <div class="rating-success">
+            <div class="success-emoji">🎉</div>
+            <h3>Thank you!</h3>
+            <p>Your rating for <strong>{{ ratingItem()?.itemName }}</strong> has been saved.</p>
+            <button class="close-rating-btn" (click)="closeRatingModal()">Close</button>
+          </div>
+        } @else {
+          <!-- Rating form -->
+          <div class="rating-modal-header">
+            <h2>Rate this dish</h2>
+            <button class="close-btn" (click)="closeRatingModal()">✕</button>
+          </div>
+          <p class="rating-item-name">{{ ratingItem()?.itemName }}</p>
+
+          <!-- Interactive stars -->
+          <div class="rating-stars-picker">
+            @for (s of starRange; track s) {
+              <button class="star-pick"
+                [class.active]="s <= (hoverStar() || selectedStar())"
+                (mouseenter)="hoverStar.set(s)"
+                (mouseleave)="hoverStar.set(0)"
+                (click)="selectedStar.set(s)">
+                ★
+              </button>
+            }
+          </div>
+          <p class="star-label">
+            @switch (hoverStar() || selectedStar()) {
+              @case (1) { Poor }
+              @case (2) { Fair }
+              @case (3) { Good }
+              @case (4) { Very Good }
+              @case (5) { Excellent! }
+              @default { Tap a star to rate }
+            }
+          </p>
+
+          <!-- Optional comment -->
+          <textarea class="rating-comment"
+            [(ngModel)]="ratingComment"
+            placeholder="Add a comment (optional)…"
+            rows="3"
+            maxlength="300">
+          </textarea>
+
+          @if (ratingError()) {
+            <p class="rating-error">{{ ratingError() }}</p>
+          }
+
+          <div class="rating-footer">
+            <button class="cancel-btn" (click)="closeRatingModal()">Cancel</button>
+            <button class="submit-rating-btn"
+              [disabled]="selectedStar() === 0 || ratingSubmitting()"
+              (click)="submitRating()">
+              {{ ratingSubmitting() ? 'Submitting…' : 'Submit Rating' }}
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- Add-Ons Modal -->
+  @if (selectedItemForAddOns()) {
+    <div class="addon-modal-overlay" (click)="closeAddOnsModal()">
+      <div class="addon-modal" (click)="$event.stopPropagation()">
+        <div class="addon-modal-header">
+          <h2>Customize Your {{ selectedItemForAddOns()?.itemName }}</h2>
+          <button class="close-btn" (click)="closeAddOnsModal()">✕</button>
+        </div>
+
+        <div class="addon-modal-body">
+          <p class="addon-subtitle">Select extras (optional)</p>
+          <div class="addon-list">
+            @for (addon of currentAddOns(); track addon.id) {
+              <label class="addon-item" [class.selected]="isAddOnSelected(addon.id)">
+                <input type="checkbox" [checked]="isAddOnSelected(addon.id)" (change)="toggleAddOn(addon)" />
+                <span class="addon-name">{{ addon.name }}</span>
+                <span class="addon-price">{{ addon.price > 0 ? '+₹' + addon.price : 'Free' }}</span>
+              </label>
+            }
+          </div>
+
+          <div class="addon-summary">
+            <div class="summary-row">
+              <span>Base Price:</span>
+              <span>₹{{ selectedItemForAddOns()?.price }}</span>
+            </div>
+            @if (getTotalAddOnsPrice() > 0) {
+              <div class="summary-row">
+                <span>Add-ons:</span>
+                <span>₹{{ getTotalAddOnsPrice() }}</span>
+              </div>
+            }
+            <div class="summary-row total">
+              <span>Total:</span>
+              <span>₹{{ (selectedItemForAddOns()?.price || 0) + getTotalAddOnsPrice() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="addon-modal-footer">
+          <button class="cancel-btn" (click)="closeAddOnsModal()">Cancel</button>
+          <button class="confirm-btn" (click)="addToCart()">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Sticky cart bar -->
+  @if (cartItemCount() > 0 && !showCart()) {
+    <div class="cart-bar" (click)="showCart.set(true)">
+      <div class="cart-bar-left">
+        <span class="cart-bar-count">{{ cartItemCount() }} item{{ cartItemCount() > 1 ? 's' : '' }}</span>
+        <span class="cart-bar-sep">·</span>
+        <span class="cart-bar-total">₹{{ cartTotal() | number:'1.0-0' }}</span>
+      </div>
+      <div class="cart-bar-right">
+        View Cart <span class="cart-bar-arrow">→</span>
+      </div>
+    </div>
+  }
+
+  <!-- Cart sheet -->
+  @if (showCart()) {
+    <div class="cart-overlay" (click)="showCart.set(false)">
+      <div class="cart-sheet" (click)="$event.stopPropagation()">
+
+        <div class="cart-sheet-header">
+          <div class="cart-sheet-title">
+            🛒 Your Order
+            @if (tableNumber()) {
+              <span class="cart-table-tag">Table {{ tableNumber() }}</span>
+            }
+          </div>
+          <button class="close-btn" (click)="showCart.set(false)">✕</button>
+        </div>
+
+        <div class="cart-sheet-body">
+          @if (cart().length === 0) {
+            <div class="cart-empty">
+              <span>🛒</span>
+              <p>Your cart is empty</p>
+            </div>
+          }
+          @for (entry of cart(); track entry.itemId + '_' + entry.selectedAddOns.length) {
+            <div class="cart-entry">
+              <div class="cart-entry-top">
+                <span class="cart-entry-name">{{ entry.itemName }}</span>
+                <span class="cart-entry-price">₹{{ entry.totalPrice * entry.quantity | number:'1.0-0' }}</span>
+              </div>
+              @if (entry.selectedAddOns.length > 0) {
+                <div class="cart-entry-addons">
+                  + {{ addonNames(entry.selectedAddOns) }}
+                </div>
+              }
+              <div class="cart-entry-bottom">
+                <span class="cart-unit-price">₹{{ entry.totalPrice | number:'1.0-0' }} each</span>
+                <div class="qty-controls">
+                  <button class="qty-btn" (click)="changeQty(entry, -1)">−</button>
+                  <span class="qty-val">{{ entry.quantity }}</span>
+                  <button class="qty-btn" (click)="changeQty(entry, +1)">+</button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (cart().length > 0) {
+          <div class="cart-sheet-footer">
+            <div class="cart-grand-total">
+              <span>Total</span>
+              <span class="cart-grand-amt">₹{{ cartTotal() | number:'1.0-0' }}</span>
+            </div>
+            <button class="checkout-btn" (click)="openCheckout()">
+              {{ tableNumber() ? '📋 Place Order' : '🛵 Proceed to Checkout' }}
+            </button>
+            <button class="clear-cart-btn" (click)="clearCart()">Clear Cart</button>
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- Checkout Modal -->
+  @if (showCheckout()) {
+    <div class="checkout-overlay" (click)="closeCheckout()">
+      <div class="checkout-sheet" (click)="$event.stopPropagation()">
+
+        <div class="checkout-header">
+          <div class="checkout-title">
+            {{ tableNumber() ? '📋 Confirm Order' : '🛵 Delivery Details' }}
+          </div>
+          <button class="close-btn" (click)="closeCheckout()">✕</button>
+        </div>
+
+        <div class="checkout-body">
+
+          @if (!tableNumber()) {
+            <p class="checkout-subtitle">Enter your details for delivery</p>
+          } @else {
+            <p class="checkout-subtitle">Table {{ tableNumber() }} · {{ cartItemCount() }} item{{ cartItemCount() !== 1 ? 's' : '' }}</p>
+          }
+
+          <div class="checkout-field">
+            <label class="field-label">Your Name (optional)</label>
+            <input class="field-input" type="text" placeholder="e.g. John Doe"
+              [value]="checkoutName()" (input)="checkoutName.set($any($event.target).value)" />
+          </div>
+
+          <div class="checkout-field">
+            <label class="field-label">Phone Number <span class="req">*</span></label>
+            <input class="field-input" type="tel" placeholder="+91 98765 43210"
+              [value]="checkoutPhone()" (input)="checkoutPhone.set($any($event.target).value)" />
+          </div>
+
+          @if (!tableNumber()) {
+            <div class="checkout-field">
+              <label class="field-label">Delivery Address <span class="req">*</span></label>
+              <textarea class="field-input field-textarea" rows="3"
+                placeholder="Flat / Building, Street, Area, City"
+                [value]="checkoutAddress()" (input)="checkoutAddress.set($any($event.target).value)"></textarea>
+            </div>
+          }
+
+          <div class="checkout-field">
+            <label class="field-label">Notes (optional)</label>
+            <input class="field-input" type="text" placeholder="e.g. Extra spicy, no onions…"
+              [value]="checkoutNotes()" (input)="checkoutNotes.set($any($event.target).value)" />
+          </div>
+
+          <!-- Order summary mini -->
+          <div class="order-summary">
+            <div class="summary-row">
+              <span>Subtotal ({{ cartItemCount() }} items)</span>
+              <span>₹{{ cartTotal() | number:'1.0-0' }}</span>
+            </div>
+            @if (!tableNumber()) {
+              <div class="summary-row">
+                <span>Delivery charge</span>
+                <span class="free-tag">Free</span>
+              </div>
+            }
+            <div class="summary-row total-row">
+              <span>Total</span>
+              <span>₹{{ cartTotal() | number:'1.0-0' }}</span>
+            </div>
+          </div>
+
+          @if (checkoutError()) {
+            <p class="checkout-error">⚠️ {{ checkoutError() }}</p>
+          }
+        </div>
+
+        <div class="checkout-footer">
+          <button class="cancel-btn" (click)="closeCheckout()" [disabled]="checkoutSubmitting()">Back</button>
+          <button class="place-order-btn" (click)="placeOrder()" [disabled]="checkoutSubmitting()">
+            @if (checkoutSubmitting()) {
+              <span class="spinner-sm"></span> Placing…
+            } @else {
+              {{ tableNumber() ? '✓ Confirm Order' : '🛵 Place Order' }}
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Order Confirmed -->
+  @if (confirmedOrder()) {
+    <div class="confirm-overlay">
+      <div class="confirm-card">
+        <div class="confirm-emoji">🎉</div>
+        <h2 class="confirm-title">Order Placed!</h2>
+        <p class="confirm-sub">Your order has been received.</p>
+
+        <div class="confirm-number">
+          <span class="confirm-label">Order Number</span>
+          <span class="confirm-val">#{{ confirmedOrder()!.orderNumber }}</span>
+        </div>
+
+        <div class="confirm-total">
+          <span>Total: </span>
+          <strong>₹{{ confirmedOrder()!.grandTotal | number:'1.0-0' }}</strong>
+        </div>
+
+        @if (confirmedOrder()!.estimatedTime) {
+          <p class="confirm-eta">⏱ Estimated delivery: <strong>{{ confirmedOrder()!.estimatedTime }}</strong></p>
+        }
+
+        <p class="confirm-msg">We'll send you a confirmation SMS shortly.</p>
+
+        <button class="confirm-done-btn" (click)="dismissConfirmation()">Back to Menu</button>
+      </div>
+    </div>
+  }
+
+  <!-- Footer -->
+  <footer class="menu-footer">
+    <p>Powered by FoodOrder POS</p>
+  </footer>
+
+</div>

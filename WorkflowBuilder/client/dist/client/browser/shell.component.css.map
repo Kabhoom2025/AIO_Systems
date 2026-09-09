@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/shell/shell.component.scss"],
+  "sourcesContent": [":host {\n  display: block;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n}\n\n.shell-topbar {\n  height: 56px;\n  flex-shrink: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 0 1.25rem;\n  background: #111827;\n  color: #fff;\n\n  .brand {\n    font-weight: 700;\n    font-size: 1rem;\n  }\n\n  .topbar-right {\n    display: flex;\n    align-items: center;\n    gap: 0.75rem;\n\n    .user-name {\n      font-size: 0.85rem;\n      color: #d1d5db;\n    }\n\n    button {\n      color: #fff;\n    }\n  }\n}\n\n.shell-body {\n  flex: 1;\n  min-height: 0;\n  overflow: auto;\n  padding: 1.25rem;\n}\n"],
+  "mappings": ";AAAA;AACE,WAAA;AACA,UAAA;AACA,WAAA;AACA,kBAAA;;AAGF,CAAA;AACE,UAAA;AACA,eAAA;AACA,WAAA;AACA,eAAA;AACA,mBAAA;AACA,WAAA,EAAA;AACA,cAAA;AACA,SAAA;;AAEA,CAVF,aAUE,CAAA;AACE,eAAA;AACA,aAAA;;AAGF,CAfF,aAeE,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;;AAEA,CApBJ,aAoBI,CALF,aAKE,CAAA;AACE,aAAA;AACA,SAAA;;AAGF,CAzBJ,aAyBI,CAVF,aAUE;AACE,SAAA;;AAKN,CAAA;AACE,QAAA;AACA,cAAA;AACA,YAAA;AACA,WAAA;;",
+  "names": []
+}

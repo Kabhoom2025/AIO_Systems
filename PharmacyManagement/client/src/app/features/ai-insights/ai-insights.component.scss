@@ -1,0 +1,16 @@
+.ai-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.subtitle { margin: 0 0 1.5rem; color: #777; font-size: 0.85rem; }
+
+.report-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.06); padding: 1.25rem; margin-bottom: 1.25rem;
+  h3 { margin: 0 0 1rem; color: #1a237e; }
+}
+
+.insights-table { width: 100%; border-collapse: collapse;
+  th, td { text-align: left; padding: 8px 10px; font-size: 0.82rem; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f8f9fa; color: #555; }
+}
+.risk-badge { padding: 3px 10px; border-radius: 12px; color: #fff; font-size: 0.75rem; font-weight: 700; }
+.loading, .empty { text-align: center; padding: 1.5rem; color: #999; }

@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 defaults `dark:` to the `prefers-color-scheme` media query. Explicit theme buttons
+ * need full manual control instead, so this switches `dark:` to fire only under a `.dark` class
+ * that useThemeStore/App.tsx toggles on <html> - see store/theme.ts.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * `color-scheme` drives the browser's default colors for unstyled native form controls (like the
+ * plain <button>s in the Screen Builder component palette, which set no explicit text color).
+ * Leaving this as "light dark" lets the browser pick based on the OS's own preference regardless
+ * of which theme our own buttons picked - so choosing "Light" while the OS is set to dark left
+ * native buttons rendering white-on-white text. Scoping it to the .dark class instead keeps it in
+ * lockstep with the app's actual theme (see store/theme.ts).
+ */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+/*
+ * React Flow only switches to its dark theme when a literal `.dark` class sits on `.react-flow`
+ * (see @xyflow/react/dist/style.css) - this app never adds that class to the ReactFlow root
+ * itself, but the same `.dark` class now lands on <html> (see store/theme.ts), so a descendant
+ * selector reaches every ReactFlow instance (Lineage view, Mapping Designer, Screen Builder) at
+ * once. Without this the MiniMap/Controls/Background stayed on React Flow's light defaults even
+ * in dark mode: a solid white panel with barely-visible light-gray node rects, reading as an
+ * empty white box against the app's dark canvas.
+ */
+.dark .react-flow {
+  --xy-minimap-background-color: #141414;
+  --xy-minimap-mask-background-color: rgba(60, 60, 60, 0.6);
+  --xy-minimap-node-background-color: #52525b;
+  --xy-background-color: #0a0a0a;
+  --xy-background-pattern-dots-color: #3f3f46;
+  --xy-background-pattern-lines-color: #262626;
+  --xy-node-color: #f8f8f8;
+  --xy-node-border: 1px solid #3f3f46;
+  --xy-node-background-color: #171717;
+  --xy-edge-stroke: #52525b;
+  --xy-controls-button-background-color: #262626;
+  --xy-controls-button-background-color-hover: #333333;
+  --xy-controls-button-color: #e5e5e5;
+  --xy-controls-button-border-color: #3f3f46;
+}

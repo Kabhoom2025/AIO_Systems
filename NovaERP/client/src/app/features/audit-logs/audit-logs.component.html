@@ -1,0 +1,87 @@
+<div class="page-header">
+  <h1>Audit Logs</h1>
+  <div class="header-actions">
+    <span class="p-input-icon-left search-wrapper">
+      <i class="pi pi-search"></i>
+      <input pInputText
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearchChange()"
+             placeholder="Search by user, action, path…"
+             class="search-input" />
+    </span>
+    <button pButton type="button" icon="pi pi-refresh" class="p-button-outlined" label="Refresh"
+            (click)="refresh()" [disabled]="loading"></button>
+  </div>
+</div>
+
+<div class="card">
+
+  @if (loading) {
+    <div class="loading-wrapper">
+      <p-progressSpinner styleClass="w-8 h-8" strokeWidth="4"></p-progressSpinner>
+      <span class="loading-text">Loading audit logs…</span>
+    </div>
+  } @else {
+    <p-table [value]="logs" dataKey="id" responsiveLayout="scroll" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:9rem">Date / Time</th>
+          <th style="width:6rem">Method</th>
+          <th>Path</th>
+          <th>Action</th>
+          <th style="width:9rem">User</th>
+          <th style="width:6rem">Status</th>
+          <th style="width:7rem">Duration</th>
+          <th style="width:8rem">IP Address</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-log>
+        <tr>
+          <td class="text-sm text-muted text-nowrap">{{ log.createdDate | date:'dd MMM yy, HH:mm' }}</td>
+          <td>
+            <p-tag [value]="log.method" [severity]="methodSeverity(log.method)" styleClass="method-tag"></p-tag>
+          </td>
+          <td>
+            <span class="path-cell" [pTooltip]="log.path" tooltipPosition="top">{{ log.path }}</span>
+          </td>
+          <td class="action-cell">{{ log.action || '—' }}</td>
+          <td class="text-sm font-semibold">{{ log.userName || 'Anonymous' }}</td>
+          <td>
+            <p-tag [value]="log.statusCode.toString()" [severity]="statusSeverity(log.statusCode)"></p-tag>
+          </td>
+          <td class="text-sm duration-cell" [class.slow]="log.durationMs > 1000">
+            {{ log.durationMs }} ms
+          </td>
+          <td class="text-sm text-muted mono">{{ log.ipAddress || '—' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-cell">
+            <div class="empty-state">
+              <i class="pi pi-list empty-icon"></i>
+              <p>No audit log entries found.</p>
+              @if (searchTerm) {
+                <p class="text-muted text-sm">Try clearing your search term.</p>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Paginator -->
+    <div class="paginator-row">
+      <span class="total-text text-muted text-sm">Total: {{ totalRecords | number }} records</span>
+      <p-paginator
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [rowsPerPageOptions]="[25, 50, 100, 200]"
+        (onPageChange)="onPageChange($event)"
+        [first]="(page - 1) * pageSize">
+      </p-paginator>
+    </div>
+  }
+</div>

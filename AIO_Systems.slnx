@@ -1,0 +1,68 @@
+<Solution>
+  <Project Path="AIO_Systems/AIO_Systems.csproj" />
+  <Project Path="ApiGateway/ApiGateway/ApiGateway.csproj" />
+  <Folder Name="/FoodOrderingSystemManagement/">
+    <Project Path="FoodOrderingSystemManagement/src/FoodOrder.API/FoodOrder.API.csproj" />
+    <Project Path="FoodOrderingSystemManagement/src/FoodOrder.Application/FoodOrder.Application.csproj" />
+    <Project Path="FoodOrderingSystemManagement/src/FoodOrder.Domain/FoodOrder.Domain.csproj" />
+    <Project Path="FoodOrderingSystemManagement/src/FoodOrder.Infrastructure/FoodOrder.Infrastructure.csproj" />
+    <Project Path="FoodOrderingSystemManagement/src/FoodOrder.Shared/FoodOrder.Shared.csproj" />
+  </Folder>
+  <Folder Name="/PharmacyManagement/">
+    <Project Path="PharmacyManagement/Pharmacy.API/Pharmacy.API.csproj" />
+    <Project Path="PharmacyManagement/Pharmacy.Application/Pharmacy.Application.csproj" />
+    <Project Path="PharmacyManagement/Pharmacy.Domain/Pharmacy.Domain.csproj" />
+    <Project Path="PharmacyManagement/Pharmacy.Infrastructure/Pharmacy.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/HRMSManagement/">
+    <Project Path="HRMSManagement/HRMS.API/HRMS.API.csproj" />
+    <Project Path="HRMSManagement/HRMS.Application/HRMS.Application.csproj" />
+    <Project Path="HRMSManagement/HRMS.Domain/HRMS.Domain.csproj" />
+    <Project Path="HRMSManagement/HRMS.Infrastructure/HRMS.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/NovaERP/">
+    <Project Path="NovaERP/NovaERP.API/NovaERP.API.csproj" />
+    <Project Path="NovaERP/NovaERP.Application/NovaERP.Application.csproj" />
+    <Project Path="NovaERP/NovaERP.Domain/NovaERP.Domain.csproj" />
+    <Project Path="NovaERP/NovaERP.Infrastructure/NovaERP.Infrastructure.csproj" />
+    <Project Path="NovaERP/NovaERP.Tests/NovaERP.Tests.csproj" />
+  </Folder>
+  <Folder Name="/WorkflowBuilder/">
+    <Project Path="WorkflowBuilder/Workflow.API/Workflow.API.csproj" />
+    <Project Path="WorkflowBuilder/Workflow.Application/Workflow.Application.csproj" />
+    <Project Path="WorkflowBuilder/Workflow.Domain/Workflow.Domain.csproj" />
+    <Project Path="WorkflowBuilder/Workflow.Infrastructure/Workflow.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/ProjectFlowAI/">
+    <Project Path="ProjectFlowAI/ProjectFlowAI.API/ProjectFlowAI.API.csproj" />
+    <Project Path="ProjectFlowAI/ProjectFlowAI.Application/ProjectFlowAI.Application.csproj" />
+    <Project Path="ProjectFlowAI/ProjectFlowAI.Domain/ProjectFlowAI.Domain.csproj" />
+    <Project Path="ProjectFlowAI/ProjectFlowAI.Infrastructure/ProjectFlowAI.Infrastructure.csproj" />
+    <Project Path="ProjectFlowAI/ProjectFlowAI.Tests/ProjectFlowAI.Tests.csproj" />
+  </Folder>
+  <Folder Name="/LineageStudio/">
+    <Project Path="LineageStudio/src/Platform.Api/Platform.Api.csproj" />
+    <Project Path="LineageStudio/src/Platform.Application/Platform.Application.csproj" />
+    <Project Path="LineageStudio/src/Platform.Domain/Platform.Domain.csproj" />
+    <Project Path="LineageStudio/src/Platform.Infrastructure/Platform.Infrastructure.csproj" />
+    <Project Path="LineageStudio/src/Platform.Runtime/Platform.Runtime.csproj" />
+    <Project Path="LineageStudio/src/Platform.Lineage/Platform.Lineage.csproj" />
+    <Project Path="LineageStudio/Tests/Platform.UnitTests/Platform.UnitTests.csproj" />
+    <Project Path="LineageStudio/Tests/Platform.IntegrationTests/Platform.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/ChatbotAI/">
+    <Project Path="ChatbotAI/Chatbot.API/Chatbot.API.csproj" />
+    <Project Path="ChatbotAI/Chatbot.Application/Chatbot.Application.csproj" />
+    <Project Path="ChatbotAI/Chatbot.Domain/Chatbot.Domain.csproj" />
+    <Project Path="ChatbotAI/Chatbot.Infrastructure/Chatbot.Infrastructure.csproj" />
+    <Project Path="ChatbotAI/Chatbot.Tests/Chatbot.Tests.csproj" />
+  </Folder>
+  <Folder Name="/LinkShield/">
+    <Project Path="LinkShield/LinkShield.API/LinkShield.API.csproj" />
+    <Project Path="LinkShield/LinkShield.Application/LinkShield.Application.csproj" />
+    <Project Path="LinkShield/LinkShield.Domain/LinkShield.Domain.csproj" />
+    <Project Path="LinkShield/LinkShield.Infrastructure/LinkShield.Infrastructure.csproj" />
+    <Project Path="LinkShield/LinkShield.Worker/LinkShield.Worker.csproj" />
+    <Project Path="LinkShield/LinkShield.Tests/LinkShield.Tests.csproj" />
+  </Folder>
+</Solution>

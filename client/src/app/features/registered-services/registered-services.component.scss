@@ -1,0 +1,63 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+}
+
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.active-chip {
+  background: #c8e6c9 !important;
+  color: #1b5e20 !important;
+}
+
+.inactive-chip {
+  background: #e0e0e0 !important;
+  color: #555 !important;
+}
+
+.status-chip {
+  font-size: 11px;
+  min-height: 22px;
+
+  &.online {
+    background: #c8e6c9 !important;
+    color: #1b5e20 !important;
+  }
+
+  &.offline {
+    background: #ffcdd2 !important;
+    color: #b71c1c !important;
+  }
+
+  &.checking {
+    background: #fff9c4 !important;
+    color: #7a6a00 !important;
+  }
+}
+
+.muted {
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+}
+
+.empty-hint {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  margin-top: 16px;
+}

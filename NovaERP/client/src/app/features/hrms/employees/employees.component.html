@@ -1,0 +1,110 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Employees</h1>
+  <button *appHasPermission="'hrms.create'" pButton type="button" icon="pi pi-plus" label="Add Employee"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="employees" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Job Title</th>
+        <th>Manager</th>
+        <th>Status</th>
+        <th style="width: 12rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-e>
+      <tr>
+        <td><code class="code-badge">{{ e.employeeCode }}</code></td>
+        <td class="font-semibold">{{ e.firstName }} {{ e.lastName }}</td>
+        <td>{{ e.departmentName }}</td>
+        <td>{{ e.jobTitle }}</td>
+        <td>{{ e.reportingManagerName ?? '—' }}</td>
+        <td><p-tag [severity]="statusSeverity(e.status)" [value]="e.status"></p-tag></td>
+        <td class="actions-cell">
+          @if (e.status !== 'Terminated') {
+            <button *appHasPermission="'hrms.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(e)"></button>
+            <button *appHasPermission="'hrms.edit'" pButton type="button" icon="pi pi-user-minus" label="Terminate"
+                    class="p-button-text p-button-sm p-button-danger" (click)="terminate(e)"></button>
+            <button *appHasPermission="'hrms.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(e)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No employees yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Employee" [(visible)]="showDialog" [modal]="true" [style]="{ width: '40rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Department</span>
+      <p-dropdown [options]="departments" [(ngModel)]="form.departmentId" optionLabel="name" optionValue="id"
+                  placeholder="Select department" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Reporting Manager</span>
+      <p-dropdown [options]="managersFor(editing)" [(ngModel)]="form.reportingManagerId" optionValue="id"
+                  placeholder="None" [showClear]="true" [style]="{ width: '100%' }">
+        <ng-template let-m pTemplate="item">{{ m.firstName }} {{ m.lastName }}</ng-template>
+        <ng-template let-m pTemplate="selectedItem">{{ m.firstName }} {{ m.lastName }}</ng-template>
+      </p-dropdown>
+    </label>
+    <label>
+      <span>First Name</span>
+      <input pInputText [(ngModel)]="form.firstName" />
+    </label>
+    <label>
+      <span>Last Name</span>
+      <input pInputText [(ngModel)]="form.lastName" />
+    </label>
+    <label>
+      <span>Email</span>
+      <input pInputText [(ngModel)]="form.email" type="email" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input pInputText [(ngModel)]="form.phone" />
+    </label>
+    <label>
+      <span>Job Title</span>
+      <input pInputText [(ngModel)]="form.jobTitle" />
+    </label>
+    <label>
+      <span>Employment Type</span>
+      <p-dropdown [options]="employmentTypes" [(ngModel)]="form.employmentType" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Date of Joining</span>
+      <p-calendar [(ngModel)]="form.dateOfJoining" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Date of Birth</span>
+      <p-calendar [(ngModel)]="form.dateOfBirth" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Gender</span>
+      <input pInputText [(ngModel)]="form.gender" />
+    </label>
+    <label>
+      <span>System User Account</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.userId" optionLabel="name" optionValue="id"
+                  placeholder="None" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

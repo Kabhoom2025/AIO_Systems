@@ -1,0 +1,38 @@
+<div class="auth-form">
+  <h1>Create an account</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      First name
+      <input type="text" formControlName="firstName" autocomplete="given-name" />
+    </label>
+
+    <label>
+      Last name
+      <input type="text" formControlName="lastName" autocomplete="family-name" />
+    </label>
+
+    <label>
+      Email
+      <input type="email" formControlName="email" autocomplete="email" />
+    </label>
+
+    <label>
+      Password
+      <input type="password" formControlName="password" autocomplete="new-password" />
+    </label>
+    <p class="auth-form__hint">At least 8 characters, with an upper-case letter, a lower-case letter, and a digit.</p>
+
+    @if (errorMessage()) {
+      <p class="auth-form__error">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Creating account…' : 'Register' }}
+    </button>
+  </form>
+
+  <p class="auth-form__switch">
+    Already have an account? <a routerLink="/auth/login">Log in</a>
+  </p>
+</div>

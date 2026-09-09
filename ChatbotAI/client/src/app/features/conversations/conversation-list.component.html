@@ -1,0 +1,57 @@
+<div class="conversation-list">
+  <button mat-flat-button color="primary" class="new-chat-btn" (click)="startNewChat()">
+    <mat-icon>add</mat-icon>
+    New Chat
+  </button>
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      placeholder="Search conversations"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="onSearchChange($event)"
+      aria-label="Search conversations" />
+  </mat-form-field>
+
+  <div class="conversation-items" role="list">
+    @for (conversation of conversations(); track conversation.id) {
+      <div
+        class="conversation-item"
+        role="listitem"
+        [class.active]="conversation.id === activeConversationId"
+        (click)="openConversation(conversation.id)">
+        <mat-icon class="conversation-icon">chat_bubble_outline</mat-icon>
+        <span class="conversation-title">{{ conversation.title }}</span>
+
+        <button
+          mat-icon-button
+          class="conversation-menu-trigger"
+          [matMenuTriggerFor]="menu"
+          (click)="$event.stopPropagation()"
+          aria-label="Conversation options">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="rename(conversation)">
+            <mat-icon>edit</mat-icon>
+            <span>Rename</span>
+          </button>
+          <button mat-menu-item (click)="archive(conversation)">
+            <mat-icon>{{ conversation.isArchived ? 'unarchive' : 'archive' }}</mat-icon>
+            <span>{{ conversation.isArchived ? 'Unarchive' : 'Archive' }}</span>
+          </button>
+          <button mat-menu-item (click)="remove(conversation)">
+            <mat-icon color="warn">delete</mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
+      </div>
+    } @empty {
+      @if (!isLoading()) {
+        <p class="empty-state">No conversations yet. Start a new chat!</p>
+      }
+    }
+  </div>
+</div>

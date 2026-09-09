@@ -1,0 +1,141 @@
+<div class="food-items-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>fastfood</mat-icon>
+      <div>
+        <h1>Food Items</h1>
+        <p>Manage your menu items</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Add Food Item
+    </button>
+  </div>
+
+  <!-- Search bar -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search food items</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)" placeholder="Name or description..." />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="onSearch('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+    <span class="count-badge">{{ filtered().length }} items</span>
+  </div>
+
+  <!-- Category filter chips -->
+  @if (!loading() && categories().length > 0) {
+    <div class="category-chips">
+      <button
+        class="chip"
+        [class.active]="selectedCategoryId() === null"
+        (click)="selectCategory(null)"
+      >
+        <mat-icon>apps</mat-icon>
+        All
+        <span class="chip-count">{{ allItems().length }}</span>
+      </button>
+      @for (cat of categories(); track cat.id) {
+        <button
+          class="chip"
+          [class.active]="selectedCategoryId() === cat.id"
+          (click)="selectCategory(cat.id)"
+        >
+          {{ cat.categoryName }}
+          <span class="chip-count">{{ countByCategory(cat.id) }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Loading food items...</p>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @else if (!loading() && filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>no_food</mat-icon>
+      <h3>{{ searchTerm() || selectedCategoryId() !== null ? 'No results found' : 'No food items yet' }}</h3>
+      <p>{{ searchTerm() ? 'Try a different search.' : 'Click "Add Food Item" to get started.' }}</p>
+      @if (!searchTerm() && selectedCategoryId() === null) {
+        <button mat-raised-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Add Food Item
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Food items grid -->
+  @else {
+    <div class="food-grid">
+      @for (item of filtered(); track item.id) {
+        <mat-card class="food-card" [class.unavailable]="!item.isAvailable">
+
+          <!-- Image -->
+          <div class="food-image">
+            @if (item.image) {
+              <img [src]="item.image" [alt]="item.itemName" loading="lazy" />
+            } @else {
+              <div class="food-image-placeholder">
+                <mat-icon>fastfood</mat-icon>
+              </div>
+            }
+            <!-- Availability badge -->
+            <span class="avail-badge" [class.available]="item.isAvailable" [class.unavailable]="!item.isAvailable">
+              {{ item.isAvailable ? 'Available' : 'Unavailable' }}
+            </span>
+          </div>
+
+          <mat-card-content>
+            <!-- Category label -->
+            <span class="category-label">{{ item.categoryName }}</span>
+
+            <!-- Name -->
+            <h3 class="item-name">{{ item.itemName }}</h3>
+
+            <!-- Description -->
+            @if (item.description) {
+              <p class="item-desc">{{ item.description }}</p>
+            }
+
+            <!-- Price + Stock row -->
+            <div class="item-footer">
+              <span class="item-price">₹{{ item.price | number:'1.2-2' }}</span>
+              <span class="stock-badge" [class]="getStockClass(item.availableQuantity)">
+                <mat-icon>inventory_2</mat-icon>
+                {{ item.availableQuantity }}
+              </span>
+            </div>
+          </mat-card-content>
+
+          <!-- Actions -->
+          <mat-card-actions>
+            <button mat-icon-button color="primary" (click)="openEdit(item)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openBarcodePrint(item)" [matTooltip]="item.barcode ? 'Print barcode' : 'No barcode assigned'" [disabled]="!item.barcode">
+              <mat-icon>barcode_reader</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="confirmDelete(item)" matTooltip="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+
+        </mat-card>
+      }
+    </div>
+  }
+
+</div>

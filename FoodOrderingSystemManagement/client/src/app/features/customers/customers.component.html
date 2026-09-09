@@ -1,0 +1,158 @@
+<div class="customers-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>people</mat-icon>
+      <div>
+        <h1>Customers</h1>
+        <p>CRM & Loyalty Management</p>
+      </div>
+    </div>
+    <button *hasPermission="'customers.add'" mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>person_add</mat-icon>
+      Add Customer
+    </button>
+  </div>
+
+  <!-- Stats bar -->
+  @if (!loading() && customers().length > 0) {
+    <div class="stats-bar">
+      <div class="stat-card">
+        <mat-icon>people</mat-icon>
+        <div>
+          <span class="stat-value">{{ customers().length }}</span>
+          <span class="stat-label">Total Customers</span>
+        </div>
+      </div>
+      <div class="stat-card gold" *hasPermission="'customers.membership'">
+        <mat-icon>emoji_events</mat-icon>
+        <div>
+          <span class="stat-value">{{ goldCount() }}</span>
+          <span class="stat-label">Gold Members</span>
+        </div>
+      </div>
+      <div class="stat-card" *hasPermission="'customers.loyalty'">
+        <mat-icon>stars</mat-icon>
+        <div>
+          <span class="stat-value">{{ totalPoints() | number }}</span>
+          <span class="stat-label">Total Points</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search customers</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)" placeholder="Name, phone or email..." />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="onSearch('')"><mat-icon>close</mat-icon></button>
+      }
+    </mat-form-field>
+    <span class="count-badge">{{ filtered().length }} customers</span>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Loading customers...</p>
+    </div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>person_off</mat-icon>
+      <h3>{{ searchTerm() ? 'No results found' : 'No customers yet' }}</h3>
+      <p>{{ searchTerm() ? 'Try a different search.' : 'Click "Add Customer" to register your first customer.' }}</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table mat-table [dataSource]="filtered()" class="customers-table">
+
+        <!-- Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Customer</th>
+          <td mat-cell *matCellDef="let c">
+            <div class="name-cell">
+              <div class="avatar" [class]="tierColor(c.tier)">{{ c.name[0] | uppercase }}</div>
+              <div>
+                <div class="customer-name">{{ c.name }}</div>
+                <div class="customer-email">{{ c.email || '—' }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Phone -->
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Phone</th>
+          <td mat-cell *matCellDef="let c">{{ c.phone }}</td>
+        </ng-container>
+
+        <!-- Tier -->
+        <ng-container matColumnDef="tier">
+          <th mat-header-cell *matHeaderCellDef>Tier</th>
+          <td mat-cell *matCellDef="let c">
+            <span *hasPermission="'customers.membership'" class="tier-badge" [class]="tierColor(c.tier)">
+              <mat-icon>{{ tierIcon(c.tier) }}</mat-icon>
+              {{ c.tier }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Points -->
+        <ng-container matColumnDef="points">
+          <th mat-header-cell *matHeaderCellDef>Points</th>
+          <td mat-cell *matCellDef="let c">
+            <span *hasPermission="'customers.loyalty'" class="points-badge">{{ c.loyaltyPoints | number }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Spend -->
+        <ng-container matColumnDef="spend">
+          <th mat-header-cell *matHeaderCellDef>Total Spend</th>
+          <td mat-cell *matCellDef="let c">₹{{ c.totalSpend | number:'1.2-2' }}</td>
+        </ng-container>
+
+        <!-- Visits -->
+        <ng-container matColumnDef="visits">
+          <th mat-header-cell *matHeaderCellDef>Visits</th>
+          <td mat-cell *matCellDef="let c">{{ c.totalVisits }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let c">
+            <span class="status-badge" [class.active]="c.isActive" [class.inactive]="!c.isActive">
+              {{ c.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let c">
+            <button mat-icon-button color="primary" (click)="openDetail(c)" matTooltip="View Profile">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button *hasPermission="'customers.edit'" mat-icon-button (click)="openEdit(c)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button *hasPermission="'customers.delete'"
+                    mat-icon-button color="warn"
+                    [disabled]="deleting() === c.id"
+                    (click)="deleteCustomer(c)" matTooltip="Delete Customer">
+              @if (deleting() === c.id) { <mat-spinner diameter="18" /> }
+              @else { <mat-icon>delete_forever</mat-icon> }
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+      </table>
+    </div>
+  }
+
+</div>

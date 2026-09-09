@@ -1,0 +1,126 @@
+<div class="dashboard-page">
+  <div class="dashboard-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="dashboard-subtitle">{{ organization?.name ?? 'Welcome back' }}</p>
+    </div>
+    <div class="header-right">
+      @if (organization) {
+        <div class="org-chip">
+          <span class="org-chip-code">{{ organization.code }}</span>
+          <span class="org-chip-meta">{{ organization.currency }} · {{ organization.timezone }}</span>
+        </div>
+      }
+      <a routerLink="/dashboard-builder" class="customize-link"><i class="pi pi-sliders-h"></i> Customize</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    @for (tile of statTiles; track tile.label) {
+      <div class="stat-tile">
+        <span class="stat-icon" [style.background]="tile.accent + '1a'" [style.color]="tile.accent">
+          <i class="pi" [ngClass]="tile.icon"></i>
+        </span>
+        <div class="stat-body">
+          <span class="stat-value">{{ tile.value }}</span>
+          <span class="stat-label">{{ tile.label }}</span>
+        </div>
+      </div>
+    }
+    <div class="stat-tile stat-tile-hero">
+      <span class="stat-icon" style="background: #eda1001a; color: #eda100;">
+        <i class="pi pi-shopping-cart"></i>
+      </span>
+      <div class="stat-body">
+        @if (posLoading) {
+          <span class="stat-value"><i class="pi pi-spin pi-spinner"></i></span>
+        } @else {
+          <span class="stat-value">{{ posTotal != null ? (posTotal | number: '1.0-0') : '—' }}<span class="stat-value-unit">{{ organization?.currency }}</span></span>
+        }
+        <span class="stat-label">Completed POS Sales</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    @if (organization) {
+      <div class="card org-summary">
+        <h3><i class="pi pi-building"></i> Organization Profile</h3>
+        <div class="org-grid">
+          <div><span class="label">Legal Name</span><span class="value">{{ organization.legalName || '—' }}</span></div>
+          <div><span class="label">Code</span><span class="value">{{ organization.code }}</span></div>
+          <div><span class="label">Currency</span><span class="value">{{ organization.currency }}</span></div>
+          <div><span class="label">Timezone</span><span class="value">{{ organization.timezone }}</span></div>
+          <div><span class="label">Email</span><span class="value">{{ organization.email || '—' }}</span></div>
+          <div><span class="label">Phone</span><span class="value">{{ organization.phone || '—' }}</span></div>
+        </div>
+      </div>
+    }
+
+    <div class="card">
+      <h3><i class="pi pi-user-edit"></i> User Activity</h3>
+      @if (userActivityLoading) {
+        <div class="chart-empty"><i class="pi pi-spin pi-spinner"></i></div>
+      } @else if (!userActivitySegments.length) {
+        <div class="chart-empty">No data yet.</div>
+      } @else {
+        <div class="proportion-bar">
+          @for (seg of userActivitySegments; track seg.label) {
+            <span class="proportion-segment" [style.width.%]="seg.percent" [style.background]="seg.color"
+                  [pTooltip]="seg.label + ': ' + seg.count + ' (' + seg.percent + '%)'"></span>
+          }
+        </div>
+        <div class="proportion-legend">
+          @for (seg of userActivitySegments; track seg.label) {
+            <div class="proportion-legend-item">
+              <span class="legend-dot" [style.background]="seg.color"></span>
+              <span class="legend-label">{{ seg.label }}</span>
+              <span class="legend-count">{{ seg.count }} · {{ seg.percent }}%</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="widgets-section-header">
+    <h2>Your Widgets</h2>
+    @if (builderDashboardName) {
+      <span class="widgets-source">from "{{ builderDashboardName }}"</span>
+    }
+  </div>
+
+  @if (chartsLoading) {
+    <div class="card"><div class="chart-empty"><i class="pi pi-spin pi-spinner"></i></div></div>
+  } @else if (!hasBuilderDashboard) {
+    <div class="card widgets-empty-card">
+      <i class="pi pi-th-large widgets-empty-icon"></i>
+      <p>You don't have a Dashboard Builder dashboard yet — create one and add widgets to see them here.</p>
+      <a routerLink="/dashboard-builder" class="p-button p-component p-button-sm">Go to Dashboard Builder</a>
+    </div>
+  } @else if (!charts.length) {
+    <div class="card widgets-empty-card">
+      <i class="pi pi-th-large widgets-empty-icon"></i>
+      <p>"{{ builderDashboardName }}" has no chart widgets yet.</p>
+      <a routerLink="/dashboard-builder" class="p-button p-component p-button-sm">Add Widgets</a>
+    </div>
+  } @else {
+    <div class="dashboard-grid">
+      @for (panel of charts; track panel.key) {
+        <div class="card chart-panel">
+          <h3><i class="pi" [ngClass]="panel.icon"></i> {{ panel.title }}</h3>
+          @if (panel.loading) {
+            <div class="chart-empty"><i class="pi pi-spin pi-spinner"></i></div>
+          } @else if (panel.empty || !panel.data) {
+            <div class="chart-empty">No data yet.</div>
+          } @else {
+            <div class="chart-wrap">
+              <p-chart [type]="panel.type" [data]="panel.data" [options]="panel.options"
+                       [height]="panel.fixedHeight ?? chartHeight(panel.data.labels.length)"></p-chart>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

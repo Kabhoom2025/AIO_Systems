@@ -1,0 +1,14 @@
+<div class="app-shell">
+  <app-header />
+  <div class="shell-body">
+    <app-sidebar />
+    <main class="main-content"
+          [class.has-logo]="!!logoUrl"
+          [style.--watermark-url]="logoUrl ? 'url(' + logoUrl + ')' : 'none'"
+          [@routeAnimations]="getRouteState(outlet)">
+      <router-outlet #outlet="outlet" />
+    </main>
+  </div>
+</div>
+
+<app-theme-customizer />

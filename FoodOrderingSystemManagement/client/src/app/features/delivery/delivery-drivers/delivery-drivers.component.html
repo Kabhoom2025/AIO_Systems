@@ -1,0 +1,99 @@
+<div class="drivers-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>people</mat-icon>
+      <div><h1>Delivery Drivers</h1><p>Manage your delivery team</p></div>
+    </div>
+    <div class="header-actions">
+      <a class="btn-secondary" routerLink="/delivery"><mat-icon>arrow_back</mat-icon> Back</a>
+      <button class="btn-primary" (click)="openCreate()"><mat-icon>add</mat-icon> Add Driver</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="36"></mat-spinner></div>
+  } @else {
+    <div class="driver-grid">
+      @for (d of drivers(); track d.id) {
+        <div class="driver-card" [class.inactive]="!d.isActive">
+          <div class="card-top">
+            <div class="avatar">{{ d.name[0] }}</div>
+            <div class="driver-info">
+              <span class="d-name">{{ d.name }}</span>
+              <span class="d-phone">{{ d.phone }}</span>
+            </div>
+            <span class="avail-badge" [class.available]="d.isAvailable" [class.busy]="!d.isAvailable">
+              {{ d.isAvailable ? 'Available' : 'Busy' }}
+            </span>
+          </div>
+          <div class="card-details">
+            @if (d.vehicleType || d.vehicleNo) {
+              <span class="detail-chip"><mat-icon>two_wheeler</mat-icon>{{ d.vehicleType }} {{ d.vehicleNo }}</span>
+            }
+            @if (d.email) {
+              <span class="detail-chip"><mat-icon>email</mat-icon>{{ d.email }}</span>
+            }
+            <span class="detail-chip"><mat-icon>local_shipping</mat-icon>{{ d.activeDeliveries }} active</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn-icon" (click)="openEdit(d)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+            <button class="btn-icon" (click)="toggleAvailability(d)" [matTooltip]="d.isAvailable ? 'Mark Busy' : 'Mark Available'">
+              <mat-icon>{{ d.isAvailable ? 'pause_circle' : 'play_circle' }}</mat-icon>
+            </button>
+            <button class="btn-icon danger" (click)="deleteDriver(d)" matTooltip="Deactivate"><mat-icon>person_off</mat-icon></button>
+          </div>
+        </div>
+      }
+      @if (drivers().length === 0) {
+        <div class="empty-state">
+          <mat-icon>person_off</mat-icon>
+          <h3>No drivers yet</h3>
+          <p>Add your first delivery driver to get started.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Driver Form Panel -->
+  @if (showForm()) {
+    <div class="overlay" (click)="showForm.set(false)"></div>
+    <div class="form-panel">
+      <div class="panel-head">
+        <h3>{{ editingDriver() ? 'Edit Driver' : 'Add Driver' }}</h3>
+        <button class="close-btn" (click)="showForm.set(false)"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="form-body">
+        <div class="field">
+          <label>Name *</label>
+          <input [(ngModel)]="form.name" placeholder="Driver name" />
+        </div>
+        <div class="field">
+          <label>Phone *</label>
+          <input [(ngModel)]="form.phone" placeholder="+91 98765 43210" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input [(ngModel)]="form.email" placeholder="driver@email.com" />
+        </div>
+        <div class="row-fields">
+          <div class="field">
+            <label>Vehicle Type</label>
+            <input [(ngModel)]="form.vehicleType" placeholder="Bike / Car" />
+          </div>
+          <div class="field">
+            <label>Vehicle No.</label>
+            <input [(ngModel)]="form.vehicleNo" placeholder="TN 01 AB 1234" />
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-cancel" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn-confirm" [disabled]="!form.name || !form.phone || saving()" (click)="save()">
+          @if (saving()) { Saving… } @else { {{ editingDriver() ? 'Save Changes' : 'Add Driver' }} }
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

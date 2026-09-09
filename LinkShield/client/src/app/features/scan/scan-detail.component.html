@@ -1,0 +1,238 @@
+@if (loadError()) {
+  <p class="scan-detail__error">{{ loadError() }}</p>
+}
+
+@if (scan(); as s) {
+  <div class="scan-detail">
+    <header class="scan-detail__header">
+      <div>
+        <p class="scan-detail__url">{{ s.originalUrl }}</p>
+        <p class="scan-detail__status">
+          Status: <strong>{{ s.status }}</strong>
+          @if (liveMessage()) { <span class="scan-detail__live"> — {{ liveMessage() }}</span> }
+        </p>
+        @if (s.failureReason) {
+          <p class="scan-detail__failure">{{ s.failureReason }}</p>
+        }
+      </div>
+
+      <div class="scan-detail__score">
+        <div class="score-circle">{{ s.riskScore }}</div>
+        <div>
+          <span [class]="verdictClass(s.verdict)">{{ s.verdict }}</span>
+          <p class="scan-detail__meta">{{ s.riskLevel }} risk · confidence {{ s.confidence | number: '1.0-2' }}</p>
+        </div>
+      </div>
+    </header>
+
+    <nav class="scan-detail__tabs">
+      @for (tab of tabs; track tab.key) {
+        <button type="button" [class.active]="activeTab() === tab.key" (click)="setTab(tab.key)">
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <section class="scan-detail__panel">
+      @switch (activeTab()) {
+        @case ('overview') {
+          <dl class="kv">
+            <dt>Normalized URL</dt><dd>{{ s.normalizedUrl }}</dd>
+            <dt>Submitted</dt><dd>{{ s.createdAtUtc | date: 'medium' }}</dd>
+            <dt>Completed</dt><dd>{{ s.completedAtUtc ? (s.completedAtUtc | date: 'medium') : '—' }}</dd>
+            <dt>Risk score</dt><dd>{{ s.riskScore }} / 100</dd>
+            <dt>Confidence</dt><dd>{{ s.confidence | number: '1.0-2' }} ({{ s.confidence * 100 | number: '1.0-0' }}% of signal categories available)</dd>
+          </dl>
+        }
+
+        @case ('url') {
+          @if (s.urlAnalysis; as u) {
+            <dl class="kv">
+              <dt>Length</dt><dd>{{ u.urlLength }} chars (domain {{ u.domainLength }}, path {{ u.pathLength }}, query {{ u.queryLength }})</dd>
+              <dt>Subdomains</dt><dd>{{ u.subdomainCount }}</dd>
+              <dt>HTTPS</dt><dd>{{ u.isHttps ? 'Yes' : 'No' }}</dd>
+              <dt>IP-literal host</dt><dd>{{ u.isIpAddressHost ? 'Yes' : 'No' }}</dd>
+              <dt>Punycode</dt><dd>{{ u.hasPunycode ? 'Yes' : 'No' }}</dd>
+              <dt>Homoglyphs</dt><dd>{{ u.hasHomoglyphs ? 'Yes' : 'No' }}</dd>
+              <dt>URL shortener</dt><dd>{{ u.isShortenedUrl ? 'Yes' : 'No' }}</dd>
+              <dt>Suspicious TLD</dt><dd>{{ u.hasSuspiciousTld ? 'Yes' : 'No' }}</dd>
+              <dt>Suspicious file extension</dt><dd>{{ u.hasSuspiciousFileExtension ? 'Yes' : 'No' }}</dd>
+              <dt>Double-encoding</dt><dd>{{ u.hasDoubleEncoding ? 'Yes' : 'No' }}</dd>
+              <dt>Suspicious keywords</dt><dd>{{ u.suspiciousKeywords.length ? u.suspiciousKeywords.join(', ') : '—' }}</dd>
+              <dt>Suspicious parameters</dt><dd>{{ u.suspiciousParameters.length ? u.suspiciousParameters.join(', ') : '—' }}</dd>
+              <dt>Stage score</dt><dd>{{ u.urlAnalysisScore }} / 100</dd>
+            </dl>
+          } @else {
+            <p class="scan-detail__pending">Not run yet.</p>
+          }
+        }
+
+        @case ('domain') {
+          @if (s.domainAnalysis; as d) {
+            <dl class="kv">
+              <dt>Registered domain</dt><dd>{{ d.registeredDomain }}</dd>
+              <dt>RDAP lookup</dt><dd>{{ d.rdapLookupSucceeded ? 'Succeeded' : ('Failed — ' + d.rdapError) }}</dd>
+              <dt>Registrar</dt><dd>{{ d.registrar ?? '—' }}</dd>
+              <dt>Registered</dt><dd>{{ d.registeredAtUtc ? (d.registeredAtUtc | date: 'mediumDate') : '—' }}</dd>
+              <dt>Expires</dt><dd>{{ d.expiresAtUtc ? (d.expiresAtUtc | date: 'mediumDate') : '—' }}</dd>
+              <dt>Domain age</dt><dd>{{ d.domainAgeDays !== null ? (d.domainAgeDays + ' days') : '—' }}</dd>
+              <dt>Nameservers</dt><dd>{{ d.nameservers.length ? d.nameservers.join(', ') : '—' }}</dd>
+            </dl>
+          } @else {
+            <p class="scan-detail__pending">Waiting for the domain-analysis stage…</p>
+          }
+        }
+
+        @case ('dns') {
+          @if (s.dnsAnalysis; as dns) {
+            <dl class="kv">
+              <dt>Resolves</dt><dd>{{ dns.resolves ? 'Yes' : 'No' }}</dd>
+              <dt>A records</dt><dd>{{ dns.aRecords.length ? dns.aRecords.join(', ') : '—' }}</dd>
+              <dt>AAAA records</dt><dd>{{ dns.aaaaRecords.length ? dns.aaaaRecords.join(', ') : '—' }}</dd>
+              <dt>MX records</dt><dd>{{ dns.mxRecords.length ? dns.mxRecords.join(', ') : '—' }}</dd>
+              <dt>NS records</dt><dd>{{ dns.nsRecords.length ? dns.nsRecords.join(', ') : '—' }}</dd>
+              <dt>Suspicious nameservers</dt><dd>{{ dns.hasSuspiciousNameservers ? 'Yes' : 'No' }}</dd>
+              @if (dns.lookupError) { <dt>Error</dt><dd>{{ dns.lookupError }}</dd> }
+            </dl>
+          } @else {
+            <p class="scan-detail__pending">Waiting for the DNS-analysis stage…</p>
+          }
+        }
+
+        @case ('ssl') {
+          @if (s.sslAnalysis; as ssl) {
+            <dl class="kv">
+              <dt>Certificate present</dt><dd>{{ ssl.hasCertificate ? 'Yes' : 'No' }}</dd>
+              @if (ssl.hasCertificate) {
+                <dt>Valid</dt><dd>{{ ssl.isValid ? 'Yes' : 'No' }}</dd>
+                <dt>Issuer</dt><dd>{{ ssl.issuer }}</dd>
+                <dt>Subject</dt><dd>{{ ssl.subject }}</dd>
+                <dt>Valid from / to</dt><dd>{{ ssl.validFromUtc | date: 'mediumDate' }} – {{ ssl.validToUtc | date: 'mediumDate' }}</dd>
+                <dt>Expired</dt><dd>{{ ssl.isExpired ? 'Yes' : 'No' }}</dd>
+                <dt>Self-signed</dt><dd>{{ ssl.isSelfSigned ? 'Yes' : 'No' }}</dd>
+                <dt>Domain matches certificate</dt><dd>{{ ssl.domainMatchesCertificate ? 'Yes' : 'No' }}</dd>
+                <dt>TLS version</dt><dd>{{ ssl.tlsVersion }}</dd>
+              } @else {
+                <dt>Reason</dt><dd>{{ ssl.chainValidationError }}</dd>
+              }
+            </dl>
+          } @else {
+            <p class="scan-detail__pending">Waiting for the SSL-analysis stage…</p>
+          }
+        }
+
+        @case ('redirects') {
+          @if (s.redirectAnalysis; as r) {
+            <dl class="kv">
+              <dt>Redirect count</dt><dd>{{ r.redirectCount }}</dd>
+              <dt>Final URL</dt><dd>{{ r.finalUrl }}</dd>
+              <dt>Domain change</dt><dd>{{ r.anyDomainChange ? 'Yes' : 'No' }}</dd>
+              <dt>HTTPS downgrade</dt><dd>{{ r.anyHttpsDowngrade ? 'Yes' : 'No' }}</dd>
+            </dl>
+            @if (r.hops.length) {
+              <table class="hops">
+                <thead><tr><th>#</th><th>From</th><th>To</th><th>Status</th><th>Flags</th></tr></thead>
+                <tbody>
+                  @for (hop of r.hops; track hop.hopIndex) {
+                    <tr>
+                      <td>{{ hop.hopIndex }}</td>
+                      <td class="hops__url">{{ hop.fromUrl }}</td>
+                      <td class="hops__url">{{ hop.toUrl }}</td>
+                      <td>{{ hop.statusCode }}</td>
+                      <td>
+                        @if (hop.domainChanged) { <span class="chip">domain change</span> }
+                        @if (hop.httpsDowngrade) { <span class="chip chip--warn">HTTPS downgrade</span> }
+                        @if (hop.targetIsSuspicious) { <span class="chip chip--danger">suspicious target</span> }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          } @else {
+            <p class="scan-detail__pending">No redirects — request went straight to a final response, or the stage hasn't run yet.</p>
+          }
+        }
+
+        @case ('threatIntel') {
+          @if (s.threatIntelligenceResults.length) {
+            <table class="hops">
+              <thead><tr><th>Provider</th><th>Status</th><th>Category</th><th>Cached</th><th>Checked</th></tr></thead>
+              <tbody>
+                @for (r of s.threatIntelligenceResults; track r.providerSlug) {
+                  <tr>
+                    <td>{{ r.providerName }}</td>
+                    <td>
+                      <span [class]="'chip ' + (r.status === 'ConfirmedMalicious' ? 'chip--danger' : r.status === 'Suspicious' ? 'chip--warn' : '')">
+                        {{ r.status }}
+                      </span>
+                    </td>
+                    <td>{{ r.detectionCategory ?? (r.errorMessage ?? '—') }}</td>
+                    <td>{{ r.fromCache ? 'Yes' : 'No' }}</td>
+                    <td>{{ r.checkedAtUtc | date: 'short' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="scan-detail__pending">Waiting for the threat-intelligence stage…</p>
+          }
+        }
+
+        @case ('brand') {
+          @if (s.brandMatches.length) {
+            <table class="hops">
+              <thead><tr><th>Brand</th><th>Match type</th><th>Matched domain</th><th>Levenshtein</th><th>Jaro-Winkler</th></tr></thead>
+              <tbody>
+                @for (m of s.brandMatches; track m.brandProfileId) {
+                  <tr>
+                    <td>{{ m.brandName }} ({{ m.officialDomain }})</td>
+                    <td><span class="chip chip--danger">{{ m.matchType }}</span></td>
+                    <td>{{ m.matchedDomain }}</td>
+                    <td>{{ m.levenshteinDistance }}</td>
+                    <td>{{ m.jaroWinklerSimilarity | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="scan-detail__pending">No brand impersonation signals found.</p>
+          }
+        }
+
+        @case ('ml') {
+          @if (s.mlPrediction; as ml) {
+            <dl class="kv">
+              <dt>Prediction</dt><dd>{{ ml.prediction }}</dd>
+              <dt>Probability</dt><dd>{{ ml.probability | number: '1.0-2' }}</dd>
+              <dt>Model version</dt><dd>{{ ml.modelVersion }}</dd>
+            </dl>
+          } @else {
+            <p class="scan-detail__pending">
+              No ML prediction available — either the stage hasn't run yet, or ml-service has no
+              trained model (it fails loudly rather than guessing).
+            </p>
+          }
+        }
+
+        @case ('riskFactors') {
+          @if (s.riskFactors.length) {
+            <ul class="risk-factors">
+              @for (f of s.riskFactors; track f.description) {
+                <li>
+                  <span class="chip">{{ f.category }}</span>
+                  {{ f.description }}
+                  <strong>+{{ f.scoreContribution }}</strong>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="scan-detail__pending">No risk factors recorded yet.</p>
+          }
+        }
+      }
+    </section>
+
+    <p class="scan-detail__back"><a routerLink="/scan">Scan another URL</a></p>
+  </div>
+}

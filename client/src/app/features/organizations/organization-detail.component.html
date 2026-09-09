@@ -1,0 +1,238 @@
+<a routerLink="/admin/organizations" class="back-link">
+  <mat-icon>arrow_back</mat-icon>
+  Back to Organizations
+</a>
+
+@if (organization(); as org) {
+  <div class="page-header">
+    <h1>{{ org.name }}</h1>
+    <mat-chip [class.active-chip]="org.isActive" [class.inactive-chip]="!org.isActive">
+      {{ org.isActive ? 'Active' : 'Inactive' }}
+    </mat-chip>
+  </div>
+  <p class="tenant-key">Tenant Key: {{ org.tenantKey }}</p>
+
+  <mat-tab-group (selectedTabChange)="$event.index === 2 && loadRestaurantData(); $event.index === 3 && loadPharmacyData()">
+    <mat-tab label="Overview & License">
+      <div class="tab-content two-col">
+        <mat-card>
+          <h3>Organization Info</h3>
+          <dl>
+            <dt>Email</dt><dd>{{ org.email || '—' }}</dd>
+            <dt>Phone</dt><dd>{{ org.phone || '—' }}</dd>
+            <dt>Address</dt><dd>{{ org.address || '—' }}</dd>
+            <dt>Timezone</dt><dd>{{ org.timezone || '—' }}</dd>
+            <dt>Currency</dt><dd>{{ org.currency || '—' }}</dd>
+            <dt>Users</dt><dd>{{ org.userCount }}</dd>
+          </dl>
+        </mat-card>
+
+        <mat-card>
+          <h3>License</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Plan</mat-label>
+            <mat-select [(ngModel)]="licenseForm.plan">
+              <mat-option value="Basic">Basic</mat-option>
+              <mat-option value="Pro">Pro</mat-option>
+              <mat-option value="Enterprise">Enterprise</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="licenseForm.status">
+              <mat-option value="Trial">Trial</mat-option>
+              <mat-option value="Active">Active</mat-option>
+              <mat-option value="Expired">Expired</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Expiry Date</mat-label>
+            <input matInput type="date" [(ngModel)]="licenseForm.expiryDate" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Max Users</mat-label>
+            <input matInput type="number" [(ngModel)]="licenseForm.maxUsers" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <input matInput [(ngModel)]="licenseForm.notes" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveLicense()">Save License</button>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Modules">
+      <div class="tab-content">
+        @if (moduleStatus(); as status) {
+          <div class="module-grid">
+            @for (m of status.modules; track m.moduleId) {
+              <mat-card class="module-card">
+                <mat-icon [style.color]="m.color">{{ m.icon || 'extension' }}</mat-icon>
+                <span class="module-name">{{ m.moduleName }}</span>
+                <mat-slide-toggle
+                  [checked]="m.isEnabled"
+                  (change)="toggleModule(m.moduleId, $event.checked)"
+                />
+              </mat-card>
+            }
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Restaurant Data">
+      <div class="tab-content">
+        @if (restaurantReport(); as report) {
+          <div class="stat-grid">
+            <mat-card class="stat-card">
+              <div class="value">{{ report.totalOrders }}</div>
+              <div class="label">Total Orders</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.totalRevenue | number: '1.2-2' }}</div>
+              <div class="label">Total Revenue</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.todayOrders }}</div>
+              <div class="label">Today's Orders</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.todayRevenue | number: '1.2-2' }}</div>
+              <div class="label">Today's Revenue</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.thisMonthOrders }}</div>
+              <div class="label">This Month's Orders</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.thisMonthRevenue | number: '1.2-2' }}</div>
+              <div class="label">This Month's Revenue</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ report.activeUsers }}</div>
+              <div class="label">Active Users</div>
+            </mat-card>
+          </div>
+        } @else if (!hasRestaurantModule()) {
+          <p class="empty-hint">The restaurant module is not enabled for this tenant.</p>
+        } @else if (restaurantLoading()) {
+          <mat-spinner diameter="32" />
+        } @else if (restaurantError()) {
+          <p class="error">{{ restaurantError() }}</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Pharmacy Data">
+      <div class="tab-content">
+        @if (!hasPharmacyModule()) {
+          <p class="empty-hint">The pharmacy module is not enabled for this tenant.</p>
+        } @else if (pharmacyLoading()) {
+          <mat-spinner diameter="32" />
+        } @else if (pharmacyError()) {
+          <p class="error">{{ pharmacyError() }}</p>
+        } @else {
+          <div class="stat-grid">
+            <mat-card class="stat-card">
+              <div class="value">{{ pharmacyMedicines().length }}</div>
+              <div class="label">Medicines</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ pharmacyExpiryAlerts().length }}</div>
+              <div class="label">Expiry Alerts</div>
+            </mat-card>
+            <mat-card class="stat-card">
+              <div class="value">{{ pharmacyPrescriptions().length }}</div>
+              <div class="label">Prescriptions</div>
+            </mat-card>
+          </div>
+
+          <h3>Medicines</h3>
+          <table mat-table [dataSource]="pharmacyMedicines()" class="mat-elevation-z1 full-width">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let m">{{ m.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>Category</th>
+              <td mat-cell *matCellDef="let m">{{ m.category }}</td>
+            </ng-container>
+            <ng-container matColumnDef="manufacturer">
+              <th mat-header-cell *matHeaderCellDef>Manufacturer</th>
+              <td mat-cell *matCellDef="let m">{{ m.manufacturer }}</td>
+            </ng-container>
+            <ng-container matColumnDef="totalStock">
+              <th mat-header-cell *matHeaderCellDef>Stock</th>
+              <td mat-cell *matCellDef="let m">{{ m.totalStock }}</td>
+            </ng-container>
+            <ng-container matColumnDef="mrp">
+              <th mat-header-cell *matHeaderCellDef>MRP</th>
+              <td mat-cell *matCellDef="let m">{{ m.mrp | number: '1.2-2' }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="medicineColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: medicineColumns"></tr>
+          </table>
+          @if (pharmacyMedicines().length === 0) {
+            <p class="empty-hint">No medicines recorded for this tenant.</p>
+          }
+
+          <h3>Recent Prescriptions</h3>
+          <table mat-table [dataSource]="pharmacyPrescriptions()" class="mat-elevation-z1 full-width">
+            <ng-container matColumnDef="patientName">
+              <th mat-header-cell *matHeaderCellDef>Patient</th>
+              <td mat-cell *matCellDef="let p">{{ p.patientName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="doctorName">
+              <th mat-header-cell *matHeaderCellDef>Doctor</th>
+              <td mat-cell *matCellDef="let p">{{ p.doctorName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="prescriptionDate">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let p">{{ p.prescriptionDate | date: 'mediumDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let p">{{ p.status }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="prescriptionColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: prescriptionColumns"></tr>
+          </table>
+          @if (pharmacyPrescriptions().length === 0) {
+            <p class="empty-hint">No prescriptions recorded for this tenant.</p>
+          }
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Users">
+      <div class="tab-content">
+        <table mat-table [dataSource]="orgUsers()" class="mat-elevation-z1 full-width">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let u">{{ u.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+          </ng-container>
+          <ng-container matColumnDef="roleName">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let u">{{ u.roleName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let u">{{ u.isActive ? 'Active' : 'Inactive' }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: userColumns"></tr>
+        </table>
+        @if (orgUsers().length === 0) {
+          <p class="empty-hint">No users yet for this tenant.</p>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+} @else if (loading()) {
+  <mat-spinner diameter="36" />
+}

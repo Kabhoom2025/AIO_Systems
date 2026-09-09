@@ -1,0 +1,83 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Production Orders</h1>
+  <button *appHasPermission="'manufacturing.create'" pButton type="button" icon="pi pi-plus" label="Add Production Order"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="orders" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>MO #</th>
+        <th>Finished Good</th>
+        <th>Warehouse</th>
+        <th>Quantity</th>
+        <th>Order Date</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 16rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-o>
+      <tr>
+        <td><code class="code-badge">{{ o.moNumber }}</code></td>
+        <td>{{ o.productName }}</td>
+        <td>{{ o.warehouseName }}</td>
+        <td class="font-semibold">{{ o.quantity | number: '1.0-4' }}</td>
+        <td>{{ o.orderDate | date: 'mediumDate' }}</td>
+        <td><p-tag [severity]="statusSeverity(o.status)" [value]="o.status"></p-tag></td>
+        <td>{{ o.ownerName }}</td>
+        <td class="actions-cell">
+          @if (o.status === 'Draft') {
+            <button *appHasPermission="'manufacturing.edit'" pButton type="button" icon="pi pi-check" label="Complete"
+                    class="p-button-text p-button-sm p-button-success" (click)="complete(o)"></button>
+            <button *appHasPermission="'manufacturing.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(o)"></button>
+            <button *appHasPermission="'manufacturing.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(o)"></button>
+            <button *appHasPermission="'manufacturing.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(o)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No production orders yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Production Order" [(visible)]="showDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Finished Good</span>
+      <p-dropdown [options]="products" [(ngModel)]="form.productId" optionLabel="name" optionValue="id"
+                  placeholder="Select finished good" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Warehouse</span>
+      <p-dropdown [options]="warehouses" [(ngModel)]="form.warehouseId" optionLabel="name" optionValue="id"
+                  placeholder="Select warehouse" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Quantity</span>
+      <p-inputNumber [(ngModel)]="form.quantity" [minFractionDigits]="0" [maxFractionDigits]="4" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Order Date</span>
+      <p-calendar [(ngModel)]="form.orderDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

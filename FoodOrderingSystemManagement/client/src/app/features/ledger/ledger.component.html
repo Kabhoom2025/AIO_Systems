@@ -1,0 +1,170 @@
+<div class="ledger-page">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>menu_book</mat-icon>
+      <div>
+        <h1>Ledger Book</h1>
+        <p>Track sales, credits &amp; debits with running balance</p>
+      </div>
+    </div>
+    @if (isAdmin()) {
+      <button mat-raised-button color="primary" (click)="openAdd()">
+        <mat-icon>add</mat-icon> Add Entry
+      </button>
+    }
+  </div>
+
+  <!-- ── Period tabs ────────────────────────────────────────────────────────── -->
+  <div class="period-nav">
+    <div class="period-tabs">
+      <button class="ptab" [class.active]="period() === 'daily'"   (click)="setPeriod('daily')">Daily</button>
+      <button class="ptab" [class.active]="period() === 'weekly'"  (click)="setPeriod('weekly')">Weekly</button>
+      <button class="ptab" [class.active]="period() === 'monthly'" (click)="setPeriod('monthly')">Monthly</button>
+      <button class="ptab" [class.active]="period() === 'yearly'"  (click)="setPeriod('yearly')">Yearly</button>
+    </div>
+
+    <div class="range-nav">
+      <button class="nav-arrow" (click)="prev()"><mat-icon>chevron_left</mat-icon></button>
+
+      <span class="range-label">{{ range().label }}</span>
+
+      @if (period() === 'daily') {
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" [value]="anchor()"
+                 (dateChange)="anchor.set($event.value!); load()" readonly />
+          <mat-datepicker-toggle matSuffix [for]="picker" />
+          <mat-datepicker #picker />
+        </mat-form-field>
+      }
+
+      <button class="nav-arrow" (click)="next()" [disabled]="isCurrent()"><mat-icon>chevron_right</mat-icon></button>
+
+      @if (!isCurrent()) {
+        <button class="today-btn" (click)="goToday()">
+          {{ period() === 'daily' ? 'Today' : period() === 'weekly' ? 'This Week' : period() === 'monthly' ? 'This Month' : 'This Year' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Summary cards ──────────────────────────────────────────────────────── -->
+  <div class="summary-row">
+    <div class="sum-card credit">
+      <div class="sum-icon"><mat-icon>arrow_downward</mat-icon></div>
+      <div class="sum-body">
+        <span class="sum-label">Total Credit</span>
+        <span class="sum-value">₹{{ summary().totalCredit | number:'1.2-2' }}</span>
+      </div>
+    </div>
+    <div class="sum-card debit">
+      <div class="sum-icon"><mat-icon>arrow_upward</mat-icon></div>
+      <div class="sum-body">
+        <span class="sum-label">Total Debit</span>
+        <span class="sum-value">₹{{ summary().totalDebit | number:'1.2-2' }}</span>
+      </div>
+    </div>
+    <div class="sum-card net" [class.negative]="summary().net < 0">
+      <div class="sum-icon"><mat-icon>account_balance</mat-icon></div>
+      <div class="sum-body">
+        <span class="sum-label">Net Balance</span>
+        <span class="sum-value">₹{{ summary().net | number:'1.2-2' }}</span>
+      </div>
+    </div>
+    <div class="sum-card entries">
+      <div class="sum-icon"><mat-icon>receipt_long</mat-icon></div>
+      <div class="sum-body">
+        <span class="sum-label">Entries</span>
+        <span class="sum-value">{{ summary().entryCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="44" />
+      <p>Loading entries…</p>
+    </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────────────── -->
+  @else if (entries().length === 0) {
+    <div class="empty-state">
+      <mat-icon>menu_book</mat-icon>
+      <h3>No entries for this {{ period() }}</h3>
+      <p>Order transactions will appear here automatically when completed.</p>
+      @if (isAdmin()) {
+        <button mat-raised-button color="primary" (click)="openAdd()">
+          <mat-icon>add</mat-icon> Add Manual Entry
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── Ledger table ───────────────────────────────────────────────────────── -->
+  @else {
+    <div class="ledger-table">
+      <div class="table-head" [class.no-actions]="!isAdmin()">
+        <span class="col-time">{{ showTime() ? 'Time' : 'Date' }}</span>
+        <span class="col-type">Type</span>
+        <span class="col-category">Category</span>
+        <span class="col-note">Note</span>
+        <span class="col-amount">Amount</span>
+        <span class="col-balance">Balance</span>
+        <span class="col-by">By</span>
+        @if (isAdmin()) {
+          <span class="col-actions"></span>
+        }
+      </div>
+
+      @for (entry of entries(); track entry.id) {
+        <div class="table-row" [class.no-actions]="!isAdmin()"
+             [class.credit-row]="entry.type === 'Credit'"
+             [class.debit-row]="entry.type === 'Debit'">
+
+          <span class="col-time">
+            @if (showTime()) {
+              {{ entry.date | date:'HH:mm' }}
+            } @else {
+              {{ entry.date | date:'dd MMM' }}
+            }
+          </span>
+
+          <span class="col-type">
+            <span class="type-badge" [class.credit]="entry.type === 'Credit'" [class.debit]="entry.type === 'Debit'">
+              <mat-icon>{{ entry.type === 'Credit' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+              {{ entry.type }}
+            </span>
+          </span>
+
+          <span class="col-category"><span class="cat-chip">{{ entry.category }}</span></span>
+
+          <span class="col-note">{{ entry.note || '—' }}</span>
+
+          <span class="col-amount" [class.credit-amt]="entry.type === 'Credit'" [class.debit-amt]="entry.type === 'Debit'">
+            {{ entry.type === 'Credit' ? '+' : '−' }}₹{{ entry.amount | number:'1.2-2' }}
+          </span>
+
+          <span class="col-balance" [class.neg]="entry.runningBalance < 0">
+            ₹{{ entry.runningBalance | number:'1.2-2' }}
+          </span>
+
+          <span class="col-by">{{ entry.createdBy }}</span>
+
+          @if (isAdmin()) {
+            <span class="col-actions">
+              <button mat-icon-button color="warn" (click)="confirmDelete(entry)" matTooltip="Delete entry">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
+          }
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

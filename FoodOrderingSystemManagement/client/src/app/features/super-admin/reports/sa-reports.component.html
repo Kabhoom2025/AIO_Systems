@@ -1,0 +1,117 @@
+<div class="sr-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>bar_chart</mat-icon>
+      <div>
+        <h1>Organization Reports</h1>
+        <p>Revenue and order statistics across all organizations</p>
+      </div>
+    </div>
+    <button class="btn-refresh" (click)="refresh()" [disabled]="loading()" matTooltip="Refresh">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner><p>Loading…</p></div>
+  } @else {
+
+    <!-- Summary stats -->
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-icon revenue"><mat-icon>payments</mat-icon></div>
+        <div>
+          <span class="summary-value">{{ totalRevenue() | currency:'INR':'symbol':'1.0-0' }}</span>
+          <span class="summary-label">Total Revenue</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon orders"><mat-icon>receipt_long</mat-icon></div>
+        <div>
+          <span class="summary-value">{{ totalOrders() }}</span>
+          <span class="summary-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon today"><mat-icon>today</mat-icon></div>
+        <div>
+          <span class="summary-value">{{ todayRevenue() | currency:'INR':'symbol':'1.0-0' }}</span>
+          <span class="summary-label">Today's Revenue</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon users"><mat-icon>people</mat-icon></div>
+        <div>
+          <span class="summary-value">{{ totalUsers() }}</span>
+          <span class="summary-label">Active Users</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <mat-icon>search</mat-icon>
+      <input [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search branches…" />
+      @if (searchTerm()) {
+        <button class="clear-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+      }
+    </div>
+
+    <!-- Branch report cards -->
+    <div class="report-grid">
+      @for (item of filtered(); track item.org.id) {
+        <div class="report-card" [class.inactive]="!item.org.isActive">
+          <div class="card-header">
+            <div class="org-avatar">{{ orgInitial(item.org.name) }}</div>
+            <div class="org-info">
+              <span class="org-name">{{ item.org.name }}</span>
+              <span class="status-dot" [class.active]="item.org.isActive" [class.inactive]="!item.org.isActive">
+                {{ item.org.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+
+          @if (item.loading) {
+            <div class="card-loading"><mat-spinner diameter="24"></mat-spinner></div>
+          } @else if (item.error || !item.report) {
+            <div class="card-error"><mat-icon>error_outline</mat-icon><span>Could not load data</span></div>
+          } @else {
+            <div class="stats-grid">
+              <div class="stat">
+                <span class="stat-val">{{ item.report.totalOrders }}</span>
+                <span class="stat-lbl">Total Orders</span>
+              </div>
+              <div class="stat">
+                <span class="stat-val">{{ item.report.totalRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span class="stat-lbl">Total Revenue</span>
+              </div>
+              <div class="stat">
+                <span class="stat-val">{{ item.report.todayOrders }}</span>
+                <span class="stat-lbl">Today</span>
+              </div>
+              <div class="stat">
+                <span class="stat-val">{{ item.report.todayRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span class="stat-lbl">Today Revenue</span>
+              </div>
+              <div class="stat">
+                <span class="stat-val">{{ item.report.thisMonthOrders }}</span>
+                <span class="stat-lbl">This Month</span>
+              </div>
+              <div class="stat">
+                <span class="stat-val">{{ item.report.thisMonthRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span class="stat-lbl">Month Revenue</span>
+              </div>
+              <div class="stat full-col">
+                <span class="stat-val">{{ item.report.activeUsers }}</span>
+                <span class="stat-lbl">Active Users</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

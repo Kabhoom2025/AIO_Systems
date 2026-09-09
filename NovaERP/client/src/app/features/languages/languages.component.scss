@@ -1,0 +1,36 @@
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 0.75rem;
+}
+
+.hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.mt-6 { margin-top: 1.5rem; }
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}
+
+.code-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: monospace;
+  margin-left: 0.375rem;
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}

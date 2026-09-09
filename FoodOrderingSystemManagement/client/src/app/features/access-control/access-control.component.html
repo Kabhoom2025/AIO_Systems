@@ -1,0 +1,274 @@
+<div class="ac-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-icon"><mat-icon>account_tree</mat-icon></div>
+      <div>
+        <h1>Organization Structure</h1>
+        <p>Full hierarchy — roles, staff, and permission connections</p>
+      </div>
+    </div>
+    @if (!loading()) {
+      <div class="ph-right">
+        <div class="ph-stats">
+          <div class="stat-chip">
+            <mat-icon>group</mat-icon>
+            <span>{{ users().length }} Users</span>
+          </div>
+          <div class="stat-chip">
+            <mat-icon>badge</mat-icon>
+            <span>{{ roles().length }} Roles</span>
+          </div>
+        </div>
+
+        <!-- View mode dropdown -->
+        <div class="view-select-wrap">
+          <mat-icon class="vs-icon">visibility</mat-icon>
+          <select class="view-select" [value]="viewMode()"
+                  (change)="viewMode.set($any($event.target).value)">
+            @for (opt of viewOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          <mat-icon class="vs-chevron">expand_more</mat-icon>
+        </div>
+
+      </div>
+    }
+  </div>
+
+  <!-- ── Content ──────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <app-loading-spinner message="Building org chart…" />
+  } @else {
+
+    <!-- ── HIERARCHY VIEW ─────────────────────────────────────────── -->
+    @if (viewMode() === 'hierarchy') {
+
+      <div class="legend">
+        <div class="legend-item"><span class="lg-box root-box"></span><span>Organization</span></div>
+        <div class="legend-item"><span class="lg-box role-box"></span><span>Role</span></div>
+        <div class="legend-item"><span class="lg-box user-box"></span><span>Staff Member</span></div>
+        <span class="lg-hint"><mat-icon>touch_app</mat-icon>Click a node to inspect permissions</span>
+      </div>
+
+      <div class="ac-body" [class.panel-open]="!!selectedNode()">
+
+        <div class="tree-scroll">
+          <div class="tree-wrapper"
+               [style.width.px]="layout().svgW * hZoom()"
+               [style.height.px]="layout().svgH * hZoom()"
+               [style.transform]="'scale(' + hZoom() + ')'"
+               [style.transform-origin]="'top left'">
+
+            <svg class="connectors-svg"
+                 [attr.width]="layout().svgW"
+                 [attr.height]="layout().svgH">
+              @for (edge of layout().edges; track trackEdge($index, edge)) {
+                <path [attr.d]="edge.path" [style.stroke]="edge.color" class="conn-line" />
+              }
+            </svg>
+
+            @for (node of layout().nodes; track trackNode($index, node)) {
+              <div class="tree-node"
+                   [class.node-root]="node.type === 'root'"
+                   [class.node-role]="node.type === 'role'"
+                   [class.node-user]="node.type === 'user'"
+                   [class.selected]="selectedNode()?.id === node.id"
+                   [style.left.px]="node.x" [style.top.px]="node.y"
+                   [style.width.px]="node.w" [style.height.px]="node.h"
+                   [style.--node-color]="node.color"
+                   (click)="selectNode(node)">
+
+                @if (node.type === 'root') {
+                  <div class="rn-inner">
+                    <mat-icon class="rn-icon">restaurant</mat-icon>
+                    <div class="rn-text">
+                      <span class="rn-label">{{ node.label }}</span>
+                      <span class="rn-sub">{{ node.sublabel }}</span>
+                    </div>
+                  </div>
+                }
+
+                @if (node.type === 'role') {
+                  <div class="role-inner">
+                    <div class="ri-accent" [style.background]="node.color"></div>
+                    <div class="ri-body">
+                      <div class="ri-icon-wrap" [style.background]="node.bgColor">
+                        <mat-icon [style.color]="node.color">{{ node.icon }}</mat-icon>
+                      </div>
+                      <div class="ri-info">
+                        <span class="ri-name">{{ node.label }}</span>
+                        <span class="ri-meta">{{ node.sublabel }}</span>
+                      </div>
+                      <div class="ri-perm-badge" [style.background]="node.bgColor" [style.color]="node.color">
+                        {{ node.permCount }}
+                      </div>
+                    </div>
+                    <div class="ri-bar">
+                      <div class="ri-bar-fill" [style.width.%]="permPercent(node)" [style.background]="node.color"></div>
+                    </div>
+                  </div>
+                }
+
+                @if (node.type === 'user') {
+                  <div class="user-inner">
+                    <div class="ui-avatar" [style.background]="node.color">
+                      {{ node.label.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="ui-info">
+                      <span class="ui-name">{{ node.label }}</span>
+                      <span class="ui-email">{{ node.sublabel }}</span>
+                    </div>
+                    <span class="ui-dot"
+                          [class.active]="node.userData?.isActive"
+                          [matTooltip]="node.userData?.isActive ? 'Active' : 'Inactive'"></span>
+                  </div>
+                }
+
+              </div>
+            }
+
+          </div>
+
+          <!-- Floating zoom buttons (bottom-right corner of tree scroll area) -->
+          <div class="zoom-corner">
+            <button class="zc-btn" (click)="hZoomIn()"
+                    [disabled]="hZoomPct() >= 250"
+                    matTooltip="Zoom in">
+              <mat-icon>add</mat-icon>
+            </button>
+            <span class="zc-level" (click)="hZoomReset()" matTooltip="Reset to 100%">
+              {{ hZoomPct() }}%
+            </span>
+            <button class="zc-btn" (click)="hZoomOut()"
+                    [disabled]="hZoomPct() <= 30"
+                    matTooltip="Zoom out">
+              <mat-icon>remove</mat-icon>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Detail panel -->
+        <div class="detail-panel" [class.open]="!!selectedNode()">
+          @if (selectedNode()) {
+            <div class="dp-head" [style.background]="selectedNode()!.bgColor">
+              <div class="dph-icon" [style.border-color]="selectedNode()!.color">
+                @if (selectedNode()!.type === 'role') {
+                  <mat-icon [style.color]="selectedNode()!.color">{{ selectedNode()!.icon }}</mat-icon>
+                } @else {
+                  <span class="dph-avatar" [style.background]="selectedNode()!.color">
+                    {{ selectedNode()!.label.charAt(0).toUpperCase() }}
+                  </span>
+                }
+              </div>
+              <div class="dph-info">
+                <span class="dph-name">{{ selectedNode()!.label }}</span>
+                <span class="dph-role" [style.color]="selectedNode()!.color">
+                  @if (selectedNode()!.type === 'role') { Role }
+                  @else { {{ selectedNode()!.roleData?.roleName }} }
+                </span>
+              </div>
+              <button class="dph-close" (click)="closeDetail()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            @if (selectedNode()!.type === 'user') {
+              <div class="dp-meta">
+                <div class="dpm-row"><mat-icon>alternate_email</mat-icon><span>{{ selectedNode()!.userData?.email }}</span></div>
+                <div class="dpm-row">
+                  <span class="dpm-dot" [class.active]="selectedNode()!.userData?.isActive"></span>
+                  <span>{{ selectedNode()!.userData?.isActive ? 'Active' : 'Inactive' }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="dp-perm-bar-section">
+              <div class="dpb-row">
+                <span class="dpb-count" [style.color]="selectedNode()!.color">{{ selectedNode()!.permCount }}</span>
+                <span class="dpb-of">/ {{ selectedNode()!.totalPerms }} permissions</span>
+                <span class="dpb-pct">{{ permPercent(selectedNode()!) }}%</span>
+              </div>
+              <div class="dpb-track">
+                <div class="dpb-fill" [style.width.%]="permPercent(selectedNode()!)" [style.background]="selectedNode()!.color"></div>
+              </div>
+            </div>
+
+            <div class="dp-groups-scroll">
+              @if (detailGroups().length === 0) {
+                <div class="dp-empty"><mat-icon>lock</mat-icon><p>No permissions assigned</p></div>
+              } @else {
+                @for (group of detailGroups(); track group.moduleKey) {
+                  <div class="dpg">
+                    <div class="dpg-head">
+                      <mat-icon>{{ group.icon }}</mat-icon>
+                      <span>{{ group.module }}</span>
+                      <span class="dpg-cnt">{{ group.features.length }}</span>
+                    </div>
+                    <div class="dpg-list">
+                      @for (feat of group.features; track feat.key) {
+                        <div class="dpg-feat">
+                          <mat-icon class="feat-check">check_circle</mat-icon>
+                          <span>{{ feat.label }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+    <!-- ── 3D NETWORK VIEW ────────────────────────────────────────── -->
+    @if (viewMode() === 'network3d') {
+      <div class="network-wrap">
+        <div class="net-toolbar">
+          <button class="net-btn" (click)="togglePlay()" [matTooltip]="isPlaying() ? 'Pause rotation' : 'Resume rotation'">
+            <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+            <span>{{ isPlaying() ? 'Pause' : 'Play' }}</span>
+          </button>
+
+          <span class="net-hint"><mat-icon>pan_tool</mat-icon> Drag · Scroll to zoom</span>
+          <div class="net-legend">
+            @for (role of roles(); track role.id) {
+              <div class="nl-item">
+                <span class="nl-dot" [style.background]="getRoleColor(role.roleName)"></span>
+                <span>{{ role.roleName }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas #networkCanvas class="net-canvas"></canvas>
+
+          <!-- Floating zoom buttons (bottom-right corner) -->
+          <div class="zoom-corner">
+            <button class="zc-btn" (click)="zoomIn()"
+                    [disabled]="zoomLevel() >= 280"
+                    matTooltip="Zoom in">
+              <mat-icon>add</mat-icon>
+            </button>
+            <span class="zc-level" (click)="zoomReset()" matTooltip="Reset to 100%">
+              {{ zoomLevel() }}%
+            </span>
+            <button class="zc-btn" (click)="zoomOut()"
+                    [disabled]="zoomLevel() <= 30"
+                    matTooltip="Zoom out">
+              <mat-icon>remove</mat-icon>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

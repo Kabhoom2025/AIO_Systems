@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+  {{ isEdit ? 'Edit Category' : 'New Category' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" novalidate>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category Name *</mat-label>
+      <input matInput formControlName="categoryName" placeholder="e.g. Pizza, Burgers, Drinks" />
+      <mat-icon matPrefix>label</mat-icon>
+      @if (categoryName.hasError('required') && categoryName.touched) {
+        <mat-error>Category name is required</mat-error>
+      } @else if (categoryName.hasError('maxlength') && categoryName.touched) {
+        <mat-error>Maximum 100 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" placeholder="Short description..."></textarea>
+      <mat-icon matPrefix>description</mat-icon>
+      @if (description.hasError('maxlength') && description.touched) {
+        <mat-error>Maximum 500 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Image URL</mat-label>
+      <input matInput formControlName="image" placeholder="https://..." />
+      <mat-icon matPrefix>image</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Display Order</mat-label>
+      <input matInput type="number" formControlName="displayOrder" min="0" />
+      <mat-icon matPrefix>sort</mat-icon>
+    </mat-form-field>
+
+    @if (isEdit) {
+      <div class="toggle-row">
+        <mat-slide-toggle formControlName="isActive" color="primary">
+          Active
+        </mat-slide-toggle>
+        <span class="toggle-hint">Inactive categories are hidden from POS</span>
+      </div>
+    }
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="submit()" [disabled]="saving">
+    @if (saving) {
+      <mat-spinner diameter="18" />
+    } @else {
+      <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+    }
+    {{ isEdit ? 'Save Changes' : 'Create' }}
+  </button>
+</mat-dialog-actions>

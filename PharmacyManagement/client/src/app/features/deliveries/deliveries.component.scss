@@ -1,0 +1,33 @@
+.deliveries-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.btn-primary { background: #1a237e; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.deliveries-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  th, td { text-align: left; padding: 10px 14px; font-size: 0.82rem; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f8f9fa; color: #555; }
+}
+.status-badge { padding: 3px 10px; border-radius: 12px; color: #fff; font-size: 0.72rem; font-weight: 700; }
+.row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  select, button, input { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.75rem; }
+  button { cursor: pointer; background: #fff; }
+  button.danger { color: #e53935; border-color: #e53935; }
+  .otp-input { width: 70px; }
+}
+.loading, .empty { text-align: center; padding: 3rem; color: #999; }
+
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.dialog { background: #fff; border-radius: 12px; padding: 2rem; width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  h3 { margin: 0 0 1.5rem; color: #1a237e; }
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  label { display: flex; flex-direction: column; font-size: 0.85rem; color: #555; gap: 4px;
+    input, select { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+  }
+  .full-width { grid-column: 1 / -1; }
+}
+.dialog-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;
+  button { padding: 8px 20px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
+}

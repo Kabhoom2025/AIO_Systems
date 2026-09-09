@@ -1,0 +1,504 @@
+<div class="emp-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>badge</mat-icon>
+      <div>
+        <h1>Employees</h1>
+        <p>HR Management — Attendance, Salary, Shifts & Performance</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="48" /></div>
+  } @else {
+
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" animationDuration="200ms">
+
+      <!-- ══════════════════════════════════════════ TAB 1: Employees ══ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>group</mat-icon>&nbsp;Employees ({{ users().length }})
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="emp-grid">
+            @for (user of users(); track user.id) {
+              <div class="emp-card" [class.inactive]="!user.isActive">
+
+                @if (editingUser()?.id === user.id) {
+                  <!-- ── Edit form inline ── -->
+                  <form [formGroup]="editForm" class="edit-inline" (ngSubmit)="saveEdit()">
+                    <div class="edit-avatar" [class]="'avatar-' + getRoleClass(user.roleName)">
+                      {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="edit-fields">
+                      <mat-form-field appearance="outline" class="ef">
+                        <mat-label>Name</mat-label>
+                        <input matInput formControlName="name" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="ef">
+                        <mat-label>Email</mat-label>
+                        <input matInput formControlName="email" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="ef">
+                        <mat-label>Role</mat-label>
+                        <mat-select formControlName="roleId">
+                          @for (r of roles(); track r.id) {
+                            <mat-option [value]="r.id">{{ r.roleName }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    <div class="edit-actions">
+                      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                        @if (saving()) { <mat-spinner diameter="14" /> } @else { Save }
+                      </button>
+                      <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </form>
+
+                } @else {
+                  <!-- ── Display card ── -->
+                  <div class="emp-avatar" [class]="'avatar-' + getRoleClass(user.roleName)">
+                    @if (user.profileImage) {
+                      <img [src]="user.profileImage" [alt]="user.name" class="emp-avatar-img" />
+                    } @else {
+                      {{ user.name.charAt(0).toUpperCase() }}
+                    }
+                  </div>
+                  <div class="emp-info">
+                    <div class="emp-name">{{ user.name }}</div>
+                    <div class="emp-email">{{ user.email }}</div>
+                    <span class="role-badge" [class]="'role-' + getRoleClass(user.roleName)">
+                      <mat-icon>{{ getRoleIcon(user.roleName) }}</mat-icon>
+                      {{ user.roleName }}
+                    </span>
+                  </div>
+                  <span class="status-dot" [class.active]="user.isActive" [matTooltip]="user.isActive ? 'Active' : 'Inactive'"></span>
+                  <div class="emp-actions">
+                    <button *hasPermission="'employees.edit'" mat-icon-button (click)="startEdit(user)" matTooltip="Edit Employee">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button *hasPermission="'employees.delete'" mat-icon-button color="warn"
+                            [disabled]="deleting() === user.id"
+                            (click)="deleteEmployee(user)" matTooltip="Delete Employee">
+                      @if (deleting() === user.id) { <mat-spinner diameter="16" /> }
+                      @else { <mat-icon>delete_forever</mat-icon> }
+                    </button>
+                  </div>
+                }
+
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- ══════════════════════════════════════════ TAB 2: Attendance ══ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>event_available</mat-icon>&nbsp;Attendance
+        </ng-template>
+
+        <div *hasPermission="'employees.attendance'" class="tab-content">
+          <div class="attendance-toolbar">
+            <mat-form-field appearance="outline" class="date-field">
+              <mat-label>Date</mat-label>
+              <input matInput type="date" [ngModel]="attendanceDate()"
+                     (ngModelChange)="onAttendanceDateChange($event)" />
+            </mat-form-field>
+            <button mat-flat-button color="primary" (click)="saveAllAttendance()" [disabled]="savingAttendance()">
+              @if (savingAttendance()) { <mat-spinner diameter="16" /> } @else { <mat-icon>save</mat-icon> }
+              Save Attendance
+            </button>
+          </div>
+
+          @if (attendanceLoading()) {
+            <div class="tab-loading"><mat-spinner diameter="36" /></div>
+          } @else {
+            <div class="attendance-table">
+              <div class="att-header">
+                <span>Employee</span><span>Status</span><span>Check In</span><span>Check Out</span><span>Notes</span>
+              </div>
+              @for (user of users(); track user.id) {
+                <div class="att-row" [class]="'att-' + getAttendancePending(user.id).status.toLowerCase()">
+                  <div class="att-emp">
+                    <div class="att-avatar" [class]="'avatar-' + getRoleClass(user.roleName)">{{ user.name[0] }}</div>
+                    <div>
+                      <div class="att-name">{{ user.name }}</div>
+                      <div class="att-role">{{ user.roleName }}</div>
+                    </div>
+                  </div>
+                  <div class="att-status-sel">
+                    @for (s of statuses; track s) {
+                      <button class="status-pill"
+                              [class.selected]="getAttendancePending(user.id).status === s"
+                              [style.--s-color]="statusColor(s)"
+                              (click)="setAttendanceStatus(user.id, s)">
+                        {{ s }}
+                      </button>
+                    }
+                  </div>
+                  <input class="time-input" type="time"
+                         [ngModel]="getAttendancePending(user.id).checkIn"
+                         (ngModelChange)="setAttendanceTime(user.id, 'checkIn', $event)" />
+                  <input class="time-input" type="time"
+                         [ngModel]="getAttendancePending(user.id).checkOut"
+                         (ngModelChange)="setAttendanceTime(user.id, 'checkOut', $event)" />
+                  <input class="notes-input" type="text" placeholder="Notes…"
+                         [ngModel]="getAttendancePending(user.id).notes"
+                         (ngModelChange)="getAttendancePending(user.id).notes = $event" />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- ══════════════════════════════════════════ TAB 3: Salary ══ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>payments</mat-icon>&nbsp;Salary
+        </ng-template>
+
+        <div *hasPermission="'employees.salary'" class="tab-content">
+          @if (salaryLoading()) {
+            <div class="tab-loading"><mat-spinner diameter="36" /></div>
+          } @else {
+
+            <!-- Salary Configs -->
+            <div class="section-header">
+              <h3><mat-icon>settings</mat-icon> Salary Configuration</h3>
+            </div>
+            <div class="salary-grid">
+              @for (cfg of salaryConfigs(); track cfg.userId) {
+                <div class="salary-card" [class.editing]="editingSalary()?.userId === cfg.userId">
+                  <div class="sc-name">{{ cfg.userName }}</div>
+                  @if (editingSalary()?.userId === cfg.userId) {
+                    <form [formGroup]="salaryForm" class="sc-form">
+                      <mat-form-field appearance="outline" class="sc-field">
+                        <mat-label>Basic (₹)</mat-label>
+                        <input matInput type="number" formControlName="basicSalary" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="sc-field">
+                        <mat-label>Allowances (₹)</mat-label>
+                        <input matInput type="number" formControlName="allowances" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="sc-field">
+                        <mat-label>Period</mat-label>
+                        <mat-select formControlName="payPeriod">
+                          <mat-option value="Monthly">Monthly</mat-option>
+                          <mat-option value="Weekly">Weekly</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <div class="sc-actions">
+                        <button mat-flat-button color="primary" type="button" (click)="saveSalary()">Save</button>
+                        <button mat-stroked-button type="button" (click)="cancelEditSalary()">Cancel</button>
+                      </div>
+                    </form>
+                  } @else {
+                    <div class="sc-values">
+                      <span class="sc-val">₹{{ cfg.basicSalary | number:'1.0-0' }}<small>Basic</small></span>
+                      <span class="sc-val">₹{{ cfg.allowances | number:'1.0-0' }}<small>Allowances</small></span>
+                      <span class="sc-gross">₹{{ cfg.totalGross | number:'1.0-0' }}<small>Gross</small></span>
+                    </div>
+                    <button mat-icon-button (click)="startEditSalary(cfg)" matTooltip="Edit Salary">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Payments -->
+            <div class="section-header">
+              <h3><mat-icon>receipt_long</mat-icon> Payment Records</h3>
+              <button mat-flat-button color="primary" (click)="addingPayment.set(!addingPayment())">
+                <mat-icon>{{ addingPayment() ? 'close' : 'add' }}</mat-icon>
+                {{ addingPayment() ? 'Cancel' : 'Add Payment' }}
+              </button>
+            </div>
+
+            @if (addingPayment()) {
+              <form [formGroup]="paymentForm" class="payment-form" (ngSubmit)="submitPayment()">
+                <mat-form-field appearance="outline">
+                  <mat-label>Employee</mat-label>
+                  <mat-select formControlName="userId">
+                    @for (u of users(); track u.id) { <mat-option [value]="u.id">{{ u.name }}</mat-option> }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Month</mat-label>
+                  <mat-select formControlName="month">
+                    @for (m of monthNames; track $index) { <mat-option [value]="$index + 1">{{ m }}</mat-option> }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Year</mat-label>
+                  <input matInput type="number" formControlName="year" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Gross Pay (₹)</mat-label>
+                  <input matInput type="number" formControlName="grossPay" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Deductions (₹)</mat-label>
+                  <input matInput type="number" formControlName="deductions" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full">
+                  <mat-label>Notes</mat-label>
+                  <input matInput formControlName="notes" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="submit">Create Record</button>
+              </form>
+            }
+
+            <div class="payments-table">
+              <div class="pt-header">
+                <span>Employee</span><span>Period</span><span>Gross</span><span>Deductions</span><span>Net</span><span>Status</span><span>Action</span>
+              </div>
+              @if (payments().length === 0) {
+                <div class="pt-empty"><mat-icon>payments</mat-icon><p>No payment records yet.</p></div>
+              }
+              @for (p of payments(); track p.id) {
+                <div class="pt-row">
+                  <span>{{ p.userName }}</span>
+                  <span>{{ monthNames[p.month - 1] }} {{ p.year }}</span>
+                  <span>₹{{ p.grossPay | number:'1.0-0' }}</span>
+                  <span>₹{{ p.deductions | number:'1.0-0' }}</span>
+                  <span class="pt-net">₹{{ p.netPay | number:'1.0-0' }}</span>
+                  <span class="pay-status" [class.paid]="p.status === 'Paid'">{{ p.status }}</span>
+                  @if (p.status === 'Pending') {
+                    <button mat-stroked-button color="primary" class="mark-paid-btn"
+                            [disabled]="markingPaid() === p.id"
+                            (click)="markPaymentPaid(p.id)">
+                      @if (markingPaid() === p.id) { <mat-spinner diameter="14" /> } @else { Mark Paid }
+                    </button>
+                  } @else {
+                    <span class="paid-date">{{ p.paidDate | date:'dd MMM' }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+          }
+        </div>
+      </mat-tab>
+
+      <!-- ══════════════════════════════════════════ TAB 4: Shifts ══ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>schedule</mat-icon>&nbsp;Shifts
+        </ng-template>
+
+        <div *hasPermission="'employees.shifts'" class="tab-content">
+          @if (shiftsLoading()) {
+            <div class="tab-loading"><mat-spinner diameter="36" /></div>
+          } @else {
+
+            <!-- Shift definitions -->
+            <div class="section-header">
+              <h3><mat-icon>view_list</mat-icon> Shift Types</h3>
+              <button mat-flat-button color="primary" (click)="addingShift.set(!addingShift())">
+                <mat-icon>{{ addingShift() ? 'close' : 'add' }}</mat-icon>
+                {{ addingShift() ? 'Cancel' : 'Add Shift' }}
+              </button>
+            </div>
+
+            @if (addingShift()) {
+              <form [formGroup]="shiftForm" class="shift-def-form" (ngSubmit)="createShift()">
+                <mat-form-field appearance="outline">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" placeholder="Morning, Evening…" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Start</mat-label>
+                  <input matInput type="time" formControlName="startTime" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>End</mat-label>
+                  <input matInput type="time" formControlName="endTime" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Color</mat-label>
+                  <input matInput type="color" formControlName="colorCode" style="height:36px;padding:2px;" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="submit">Create</button>
+              </form>
+            }
+
+            <div class="shift-defs">
+              @for (sd of shiftDefs(); track sd.id) {
+                <div class="shift-chip" [style.border-color]="sd.colorCode" [style.background]="sd.colorCode + '22'">
+                  <span class="sc-dot" [style.background]="sd.colorCode"></span>
+                  <span class="sc-name">{{ sd.name }}</span>
+                  <span class="sc-time">{{ sd.startTime }} – {{ sd.endTime }}</span>
+                  <button mat-icon-button color="warn" (click)="deleteShift(sd.id)" matTooltip="Delete shift">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+              @if (shiftDefs().length === 0) {
+                <p class="no-shifts">No shift types defined yet.</p>
+              }
+            </div>
+
+            <!-- Weekly schedule -->
+            <div class="section-header" style="margin-top:24px">
+              <h3><mat-icon>calendar_view_week</mat-icon> Weekly Schedule</h3>
+              <div class="week-nav">
+                <button mat-icon-button (click)="prevWeek()"><mat-icon>chevron_left</mat-icon></button>
+                <span>{{ shiftWeekStart() | date:'dd MMM' }} – {{ shiftWeekDays()[6] | date:'dd MMM yyyy' }}</span>
+                <button mat-icon-button (click)="nextWeek()"><mat-icon>chevron_right</mat-icon></button>
+              </div>
+            </div>
+
+            <!-- Assign -->
+            <div class="assign-row">
+              <mat-form-field appearance="outline" class="assign-field">
+                <mat-label>Employee</mat-label>
+                <mat-select [ngModel]="newAssignment().userId" (ngModelChange)="setAssignmentUser($event)">
+                  @for (u of users(); track u.id) { <mat-option [value]="u.id">{{ u.name }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="assign-field">
+                <mat-label>Shift</mat-label>
+                <mat-select [ngModel]="newAssignment().shiftId" (ngModelChange)="setAssignmentShift($event)">
+                  @for (sd of shiftDefs(); track sd.id) { <mat-option [value]="sd.id">{{ sd.name }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="assign-field">
+                <mat-label>Date</mat-label>
+                <input matInput type="date" [ngModel]="newAssignment().date" (ngModelChange)="setAssignmentDate($event)" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" (click)="assignShift()">
+                <mat-icon>add</mat-icon> Assign
+              </button>
+            </div>
+
+            <!-- 7-day grid -->
+            <div class="week-grid">
+              @for (day of shiftWeekDays(); track day) {
+                <div class="day-col">
+                  <div class="day-header">
+                    <span class="day-name">{{ day | date:'EEE' }}</span>
+                    <span class="day-date">{{ day | date:'d' }}</span>
+                  </div>
+                  <div class="day-assignments">
+                    @for (a of getAssignmentsForDay(day); track a.id) {
+                      <div class="assignment-chip" [style.background]="a.shiftColor + '33'" [style.border-color]="a.shiftColor">
+                        <span class="ac-name">{{ a.userName }}</span>
+                        <span class="ac-shift">{{ a.shiftName }}</span>
+                        <span class="ac-time">{{ a.shiftStart }}–{{ a.shiftEnd }}</span>
+                        <button class="ac-remove" (click)="removeAssignment(a.id)" matTooltip="Remove">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </div>
+                    }
+                    @if (getAssignmentsForDay(day).length === 0) {
+                      <div class="no-assignment">—</div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+          }
+        </div>
+      </mat-tab>
+
+      <!-- ══════════════════════════════════════════ TAB 5: Performance ══ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>star_rate</mat-icon>&nbsp;Performance
+        </ng-template>
+
+        <div *hasPermission="'employees.performance'" class="tab-content">
+
+          <div class="perf-toolbar">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by Employee</mat-label>
+              <mat-select [ngModel]="reviewFilter()" (ngModelChange)="reviewFilter.set($event)">
+                <mat-option [value]="0">All Employees</mat-option>
+                @for (u of users(); track u.id) { <mat-option [value]="u.id">{{ u.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            <button mat-flat-button color="primary" (click)="addingReview.set(!addingReview())">
+              <mat-icon>{{ addingReview() ? 'close' : 'add' }}</mat-icon>
+              {{ addingReview() ? 'Cancel' : 'Add Review' }}
+            </button>
+          </div>
+
+          @if (addingReview()) {
+            <form [formGroup]="reviewForm" class="review-form" (ngSubmit)="submitReview()">
+              <mat-form-field appearance="outline">
+                <mat-label>Employee</mat-label>
+                <mat-select formControlName="userId">
+                  @for (u of users(); track u.id) { <mat-option [value]="u.id">{{ u.name }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Review Date</mat-label>
+                <input matInput type="date" formControlName="reviewDate" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                  @for (c of reviewCategories; track c) { <mat-option [value]="c">{{ c }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <div class="rating-row">
+                <label>Rating:</label>
+                @for (s of ratingStars; track s) {
+                  <button type="button" class="star-btn" (click)="reviewForm.patchValue({rating: s})">
+                    <mat-icon [class.filled]="(reviewForm.value.rating ?? 0) >= s">
+                      {{ (reviewForm.value.rating ?? 0) >= s ? 'star' : 'star_border' }}
+                    </mat-icon>
+                  </button>
+                }
+              </div>
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Comments *</mat-label>
+                <textarea matInput formControlName="comments" rows="3" placeholder="Performance notes…"></textarea>
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Submit Review</button>
+            </form>
+          }
+
+          @if (reviewsLoading()) {
+            <div class="tab-loading"><mat-spinner diameter="36" /></div>
+          } @else if (filteredReviews().length === 0) {
+            <div class="tab-empty"><mat-icon>star_border</mat-icon><p>No reviews yet.</p></div>
+          } @else {
+            <div class="reviews-list">
+              @for (r of filteredReviews(); track r.id) {
+                <div class="review-card">
+                  <div class="rc-top">
+                    <div class="rc-employee">{{ r.userName }}</div>
+                    <span class="rc-category">{{ r.category }}</span>
+                    <span class="rc-date">{{ r.reviewDate | date:'dd MMM yyyy' }}</span>
+                    <div class="rc-stars">
+                      @for (s of stars(r.rating); track $index) { <mat-icon class="star filled">star</mat-icon> }
+                      @for (s of emptyStars(r.rating); track $index) { <mat-icon class="star">star_border</mat-icon> }
+                    </div>
+                    <button mat-icon-button color="warn" (click)="deleteReview(r.id)" matTooltip="Delete">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <div class="rc-comments">{{ r.comments }}</div>
+                  <div class="rc-reviewer">Reviewed by: {{ r.reviewedByName }}</div>
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  }
+
+</div>

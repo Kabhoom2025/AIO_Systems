@@ -1,0 +1,52 @@
+.pos-page { padding: 1.5rem; }
+.pos-layout { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; align-items: start; }
+
+.search-panel, .cart-panel { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.06); padding: 1.25rem; }
+h2, h3 { margin: 0 0 1rem; color: #1a237e; }
+
+.search-box input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; margin-bottom: 1rem; }
+.scan-box input { border-color: #1a237e; border-width: 2px; background: #f5f6fb; }
+
+.medicine-list { max-height: 480px; overflow-y: auto; }
+.medicine-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #f0f0f0;
+  &.out-of-stock { opacity: 0.5; }
+}
+.medicine-info { flex: 1; display: flex; flex-direction: column;
+  span { font-size: 0.78rem; color: #777; }
+}
+.qty-input { width: 60px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+.medicine-row button { padding: 6px 14px; background: #1a237e; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+.medicine-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cart-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem;
+  th, td { text-align: left; padding: 6px 8px; font-size: 0.82rem; border-bottom: 1px solid #f0f0f0; }
+  input { width: 60px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; }
+  button.danger { background: #fff; border: 1px solid #e53935; color: #e53935; border-radius: 4px; cursor: pointer; padding: 2px 8px; }
+}
+.empty { text-align: center; color: #999; padding: 1.5rem; }
+
+.checkout-form { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;
+  label { display: flex; flex-direction: column; font-size: 0.82rem; color: #555; gap: 4px;
+    select { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+  }
+}
+.grand-total { font-size: 1.1rem; text-align: right; margin-bottom: 1rem; color: #222; }
+.btn-checkout { width: 100%; background: #2e7d32; color: #fff; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+.btn-checkout:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.dialog.receipt { background: #fff; border-radius: 12px; padding: 2rem; width: 400px; max-width: 95vw;
+  h3 { margin: 0 0 1rem; }
+}
+.info-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; color: #555;
+  b { color: #222; }
+  &.total { font-size: 1.1rem; border-top: 1px solid #eee; padding-top: 8px; margin-top: 4px; }
+}
+.dialog-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;
+  button { padding: 8px 20px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
+  .btn-primary { background: #1a237e; color: #fff; border: none; }
+}
+
+@media print {
+  .pos-layout, .page-header { display: none !important; }
+}

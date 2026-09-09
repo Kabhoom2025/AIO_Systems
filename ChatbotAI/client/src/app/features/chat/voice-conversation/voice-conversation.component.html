@@ -1,0 +1,58 @@
+<div class="voice-conversation">
+  <button mat-icon-button class="close-btn" (click)="endConversation()" aria-label="Close voice conversation">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2 class="title">AI Assistant</h2>
+
+  <div class="orb-wrapper">
+    <div class="orb" [class.listening]="status() === 'listening'" [class.speaking]="status() === 'speaking'" [class.processing]="status() === 'processing'">
+      <mat-icon>{{ status() === 'speaking' ? 'graphic_eq' : 'auto_awesome' }}</mat-icon>
+    </div>
+  </div>
+
+  <p class="status-label">
+    @switch (status()) {
+      @case ('listening') { Listening... }
+      @case ('processing') { Thinking... }
+      @case ('speaking') { Speaking... }
+      @case ('paused') { Paused }
+      @default { Ready }
+    }
+  </p>
+
+  @if (interimTranscript()) {
+    <p class="transcript">{{ interimTranscript() }}</p>
+  } @else if (lastUserText()) {
+    <p class="transcript muted">"{{ lastUserText() }}"</p>
+  }
+
+  @if (!isVoiceSupported) {
+    <p class="unsupported">Voice recognition is not supported in this browser.</p>
+  }
+
+  <div class="controls">
+    <button mat-icon-button class="control-btn" (click)="toggleMute()" [matTooltip]="muted() ? 'Unmute AI voice' : 'Mute AI voice'">
+      <mat-icon>{{ muted() ? 'volume_off' : 'volume_up' }}</mat-icon>
+    </button>
+
+    <button
+      mat-fab
+      color="primary"
+      class="mic-btn"
+      [class.listening]="status() === 'listening'"
+      (click)="toggleMic()"
+      [disabled]="!isVoiceSupported"
+      matTooltip="Tap to interrupt or start listening">
+      <mat-icon>mic</mat-icon>
+    </button>
+
+    <button mat-icon-button class="control-btn" (click)="togglePause()" [matTooltip]="status() === 'paused' ? 'Resume' : 'Pause'">
+      <mat-icon>{{ status() === 'paused' ? 'play_arrow' : 'pause' }}</mat-icon>
+    </button>
+  </div>
+
+  <button mat-stroked-button class="end-btn" (click)="endConversation()">
+    End Conversation
+  </button>
+</div>

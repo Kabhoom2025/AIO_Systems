@@ -1,0 +1,64 @@
+<div class="customers-page">
+  <div class="page-header">
+    <h2>Customers</h2>
+    <button *appHasPermission="'customers.create'" class="btn-primary" (click)="openAdd()">+ Add Customer</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <div class="customers-grid">
+      @for (c of customers(); track c.id) {
+        <div class="customer-card" [class.inactive]="!c.isActive">
+          <div class="card-header">
+            <h3>{{ c.name }}</h3>
+            <span class="membership-badge" [style.background]="membershipColor(c.membershipLevel)">{{ c.membershipLevel }}</span>
+          </div>
+          <div class="card-body">
+            <div class="info-row"><span>Phone</span><b>{{ c.phone || '-' }}</b></div>
+            <div class="info-row"><span>Email</span><b>{{ c.email || '-' }}</b></div>
+            <div class="info-row"><span>Loyalty Points</span><b>{{ c.loyaltyPoints }}</b></div>
+            <div class="info-row"><span>Wallet Balance</span><b>₹{{ c.walletBalance }}</b></div>
+          </div>
+          <div class="card-actions">
+            <button *appHasPermission="'customers.edit'" (click)="openEdit(c)">Edit</button>
+            <button *appHasPermission="'customers.delete'" class="danger" (click)="delete(c.id)">Delete</button>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">No customers found. Add one to get started.</div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Customer</h3>
+        <div class="form-grid">
+          <label>Name <input [(ngModel)]="form.name" /></label>
+          <label>Phone <input [(ngModel)]="form.phone" /></label>
+          <label>Email <input [(ngModel)]="form.email" /></label>
+          <label>Membership Level
+            <select [(ngModel)]="form.membershipLevel">
+              @for (m of membershipOptions; track m) { <option [value]="m">{{ m }}</option> }
+            </select>
+          </label>
+          <label class="full-width">Address <input [(ngModel)]="form.address" /></label>
+          @if (editId()) {
+            <label>Loyalty Points <input type="number" [(ngModel)]="form.loyaltyPoints" /></label>
+            <label>Wallet Balance (₹) <input type="number" [(ngModel)]="form.walletBalance" /></label>
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="form.isActive" /> Active
+            </label>
+          }
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

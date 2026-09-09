@@ -1,0 +1,121 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Roles</h1>
+  <button
+    *appHasPermission="'roles.create'"
+    pButton
+    type="button"
+    icon="pi pi-plus"
+    label="Add Role"
+    (click)="openAddDialog()">
+  </button>
+</div>
+
+<div class="card">
+  <p-table [value]="roles" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Type</th>
+        <th>Users</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-role>
+      <tr>
+        <td>{{ role.name }}</td>
+        <td>{{ role.description || '-' }}</td>
+        <td><p-tag [value]="role.isSystemRole ? 'System' : 'Custom'" [severity]="role.isSystemRole ? 'info' : 'secondary'"></p-tag></td>
+        <td>{{ role.userCount }}</td>
+        <td class="actions-cell">
+          <ng-container *appHasPermission="'roles.edit'">
+            @if (role.isSystemRole) {
+              <span class="hint-text">System roles cannot be modified</span>
+            } @else {
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                (click)="openEditDialog(role)"
+                title="Edit">
+              </button>
+            }
+          </ng-container>
+          <button
+            *appHasPermission="'roles.delete'"
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-sm p-button-danger"
+            [disabled]="!canDelete(role)"
+            [title]="canDelete(role) ? 'Delete' : deleteDisabledReason(role)"
+            (click)="confirmDelete(role)">
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="empty-row">No roles found.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Add Role Dialog -->
+<p-dialog header="Add Role" [(visible)]="showAddDialog" [modal]="true" [style]="{ width: '480px' }">
+  <div class="form-grid">
+    <label>Name
+      <input pInputText [(ngModel)]="addForm.name" name="addName" />
+    </label>
+    <label>Description
+      <input pInputText [(ngModel)]="addForm.description" name="addDescription" />
+    </label>
+    <label>Permissions
+      <p-multiSelect
+        [options]="permissionOptions"
+        [(ngModel)]="addForm.permissionKeys"
+        name="addPermissionKeys"
+        optionLabel="label"
+        optionValue="key"
+        placeholder="Select Permissions"
+        display="chip">
+      </p-multiSelect>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showAddDialog = false"></button>
+    <button pButton type="button" label="Save" icon="pi pi-check" [loading]="saving" (click)="saveAdd()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Edit Role Dialog -->
+<p-dialog header="Edit Role" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }">
+  <div class="form-grid">
+    <label>Name
+      <input pInputText [(ngModel)]="editForm.name" name="editName" />
+    </label>
+    <label>Description
+      <input pInputText [(ngModel)]="editForm.description" name="editDescription" />
+    </label>
+    <label>Permissions
+      <p-multiSelect
+        [options]="permissionOptions"
+        [(ngModel)]="editForm.permissionKeys"
+        name="editPermissionKeys"
+        optionLabel="label"
+        optionValue="key"
+        placeholder="Select Permissions"
+        display="chip">
+      </p-multiSelect>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showEditDialog = false"></button>
+    <button pButton type="button" label="Save" icon="pi pi-check" [loading]="saving" (click)="saveEdit()"></button>
+  </ng-template>
+</p-dialog>

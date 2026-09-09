@@ -1,0 +1,65 @@
+<div class="suppliers-page">
+  <div class="page-header">
+    <h2>Suppliers</h2>
+    <div class="header-actions">
+      <button (click)="exportCsv()">Export CSV</button>
+      <button *appHasPermission="'suppliers.create'" class="btn-primary" (click)="openAdd()">+ Add Supplier</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <div class="suppliers-grid">
+      @for (s of suppliers(); track s.id) {
+        <div class="supplier-card" [class.inactive]="!s.isActive">
+          <div class="card-header">
+            <h3>{{ s.name }}</h3>
+            <span class="badge" [class.badge-off]="!s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+          <div class="card-body">
+            <div class="info-row"><span>Contact</span><b>{{ s.contactPerson || '-' }}</b></div>
+            <div class="info-row"><span>Phone</span><b>{{ s.phone || '-' }}</b></div>
+            <div class="info-row"><span>Email</span><b>{{ s.email || '-' }}</b></div>
+            <div class="info-row"><span>GST</span><b>{{ s.gstNumber || '-' }}</b></div>
+            <div class="info-row"><span>Credit Limit</span><b>₹{{ s.creditLimit }}</b></div>
+          </div>
+          <div class="card-actions">
+            <button *appHasPermission="'suppliers.edit'" (click)="openEdit(s)">Edit</button>
+            <button *appHasPermission="'suppliers.delete'" class="danger" (click)="delete(s.id)">Delete</button>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">No suppliers found. Add one to get started.</div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Supplier</h3>
+        <div class="form-grid">
+          <label>Name <input [(ngModel)]="form.name" /></label>
+          <label>Contact Person <input [(ngModel)]="form.contactPerson" /></label>
+          <label>Phone <input [(ngModel)]="form.phone" /></label>
+          <label>Email <input [(ngModel)]="form.email" /></label>
+          <label>GST Number <input [(ngModel)]="form.gstNumber" /></label>
+          <label>Payment Terms <input [(ngModel)]="form.paymentTerms" placeholder="Net 30…" /></label>
+          <label>Credit Limit (₹) <input type="number" [(ngModel)]="form.creditLimit" /></label>
+          <label>Address <input [(ngModel)]="form.address" /></label>
+          @if (editId()) {
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="form.isActive" /> Active
+            </label>
+          }
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

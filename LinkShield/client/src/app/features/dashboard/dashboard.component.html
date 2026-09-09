@@ -1,0 +1,41 @@
+<div class="dashboard">
+  <header class="dashboard__header">
+    <h1>SOC Dashboard</h1>
+    <a routerLink="/scan" class="dashboard__cta">New Scan</a>
+  </header>
+
+  @if (loadError()) {
+    <p class="dashboard__error">{{ loadError() }}</p>
+  }
+
+  @if (summary(); as s) {
+    <div class="stat-grid">
+      <div class="stat-tile"><span class="stat-tile__value">{{ s.totalScans }}</span><span class="stat-tile__label">Total scans</span></div>
+      <div class="stat-tile stat-tile--safe"><span class="stat-tile__value">{{ s.safeCount }}</span><span class="stat-tile__label">Safe</span></div>
+      <div class="stat-tile stat-tile--moderate"><span class="stat-tile__value">{{ s.suspiciousCount }}</span><span class="stat-tile__label">Suspicious</span></div>
+      <div class="stat-tile stat-tile--critical"><span class="stat-tile__value">{{ s.maliciousCount }}</span><span class="stat-tile__label">Malicious</span></div>
+      <div class="stat-tile stat-tile--critical"><span class="stat-tile__value">{{ s.criticalCount }}</span><span class="stat-tile__label">Critical risk</span></div>
+      <div class="stat-tile"><span class="stat-tile__value">{{ s.threatsDetected }}</span><span class="stat-tile__label">Threats detected</span></div>
+      <div class="stat-tile"><span class="stat-tile__value">{{ s.averageRiskScore | number: '1.0-1' }}</span><span class="stat-tile__label">Avg. risk score</span></div>
+      <div class="stat-tile"><span class="stat-tile__value">{{ s.threatIntelligenceMatches }}</span><span class="stat-tile__label">TI matches</span></div>
+    </div>
+  }
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h2>Scans over time (14 days)</h2>
+      <canvas #scansOverTimeCanvas></canvas>
+    </div>
+    <div class="chart-card">
+      <h2>Risk distribution</h2>
+      <canvas #riskDistributionCanvas></canvas>
+    </div>
+    <div class="chart-card">
+      <h2>Top targeted brands</h2>
+      @if (trends()?.topTargetedBrands?.length === 0) {
+        <p class="chart-card__empty">No brand-impersonation matches in this window.</p>
+      }
+      <canvas #topBrandsCanvas></canvas>
+    </div>
+  </div>
+</div>

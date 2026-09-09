@@ -1,0 +1,36 @@
+<div class="orders-page">
+  <div class="page-header">
+    <div class="eyebrow">Your purchases</div>
+    <h1>My Orders</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading orders…</div>
+  } @else {
+    <div class="order-list">
+      @for (o of orders(); track o.id) {
+        <div class="order-card">
+          <div class="order-head">
+            <div>
+              <h3>{{ o.invoiceNumber }}</h3>
+              <div class="meta">{{ o.branchName }} &middot; {{ o.saleDate | date:'medium' }}</div>
+            </div>
+            <div class="order-total">₹{{ o.totalAmount | number:'1.2-2' }}</div>
+          </div>
+          <ul class="item-list">
+            @for (it of o.items; track it.medicineName) {
+              <li>{{ it.medicineName }} &times; {{ it.quantity }} <span>₹{{ it.lineTotal | number:'1.2-2' }}</span></li>
+            }
+          </ul>
+          <div class="order-foot">
+            <span class="payment">{{ o.paymentMethod }}</span>
+            <span class="status-badge">{{ o.status }}</span>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">You haven't placed any orders yet. Visit the Store to buy medicines.</div>
+      }
+    </div>
+  }
+</div>

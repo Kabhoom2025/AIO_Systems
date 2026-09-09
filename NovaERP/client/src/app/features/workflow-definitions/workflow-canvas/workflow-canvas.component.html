@@ -1,0 +1,168 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="canvas-page">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-plain" (click)="back()"></button>
+      <div class="breadcrumb">
+        <span class="crumb-link" (click)="back()">Workflow Definitions</span>
+        <i class="pi pi-angle-right"></i>
+        <input class="name-input" [(ngModel)]="name" [disabled]="viewOnly" placeholder="Untitled workflow" />
+      </div>
+    </div>
+
+    <div class="top-bar-center">
+      <label class="entity-type-field">
+        <span>Applies to</span>
+        <input pInputText [(ngModel)]="entityType" [disabled]="viewOnly" placeholder="e.g. PurchaseOrder" />
+      </label>
+      @if (!viewOnly) {
+        <span class="saved-label" [class.dirty]="isDirty">
+          {{ isDirty ? 'Unsaved changes' : savedAgoLabel }}
+        </span>
+      } @else {
+        <span class="view-only-label"><i class="pi pi-eye"></i> Viewing read-only</span>
+      }
+    </div>
+
+    <div class="top-bar-right">
+      <button pButton type="button" [icon]="viewOnly ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              [label]="viewOnly ? 'Editing Off' : 'View Only'"
+              class="p-button-outlined" [class.p-button-info]="viewOnly"
+              (click)="toggleViewOnly()"></button>
+      <button pButton type="button" [label]="isActive ? 'Active' : 'Inactive'"
+              [icon]="isActive ? 'pi pi-check-circle' : 'pi pi-circle-off'"
+              class="p-button-outlined" [class.p-button-success]="isActive"
+              [disabled]="viewOnly"
+              (click)="isActive = !isActive"></button>
+      @if (!viewOnly) {
+        <button *appHasPermission="definitionId ? 'workflows.edit' : 'workflows.create'"
+                pButton type="button" label="Save" icon="pi pi-save" [loading]="saving" (click)="save()"></button>
+      }
+    </div>
+  </div>
+
+  <div class="body-area">
+  @if (loading) {
+    <div class="canvas-loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Loading workflow…</span>
+    </div>
+  } @else {
+    <div class="canvas-scroll" (click)="closeInsertMenu()">
+      <div class="canvas-track" [style.zoom]="zoom">
+        <div class="node trigger-node">
+          <div class="node-icon"><i class="pi pi-file"></i></div>
+          <div class="node-body">
+            <span class="node-badge">Trigger</span>
+            <span class="node-title">New {{ entityType || '(entity)' }} submitted</span>
+          </div>
+        </div>
+
+        <div class="connector">
+          @if (steps.length && steps[0].minAmount != null) {
+            <span class="condition-chip">Only if amount ≥ {{ steps[0].minAmount | number: '1.0-2' }}</span>
+          }
+          <div class="connector-line"></div>
+          @if (!viewOnly) {
+            <button type="button" class="insert-btn" (click)="toggleInsertMenu(0); $event.stopPropagation()">
+              <i class="pi pi-plus"></i>
+            </button>
+          }
+          @if (openMenuAt === 0) {
+            <div class="insert-menu" [class.closing]="menuClosing" (click)="$event.stopPropagation()">
+              <button type="button" (click)="addStepAt(0)"><i class="pi pi-plus-circle"></i> Add Step</button>
+            </div>
+          }
+        </div>
+
+        @for (step of steps; track step.tempId; let i = $index) {
+          <div class="node step-node" [class.selected]="selectedIndex === i" [class.removing]="isRemoving(step)"
+               (click)="selectStep(i); $event.stopPropagation()">
+            <div class="node-icon step-icon"><i class="pi pi-sitemap"></i></div>
+            <div class="node-body">
+              <div class="node-body-header">
+                <span class="node-badge">Action</span>
+                <span class="step-order">Step {{ i + 1 }}</span>
+              </div>
+              <span class="node-title">{{ step.name || 'Untitled step' }}</span>
+              @if (approverRoleName(step.approverRoleId) || step.minAmount != null) {
+                <div class="node-sub-chips">
+                  @if (approverRoleName(step.approverRoleId); as roleName) {
+                    <span class="mini-chip"><i class="pi pi-user"></i> {{ roleName }}</span>
+                  }
+                  @if (step.minAmount != null) {
+                    <span class="mini-chip"><i class="pi pi-dollar"></i> Min {{ step.minAmount | number: '1.0-2' }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="connector">
+            @if (i + 1 < steps.length && steps[i + 1].minAmount != null) {
+              <span class="condition-chip">Only if amount ≥ {{ steps[i + 1].minAmount | number: '1.0-2' }}</span>
+            }
+            <div class="connector-line"></div>
+            @if (!viewOnly) {
+              <button type="button" class="insert-btn" (click)="toggleInsertMenu(i + 1); $event.stopPropagation()">
+                <i class="pi pi-plus"></i>
+              </button>
+            }
+            @if (openMenuAt === i + 1) {
+              <div class="insert-menu" [class.closing]="menuClosing" (click)="$event.stopPropagation()">
+                <button type="button" (click)="addStepAt(i + 1)"><i class="pi pi-plus-circle"></i> Add Step</button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (!steps.length) {
+          <div class="empty-hint">No steps yet — click the "+" above to add your first approval step.</div>
+        }
+      </div>
+    </div>
+
+    <div class="zoom-controls">
+      <button type="button" (click)="zoomOut()" [disabled]="zoom <= minZoom" title="Zoom out">
+        <i class="pi pi-minus"></i>
+      </button>
+      <span class="zoom-level" (click)="resetZoom()" title="Reset zoom">{{ zoom * 100 | number: '1.0-0' }}%</span>
+      <button type="button" (click)="zoomIn()" [disabled]="zoom >= maxZoom" title="Zoom in">
+        <i class="pi pi-plus"></i>
+      </button>
+    </div>
+  }
+
+  @if (selectedIndex !== null) {
+    <div class="properties-panel" [class.closing]="panelClosing">
+      <div class="panel-header">
+        <h3>Properties</h3>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-plain" (click)="closePanel()"></button>
+      </div>
+      <div class="panel-body">
+        <label>
+          <span>Step Name</span>
+          <input pInputText [(ngModel)]="steps[selectedIndex].name" [disabled]="viewOnly" placeholder="e.g. Manager Approval" />
+        </label>
+        <label>
+          <span>Approver Role</span>
+          <p-dropdown [options]="roles" [(ngModel)]="steps[selectedIndex].approverRoleId" [disabled]="viewOnly"
+                      optionLabel="name" optionValue="id" placeholder="Optional" [showClear]="true"></p-dropdown>
+        </label>
+        <label>
+          <span>Min Amount</span>
+          <p-inputNumber [(ngModel)]="steps[selectedIndex].minAmount" [disabled]="viewOnly" mode="decimal" [minFractionDigits]="2"
+                          placeholder="Optional — applies this step only above this amount"></p-inputNumber>
+        </label>
+      </div>
+      @if (!viewOnly) {
+        <div class="panel-footer">
+          <button *appHasPermission="'workflows.delete'" pButton type="button" label="Delete Step" icon="pi pi-trash"
+                  class="p-button-text p-button-danger" (click)="removeStep(selectedIndex)"></button>
+        </div>
+      }
+    </div>
+  }
+  </div>
+</div>

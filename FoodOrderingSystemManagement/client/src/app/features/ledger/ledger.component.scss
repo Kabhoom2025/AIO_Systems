@@ -1,0 +1,245 @@
+.ledger-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+  min-height: 0;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  mat-icon { font-size: 32px; width: 32px; height: 32px; color: var(--primary); }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #212121; }
+  p  { margin: 2px 0 0; font-size: .85rem; color: #757575; }
+}
+
+// ── Period navigation ─────────────────────────────────────────────────────────
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.period-tabs {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.ptab {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 20px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #757575;
+  cursor: pointer;
+  transition: all .15s;
+
+  &.active {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+
+  &:hover:not(.active) { color: #424242; }
+}
+
+.range-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.range-label {
+  font-size: .95rem;
+  font-weight: 700;
+  color: #212121;
+  min-width: 200px;
+  text-align: center;
+}
+
+.nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #616161;
+  transition: all .15s;
+  flex-shrink: 0;
+  mat-icon { font-size: 20px; }
+
+  &:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  &:disabled { opacity: .4; cursor: default; }
+}
+
+.date-field { width: 160px; }
+
+.today-btn {
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--primary);
+  white-space: nowrap;
+  transition: all .15s;
+  &:hover { background: #fff5f2; border-color: var(--primary); }
+}
+
+// ── Summary cards ─────────────────────────────────────────────────────────────
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.sum-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+
+  .sum-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    mat-icon { font-size: 22px; }
+  }
+
+  .sum-label { display: block; font-size: .75rem; color: #9e9e9e; font-weight: 500; }
+  .sum-value { display: block; font-size: 1.3rem; font-weight: 700; color: #212121; margin-top: 2px; }
+
+  &.credit  { border-color: #c8e6c9; .sum-icon { background: #e8f5e9; mat-icon { color: #2e7d32; } } .sum-value { color: #2e7d32; } }
+  &.debit   { border-color: #ffcdd2; .sum-icon { background: #ffebee; mat-icon { color: #c62828; } } .sum-value { color: #c62828; } }
+  &.net     { border-color: #bbdefb; .sum-icon { background: #e3f2fd; mat-icon { color: #1565c0; } } .sum-value { color: #1565c0; }
+              &.negative { border-color: #ffcdd2; .sum-icon { background: #ffebee; mat-icon { color: #c62828; } } .sum-value { color: #c62828; } } }
+  &.entries { border-color: #e1d5e7; .sum-icon { background: #f3e5f5; mat-icon { color: #6a1b9a; } } .sum-value { color: #6a1b9a; } }
+}
+
+// ── Loading / Empty ───────────────────────────────────────────────────────────
+.loading-center {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 60px 0; color: #9e9e9e;
+  flex: 1;
+}
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 60px 0; color: #9e9e9e;
+  flex: 1;
+  mat-icon { font-size: 56px; width: 56px; height: 56px; opacity: .3; }
+  h3 { margin: 0; font-size: 1.1rem; color: #424242; }
+  p  { margin: 0; font-size: .85rem; }
+}
+
+// ── Ledger table ──────────────────────────────────────────────────────────────
+.ledger-table {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+$cols: 70px 110px 140px 1fr 120px 120px 100px 50px;
+$cols-no-actions: 70px 110px 140px 1fr 120px 120px 100px;
+
+.table-head {
+  display: grid;
+  grid-template-columns: $cols;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #757575;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  &.no-actions { grid-template-columns: $cols-no-actions; }
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: $cols;
+  align-items: center;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background .12s;
+  font-size: .875rem;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #fafafa; }
+  &.credit-row { border-left: 3px solid #4caf50; }
+  &.debit-row  { border-left: 3px solid #f44336; }
+  &.no-actions { grid-template-columns: $cols-no-actions; }
+}
+
+.col-time { color: #9e9e9e; font-size: .8rem; }
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 700;
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+
+  &.credit { background: #e8f5e9; color: #2e7d32; }
+  &.debit  { background: #ffebee; color: #c62828; }
+}
+
+.cat-chip {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: .75rem;
+  font-weight: 500;
+  color: #424242;
+}
+
+.col-note    { color: #757575; font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-amount  { font-weight: 700; font-size: .9rem; &.credit-amt { color: #2e7d32; } &.debit-amt { color: #c62828; } }
+.col-balance { font-weight: 600; color: #212121; &.neg { color: #c62828; } }
+.col-by      { font-size: .8rem; color: #9e9e9e; }
+.col-actions { display: flex; justify-content: center; }

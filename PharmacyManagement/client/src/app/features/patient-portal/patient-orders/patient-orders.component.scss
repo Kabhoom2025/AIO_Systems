@@ -1,0 +1,32 @@
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+.orders-page { padding: 40px 32px; max-width: 900px; margin: 0 auto; }
+
+.page-header { margin-bottom: 28px; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #C96F1B; margin-bottom: 8px; }
+.page-header h1 { font-family: Georgia, serif; font-size: 1.9rem; margin: 0; color: #12231F; }
+
+.order-list { display: flex; flex-direction: column; gap: 16px; }
+.order-card {
+  background: #fff; border-radius: 14px; padding: 20px 22px;
+  box-shadow: 0 10px 26px -18px rgba(18,35,31,0.25);
+}
+.order-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.order-head h3 { font-family: Georgia, serif; margin: 0; color: #12231F; font-size: 1.05rem; }
+.meta { color: #4B5D58; font-size: 0.8rem; margin-top: 2px; }
+.order-total { font-weight: 700; color: #0E4D42; font-size: 1.1rem; }
+
+.item-list { list-style: none; margin: 0 0 12px; padding: 0; border-top: 1px solid #F5F7F3; }
+.item-list li {
+  display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.86rem; color: #12231F;
+}
+.item-list li span { color: #4B5D58; }
+
+.order-foot { display: flex; justify-content: space-between; align-items: center; }
+.payment { font-size: 0.8rem; color: #4B5D58; }
+.status-badge {
+  background: #E6F4EA; color: #2E7D4F; font-weight: 700; font-size: 0.74rem;
+  padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.loading, .empty { text-align: center; padding: 40px; color: #4B5D58; }

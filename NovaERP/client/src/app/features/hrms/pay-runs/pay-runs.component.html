@@ -1,0 +1,132 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Pay Runs</h1>
+  <button *appHasPermission="'payroll.create'" pButton type="button" icon="pi pi-plus" label="New Pay Run"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="payRuns" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Run #</th>
+        <th>Period</th>
+        <th>Employees</th>
+        <th>Total Gross</th>
+        <th>Total Net</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 20rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-r>
+      <tr>
+        <td><code class="code-badge">{{ r.runNumber }}</code></td>
+        <td>{{ monthName(r.periodMonth) }} {{ r.periodYear }}</td>
+        <td>
+          @if (r.lines.length) {
+            <button pButton type="button" [label]="r.lines.length + ' lines'" class="p-button-text p-button-sm" (click)="viewLines(r)"></button>
+          } @else {
+            <span class="text-muted">Not processed</span>
+          }
+        </td>
+        <td class="font-semibold">{{ r.totalGrossPay | number: '1.2-2' }}</td>
+        <td class="font-semibold">{{ r.totalNetPay | number: '1.2-2' }}</td>
+        <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+        <td>{{ r.ownerName }}</td>
+        <td class="actions-cell">
+          @if (r.status === 'Draft') {
+            <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-cog" label="Process"
+                    class="p-button-text p-button-sm p-button-success" (click)="process(r)"></button>
+            <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(r)"></button>
+            <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(r)"></button>
+            <button *appHasPermission="'payroll.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(r)"></button>
+          } @else if (r.status === 'Processed') {
+            <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-wallet" label="Pay"
+                    class="p-button-text p-button-sm p-button-success" (click)="openPay(r)"></button>
+            <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(r)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No pay runs yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'New' }} Pay Run" [(visible)]="showDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Period Month</span>
+      <p-dropdown [options]="months" [(ngModel)]="form.periodMonth" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Period Year</span>
+      <p-inputNumber [(ngModel)]="form.periodYear" [useGrouping]="false" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Expense Account</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="form.expenseLedgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select expense account" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Deductions Payable Account</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="form.deductionsPayableLedgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select payable account" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Pay Run Lines — {{ viewing?.runNumber }}" [(visible)]="showLinesDialog" [modal]="true" [style]="{ width: '44rem' }">
+  <div class="line-row line-row-header">
+    <span>Employee</span>
+    <span>Basic</span>
+    <span>HRA</span>
+    <span>Allowances</span>
+    <span>Deductions</span>
+    <span>Net Pay</span>
+  </div>
+  @for (line of viewing?.lines; track line.id) {
+    <div class="line-row">
+      <span>{{ line.employeeName }}</span>
+      <span>{{ line.basicSalary | number: '1.2-2' }}</span>
+      <span>{{ line.hra | number: '1.2-2' }}</span>
+      <span>{{ line.otherAllowances | number: '1.2-2' }}</span>
+      <span>{{ line.deductions | number: '1.2-2' }}</span>
+      <span class="font-semibold">{{ line.netPay | number: '1.2-2' }}</span>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showLinesDialog = false"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Pay Pay Run" [(visible)]="showPayDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid single-column">
+    <label>
+      <span>Payment Account (Cash/Bank)</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="paymentLedgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select payment account" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showPayDialog = false"></button>
+    <button pButton type="button" label="Pay" (click)="confirmPay()"></button>
+  </ng-template>
+</p-dialog>

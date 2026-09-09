@@ -1,0 +1,255 @@
+<div class="assets-page">
+  <div class="page-header">
+    <h1>Assets</h1>
+    <button pButton type="button" label="Add Asset" icon="pi pi-plus" *appHasPermission="'assets.create'" (click)="openAdd()"></button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="card kpi-card">
+      <span class="kpi-label">Available</span>
+      <span class="kpi-value">{{ availableCount }}</span>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-label">Allocated</span>
+      <span class="kpi-value">{{ allocatedCount }}</span>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-label">In Repair</span>
+      <span class="kpi-value">{{ inRepairCount }}</span>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-label">Retired</span>
+      <span class="kpi-value">{{ retiredCount }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <p-dropdown
+        [options]="categories"
+        [(ngModel)]="categoryFilter"
+        placeholder="All Categories"
+        [showClear]="true"
+        (onChange)="onFilterChange()">
+      </p-dropdown>
+      <p-dropdown
+        [options]="statuses"
+        [(ngModel)]="statusFilter"
+        placeholder="All Statuses"
+        [showClear]="true"
+        (onChange)="onFilterChange()">
+      </p-dropdown>
+    </div>
+
+    <p-table [value]="assets" [loading]="loading" dataKey="id" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tag</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Serial No.</th>
+          <th>Status</th>
+          <th>Condition</th>
+          <th>Current Holder</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-asset>
+        <tr>
+          <td>{{ asset.assetTag }}</td>
+          <td>{{ asset.name }}</td>
+          <td>{{ asset.category }}</td>
+          <td>{{ asset.serialNumber || '-' }}</td>
+          <td><p-tag [value]="asset.status" [severity]="statusSeverity(asset.status)"></p-tag></td>
+          <td>{{ asset.condition }}</td>
+          <td>{{ asset.currentHolderName || '-' }}</td>
+          <td class="actions-cell">
+            <button pButton type="button" icon="pi pi-eye" class="p-button-text p-button-sm" (click)="viewDetail(asset)" pTooltip="View"></button>
+            <button
+              pButton type="button" icon="pi pi-user-plus" class="p-button-text p-button-sm"
+              *appHasPermission="'assets.edit'"
+              [disabled]="asset.status !== 'Available'"
+              (click)="openAllocate(asset)" pTooltip="Allocate">
+            </button>
+            <button
+              pButton type="button" icon="pi pi-undo" class="p-button-text p-button-sm"
+              *appHasPermission="'assets.edit'"
+              [disabled]="asset.status !== 'Allocated'"
+              (click)="openReturn(asset)" pTooltip="Return">
+            </button>
+            <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" *appHasPermission="'assets.edit'" (click)="openEdit(asset)" pTooltip="Edit"></button>
+            <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" *appHasPermission="'assets.delete'" (click)="deleteAsset(asset)" pTooltip="Delete"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8">No assets found.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="card my-assets-panel">
+    <h3>My Assets</h3>
+    @if (myAssets.length) {
+      <p-table [value]="myAssets" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Tag</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Condition</th>
+            <th>Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-asset>
+          <tr>
+            <td>{{ asset.assetTag }}</td>
+            <td>{{ asset.name }}</td>
+            <td>{{ asset.category }}</td>
+            <td>{{ asset.condition }}</td>
+            <td><p-tag [value]="asset.status" [severity]="statusSeverity(asset.status)"></p-tag></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <p class="empty-text">No assets currently allocated to you.</p>
+    }
+  </div>
+</div>
+
+<!-- Add / Edit dialog -->
+<p-dialog header="{{ editId ? 'Edit Asset' : 'Add Asset' }}" [(visible)]="showFormDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <div class="field">
+      <label>Name</label>
+      <input pInputText type="text" [(ngModel)]="form.name" />
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <p-dropdown [options]="categories" [(ngModel)]="form.category"></p-dropdown>
+    </div>
+    <div class="field">
+      <label>Serial Number</label>
+      <input pInputText type="text" [(ngModel)]="form.serialNumber" />
+    </div>
+    <div class="field">
+      <label>Condition</label>
+      <p-dropdown [options]="conditions" [(ngModel)]="form.condition"></p-dropdown>
+    </div>
+    @if (editId) {
+      <div class="field">
+        <label>Status</label>
+        <p-dropdown [options]="statuses" [(ngModel)]="form.status"></p-dropdown>
+      </div>
+    }
+    <div class="field">
+      <label>Purchase Date</label>
+      <p-calendar [(ngModel)]="form.purchaseDate" dateFormat="yy-mm-dd" [showIcon]="true"></p-calendar>
+    </div>
+    <div class="field">
+      <label>Purchase Cost</label>
+      <p-inputNumber [(ngModel)]="form.purchaseCost" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label>Warranty Until</label>
+      <p-calendar [(ngModel)]="form.warrantyUntil" dateFormat="yy-mm-dd" [showIcon]="true"></p-calendar>
+    </div>
+    <div class="field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea rows="3" [(ngModel)]="form.notes"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showFormDialog = false"></button>
+    <button pButton type="button" label="Save" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- View dialog -->
+<p-dialog header="Asset Details" [(visible)]="showViewDialog" [modal]="true" [style]="{ width: '40rem' }">
+  @if (viewAsset) {
+    <div class="detail-grid">
+      <div><b>Tag:</b> {{ viewAsset.assetTag }}</div>
+      <div><b>Name:</b> {{ viewAsset.name }}</div>
+      <div><b>Category:</b> {{ viewAsset.category }}</div>
+      <div><b>Serial No.:</b> {{ viewAsset.serialNumber || '-' }}</div>
+      <div><b>Status:</b> <p-tag [value]="viewAsset.status" [severity]="statusSeverity(viewAsset.status)"></p-tag></div>
+      <div><b>Condition:</b> {{ viewAsset.condition }}</div>
+      <div><b>Current Holder:</b> {{ viewAsset.currentHolderName || '-' }}</div>
+      <div><b>Notes:</b> {{ viewAsset.notes || '-' }}</div>
+    </div>
+
+    <h4>Allocation History</h4>
+    @if (viewAsset.allocations.length) {
+      <p-table [value]="viewAsset.allocations" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th>
+            <th>Allocated Date</th>
+            <th>Returned Date</th>
+            <th>Return Condition</th>
+            <th>Notes</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-a>
+          <tr>
+            <td>{{ a.employeeName }}</td>
+            <td>{{ a.allocatedDate }}</td>
+            <td>{{ a.returnedDate || '-' }}</td>
+            <td>{{ a.returnCondition || '-' }}</td>
+            <td>{{ a.notes || '-' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <p class="empty-text">No allocation history.</p>
+    }
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showViewDialog = false"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Allocate dialog -->
+<p-dialog header="Allocate Asset" [(visible)]="showAllocateDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <div class="field full-width">
+      <label>Employee</label>
+      <p-dropdown
+        [options]="employees"
+        [(ngModel)]="allocateForm.employeeId"
+        optionLabel="fullName"
+        optionValue="id"
+        placeholder="Select employee"
+        [filter]="true"
+        filterBy="fullName,employeeCode">
+      </p-dropdown>
+    </div>
+    <div class="field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea rows="3" [(ngModel)]="allocateForm.notes"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showAllocateDialog = false"></button>
+    <button pButton type="button" label="Allocate" (click)="submitAllocate()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Return dialog -->
+<p-dialog header="Return Asset" [(visible)]="showReturnDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <div class="field full-width">
+      <label>Return Condition</label>
+      <p-dropdown [options]="conditions" [(ngModel)]="returnForm.returnCondition"></p-dropdown>
+    </div>
+    <div class="field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea rows="3" [(ngModel)]="returnForm.notes"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showReturnDialog = false"></button>
+    <button pButton type="button" label="Return" (click)="submitReturn()"></button>
+  </ng-template>
+</p-dialog>

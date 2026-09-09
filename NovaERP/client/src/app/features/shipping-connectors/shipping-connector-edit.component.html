@@ -1,0 +1,295 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>{{ connectorId ? 'Edit' : 'New' }} Carrier Connector</h1>
+</div>
+
+<div class="card">
+  <h3>Basic Info</h3>
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="form.name" placeholder="e.g. Piyovi Rate Shop" />
+    </label>
+    <label>
+      <span>TMS Type</span>
+      <input pInputText [(ngModel)]="form.tmsType" placeholder="Freeform label, e.g. Piyovi" />
+    </label>
+    <label>
+      <span>Base URL</span>
+      <input pInputText [(ngModel)]="form.baseUrl" placeholder="https://api.example.com/rates" />
+    </label>
+    <label>
+      <span>HTTP Method</span>
+      <p-dropdown [options]="httpMethods" [(ngModel)]="form.httpMethod" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Request Content Type</span>
+      <p-dropdown [options]="requestContentTypes" [(ngModel)]="form.requestContentType" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Response Format</span>
+      <p-dropdown [options]="responseFormats" [(ngModel)]="form.responseFormat" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Auth Type</span>
+      <p-dropdown [options]="authTypes" [(ngModel)]="form.authType" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="form.isActive" [binary]="true"></p-checkbox>
+      <span>Active</span>
+    </label>
+
+    @if (!outboundMappingSupported) {
+      <p class="auth-hint format-hint">
+        With Request Content Type "{{ form.requestContentType }}", the real request sends the Outbound tab's Sample Request Payload verbatim (no field-mapping substitution) — Send Test Request below still lets you try any raw body.
+      </p>
+    }
+
+    @if (form.authType === 'ApiKeyHeader') {
+      <label>
+        <span>Header Name</span>
+        <input pInputText [(ngModel)]="form.authHeaderName" placeholder="e.g. X-Api-Key" />
+      </label>
+      <label>
+        <span>API Key</span>
+        <p-password [(ngModel)]="form.authApiKey" [toggleMask]="true" [feedback]="false"
+                    [placeholder]="hasAuthApiKey ? 'Leave blank to keep unchanged' : 'Enter API key'"
+                    [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    }
+    @if (form.authType === 'BearerToken') {
+      <label>
+        <span>Token</span>
+        <p-password [(ngModel)]="form.authApiKey" [toggleMask]="true" [feedback]="false"
+                    [placeholder]="hasAuthApiKey ? 'Leave blank to keep unchanged' : 'Enter token'"
+                    [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    }
+    @if (form.authType === 'BasicAuth') {
+      <label>
+        <span>Username</span>
+        <input pInputText [(ngModel)]="form.authUsername" />
+      </label>
+      <label>
+        <span>Password</span>
+        <p-password [(ngModel)]="form.authPassword" [toggleMask]="true" [feedback]="false"
+                    [placeholder]="hasAuthPassword ? 'Leave blank to keep unchanged' : 'Enter password'"
+                    [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    }
+    @if (form.authType === 'TokenLogin') {
+      <label>
+        <span>Token Login URL</span>
+        <input pInputText [(ngModel)]="form.authTokenUrl" placeholder="https://api.example.com/authenticate" />
+      </label>
+      <label>
+        <span>Token Field Path</span>
+        <input pInputText [(ngModel)]="form.authTokenResponsePath" placeholder="token (default)" />
+      </label>
+      <label>
+        <span>Principal</span>
+        <input pInputText [(ngModel)]="form.authUsername" placeholder="e.g. account name" />
+      </label>
+      <label>
+        <span>Credential</span>
+        <p-password [(ngModel)]="form.authPassword" [toggleMask]="true" [feedback]="false"
+                    [placeholder]="hasAuthPassword ? 'Leave blank to keep unchanged' : 'Enter credential'"
+                    [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+      <p class="auth-hint">Calls Token Login URL first with <code>{{ '{' }}"principal", "credential"{{ '}' }}</code>, then sends the response's <code>Token Field Path</code> value as a Bearer token on the real request.</p>
+    }
+  </div>
+</div>
+
+<div class="card mt-4 send-card">
+  <h3>Send Test Request</h3>
+  <p class="send-hint">Try the connector live — sends a real HTTP request to Base URL through the server (works before Save, using whatever's currently in the form above).</p>
+
+  <div class="send-grid">
+    <div class="send-request">
+      <div class="send-request-head">
+        <span class="method-badge">{{ form.httpMethod }}</span>
+        <span class="send-url">{{ form.baseUrl || '(enter a Base URL above)' }}</span>
+      </div>
+
+      @if (form.httpMethod === 'POST') {
+        <div class="body-row">
+          <span class="body-label">Body</span>
+          <button pButton type="button" label="Use Sample Request" class="p-button-text p-button-sm"
+                  (click)="useSampleAsRequestBody()"></button>
+        </div>
+        <textarea pTextarea rows="8" [(ngModel)]="testRequestBody"
+                  [placeholder]="bodyPlaceholder()"></textarea>
+      }
+
+      <button pButton type="button" label="Send" icon="pi pi-send" class="mt-2"
+              [loading]="sending" (click)="sendTest()"></button>
+    </div>
+
+    <div class="send-response">
+      <span class="body-label">Response</span>
+      @if (!testResult) {
+        <div class="response-empty">No request sent yet.</div>
+      } @else if (testResult.error) {
+        <div class="response-error">
+          <i class="pi pi-times-circle"></i> {{ testResult.error }}
+        </div>
+      } @else {
+        <div class="response-meta">
+          <span class="status-badge" [class.status-ok]="testResult.success" [class.status-fail]="!testResult.success">
+            {{ testResult.statusCode }}
+          </span>
+          <span class="elapsed">{{ testResult.elapsedMs }} ms</span>
+          <button pButton type="button" label="Use as Sample Response" class="p-button-text p-button-sm"
+                  (click)="useResponseAsSample()"></button>
+        </div>
+        <pre class="response-body">{{ testResult.responseBody }}</pre>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4 mapping-tabs-card">
+  <p-tabView>
+    <p-tabPanel header="Outbound Mapping">
+      <h3>Outbound Mapping — build the request from your Shipment</h3>
+      <div class="form-grid one-col">
+        <label>
+          <span>Sample Request Payload</span>
+          <textarea pTextarea rows="6" [(ngModel)]="form.sampleRequestPayload"
+                    placeholder="Paste an example request payload for this TMS…"></textarea>
+        </label>
+      </div>
+      <button pButton type="button" label="Detect Fields" icon="pi pi-search" class="p-button-sm p-button-outlined mt-2"
+              (click)="detectRequestFields()"></button>
+
+      @if (requestFieldOptions.length) {
+        <div class="detected-fields">
+          <span class="detected-label">Detected {{ requestFieldOptions.length }} fields — click one to add a mapping row for it:</span>
+          <div class="field-chip-list">
+            @for (f of requestFieldOptions; track f.path) {
+              <button type="button" class="field-chip" (click)="quickAddFromDetectedField('Outbound', f)">
+                {{ f.path }} <small>({{ f.example }})</small>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="mapping-table-wrapper">
+      <table class="mapping-table">
+        <thead>
+          <tr><th>NovaERP Field</th><th>Constant Value</th><th>External Path</th><th>Transform</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (m of outboundMappings; track $index) {
+            <tr>
+              <td>
+                <p-dropdown [options]="outboundNovaFieldGroups" [group]="true" optionLabel="label" optionValue="value"
+                            optionGroupLabel="label" optionGroupChildren="items" [filter]="true" filterBy="label"
+                            [appendTo]="'body'"
+                            [(ngModel)]="m.novaField" [style]="{ width: '100%' }"></p-dropdown>
+              </td>
+              <td>
+                @if (m.novaField === 'Constant') {
+                  <input pInputText [(ngModel)]="m.constantValue" placeholder="e.g. HW" [style]="{ width: '100%' }" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td>
+                <p-dropdown [options]="requestFieldOptions" optionLabel="path" optionValue="path" [editable]="true"
+                            [filter]="true" filterBy="path" [appendTo]="'body'"
+                            [(ngModel)]="m.externalPath" [style]="{ width: '100%' }" placeholder="e.g. destination.zip"></p-dropdown>
+              </td>
+              <td>
+                <p-dropdown [options]="transforms" [appendTo]="'body'" [(ngModel)]="m.transform" [style]="{ width: '100%' }"></p-dropdown>
+              </td>
+              <td>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                        (click)="removeMapping(m)"></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+      <button pButton type="button" label="Add Mapping" icon="pi pi-plus" class="p-button-sm p-button-text mt-2"
+              (click)="addMapping('Outbound')"></button>
+    </p-tabPanel>
+
+    <p-tabPanel header="Inbound Mapping">
+      <h3>Inbound Mapping — parse rate quotes from the response</h3>
+      <div class="form-grid one-col">
+        <label>
+          <span>Sample Response Payload</span>
+          <textarea pTextarea rows="6" [(ngModel)]="form.sampleResponsePayload"
+                    placeholder="Paste an example response payload from this TMS…"></textarea>
+        </label>
+      </div>
+      <button pButton type="button" label="Detect Fields" icon="pi pi-search" class="p-button-sm p-button-outlined mt-2"
+              (click)="detectResponseFields()"></button>
+
+      @if (responseFieldOptions.length) {
+        <div class="detected-fields">
+          <span class="detected-label">Detected {{ responseFieldOptions.length }} fields — click one to add a mapping row for it:</span>
+          <div class="field-chip-list">
+            @for (f of responseFieldOptions; track f.path) {
+              <button type="button" class="field-chip" (click)="quickAddFromDetectedField('Inbound', f)">
+                {{ f.path }} <small>({{ f.example }})</small>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="mapping-table-wrapper">
+      <table class="mapping-table">
+        <thead>
+          <tr><th>External Path</th><th>NovaERP Quote Field</th><th>Constant Value</th><th>Transform</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (m of inboundMappings; track $index) {
+            <tr>
+              <td>
+                <p-dropdown [options]="responseFieldOptions" optionLabel="path" optionValue="path" [editable]="true"
+                            [filter]="true" filterBy="path" [appendTo]="'body'"
+                            [(ngModel)]="m.externalPath" [style]="{ width: '100%' }" placeholder="e.g. rates[].price, or Constant"></p-dropdown>
+              </td>
+              <td>
+                <p-dropdown [options]="inboundNovaFields" [filter]="true" [appendTo]="'body'"
+                            [(ngModel)]="m.novaField" [style]="{ width: '100%' }"></p-dropdown>
+              </td>
+              <td>
+                @if (m.externalPath === 'Constant') {
+                  <input pInputText [(ngModel)]="m.constantValue" placeholder="e.g. Mini Max" [style]="{ width: '100%' }" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td>
+                <p-dropdown [options]="transforms" [appendTo]="'body'" [(ngModel)]="m.transform" [style]="{ width: '100%' }"></p-dropdown>
+              </td>
+              <td>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                        (click)="removeMapping(m)"></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      </div>
+      <button pButton type="button" label="Add Mapping" icon="pi pi-plus" class="p-button-sm p-button-text mt-2"
+              (click)="addMapping('Inbound')"></button>
+      <button pButton type="button" label="Add Constant Field" icon="pi pi-plus" class="p-button-sm p-button-text mt-2"
+              pTooltip="For a Quote field this carrier's response never returns (e.g. Carrier Name) — fills it with a fixed value on every quote instead of reading the response."
+              (click)="addConstantInboundMapping()"></button>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<div class="form-actions">
+  <button pButton type="button" label="Cancel" class="p-button-text" (click)="cancel()"></button>
+  <button pButton type="button" label="Save Connector" [loading]="saving" (click)="save()"></button>
+</div>

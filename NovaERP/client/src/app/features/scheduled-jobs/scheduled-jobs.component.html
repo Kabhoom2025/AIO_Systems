@@ -1,0 +1,59 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Scheduled Jobs</h1>
+</div>
+
+<div class="card">
+  <p-table [value]="jobs" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Job Key</th>
+        <th>Cron Expression</th>
+        <th>Enabled</th>
+        <th>Last Run</th>
+        <th>Last Status</th>
+        <th style="width: 14rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-j>
+      <tr>
+        <td class="font-semibold">{{ j.name }}</td>
+        <td><code class="code-badge">{{ j.jobKey }}</code></td>
+        <td>
+          @if (editingId === j.id) {
+            <input pInputText [(ngModel)]="editCron" style="width: 100%" />
+          } @else {
+            <code class="code-badge">{{ j.cronExpression }}</code>
+          }
+        </td>
+        <td>
+          @if (editingId === j.id) {
+            <p-checkbox [(ngModel)]="editEnabled" [binary]="true"></p-checkbox>
+          } @else {
+            <p-tag [severity]="j.isEnabled ? 'success' : 'danger'" [value]="j.isEnabled ? 'Enabled' : 'Disabled'"></p-tag>
+          }
+        </td>
+        <td>{{ j.lastRunAt ? (j.lastRunAt | date: 'medium') : '—' }}</td>
+        <td>{{ j.lastRunStatus ?? '—' }}</td>
+        <td class="actions-cell">
+          @if (editingId === j.id) {
+            <button pButton type="button" icon="pi pi-check" label="Save" class="p-button-text p-button-sm"
+                    [loading]="saving" (click)="saveEdit(j)"></button>
+            <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-text p-button-sm"
+                    (click)="cancelEdit()"></button>
+          } @else {
+            <button *appHasPermission="'scheduler.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="startEdit(j)"></button>
+            <button *appHasPermission="'scheduler.edit'" pButton type="button" icon="pi pi-play" label="Run now"
+                    class="p-button-text p-button-sm" [loading]="triggeringId === j.id" (click)="triggerNow(j)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No scheduled jobs configured.</td></tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,0 +1,142 @@
+<div class="admin">
+  <h1>Admin Panel</h1>
+
+  @if (errorMessage()) {
+    <p class="admin__error">{{ errorMessage() }}</p>
+  }
+
+  @if (newlyIssuedKey()) {
+    <div class="admin__new-key">
+      <p><strong>New API key issued — copy it now, it won't be shown again:</strong></p>
+      <code>{{ newlyIssuedKey() }}</code>
+      <button type="button" class="admin__link-button" (click)="dismissNewKey()">Dismiss</button>
+    </div>
+  }
+
+  <nav class="admin__tabs">
+    <button type="button" [class.active]="activeTab() === 'brands'" (click)="setTab('brands')">Brands</button>
+    <button type="button" [class.active]="activeTab() === 'riskRules'" (click)="setTab('riskRules')">Risk Rules</button>
+    <button type="button" [class.active]="activeTab() === 'apiClients'" (click)="setTab('apiClients')">API Clients</button>
+    <button type="button" [class.active]="activeTab() === 'auditLogs'" (click)="setTab('auditLogs')">Audit Logs</button>
+  </nav>
+
+  @switch (activeTab()) {
+    @case ('brands') {
+      <section class="admin__panel">
+        <form class="admin__inline-form" [formGroup]="brandForm" (ngSubmit)="submitBrand()">
+          <input type="text" formControlName="brandName" placeholder="Brand name (e.g. PayPal)" />
+          <input type="text" formControlName="officialDomain" placeholder="Official domain (e.g. paypal.com)" />
+          <button type="submit">Add brand</button>
+        </form>
+
+        <table class="admin-table">
+          <thead><tr><th>Brand</th><th>Official domain</th><th>Enabled</th></tr></thead>
+          <tbody>
+            @for (b of brands(); track b.id) {
+              <tr>
+                <td>{{ b.brandName }}</td>
+                <td>{{ b.officialDomain }}</td>
+                <td>{{ b.isEnabled ? 'Yes' : 'No' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+
+    @case ('riskRules') {
+      <section class="admin__panel">
+        <form class="admin__grid-form" [formGroup]="riskRuleForm" (ngSubmit)="submitRiskRule()">
+          <input type="text" formControlName="name" placeholder="Rule name" />
+          <select formControlName="category">
+            @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+          </select>
+          <input type="text" formControlName="description" placeholder="Description" class="admin__wide" />
+          <input type="text" formControlName="conditionExpression" placeholder="Condition expression" class="admin__wide" />
+          <label>Weight <input type="number" step="0.01" min="0" max="1" formControlName="weight" /></label>
+          <label>Score contribution <input type="number" min="0" max="100" formControlName="scoreContribution" /></label>
+          <button type="submit">Add rule</button>
+        </form>
+
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Category</th><th>Weight</th><th>Score</th><th>Enabled</th><th></th></tr></thead>
+          <tbody>
+            @for (r of riskRules(); track r.id) {
+              <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.category }}</td>
+                <td>{{ r.weight }}</td>
+                <td>{{ r.scoreContribution }}</td>
+                <td>{{ r.isEnabled ? 'Yes' : 'No' }}</td>
+                <td><button type="button" class="admin__link-button" (click)="toggleRiskRuleEnabled(r)">{{ r.isEnabled ? 'Disable' : 'Enable' }}</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+
+    @case ('apiClients') {
+      <section class="admin__panel">
+        <form class="admin__grid-form" [formGroup]="apiClientForm" (ngSubmit)="submitApiClient()">
+          <input type="text" formControlName="organizationName" placeholder="Organization name" />
+          <input type="email" formControlName="contactEmail" placeholder="Contact email" />
+          <label>Daily quota <input type="number" min="1" formControlName="dailyQuota" /></label>
+          <label>Requests/min <input type="number" min="1" formControlName="requestsPerMinute" /></label>
+          <button type="submit">Add client</button>
+        </form>
+
+        @for (client of apiClients(); track client.id) {
+          <div class="admin__client-card">
+            <div class="admin__client-header">
+              <strong>{{ client.organizationName }}</strong> ({{ client.contactEmail }}) —
+              {{ client.dailyQuota }}/day, {{ client.requestsPerMinute }}/min
+              <button type="button" class="admin__link-button" (click)="issueApiKey(client)">Issue key</button>
+            </div>
+            <table class="admin-table">
+              <thead><tr><th>Prefix</th><th>Label</th><th>Last used</th><th>Uses</th><th>Active</th><th></th></tr></thead>
+              <tbody>
+                @for (key of client.keys; track key.id) {
+                  <tr>
+                    <td><code>{{ key.keyPrefix }}…</code></td>
+                    <td>{{ key.label }}</td>
+                    <td>{{ key.lastUsedAtUtc ? (key.lastUsedAtUtc | date: 'short') : 'never' }}</td>
+                    <td>{{ key.usageCount }}</td>
+                    <td>{{ key.isActive ? 'Yes' : 'No' }}</td>
+                    <td>
+                      @if (key.isActive) {
+                        <button type="button" class="admin__link-button" (click)="revokeApiKey(key.id)">Revoke</button>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (client.keys.length === 0) {
+                  <tr><td colspan="6" class="admin__muted">No keys issued yet.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+
+    @case ('auditLogs') {
+      <section class="admin__panel">
+        <table class="admin-table">
+          <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th>IP</th></tr></thead>
+          <tbody>
+            @for (log of auditLogs(); track log.id) {
+              <tr>
+                <td>{{ log.occurredAtUtc | date: 'medium' }}</td>
+                <td>{{ log.userEmail ?? '—' }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.entityType }}@if (log.entityId) { <span class="admin__muted"> ({{ log.entityId }})</span> }</td>
+                <td>{{ log.ipAddress ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  }
+</div>

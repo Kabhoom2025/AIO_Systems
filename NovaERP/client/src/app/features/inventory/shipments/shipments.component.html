@@ -1,0 +1,491 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Shipments</h1>
+  <button *appHasPermission="'warehouse.create'" pButton type="button" icon="pi pi-plus" label="New Shipment"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="shipments" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Shipment #</th>
+        <th>Source</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Ship Date</th>
+        <th>Carrier</th>
+        <th>Blind?</th>
+        <th>Status</th>
+        <th style="width: 20rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-s>
+      <tr>
+        <td><code class="code-badge">{{ s.shipmentNumber }}</code></td>
+        <td>{{ s.sourceType === 'SalesOrder' ? (s.salesOrderNumber ?? 'Sales Order') : 'Transfer Order' }}</td>
+        <td>{{ s.warehouseName }}</td>
+        <td>{{ s.sourceType === 'SalesOrder' ? s.shipToCity : s.destinationWarehouseName }}</td>
+        <td>{{ s.shipDate | date: 'mediumDate' }}</td>
+        <td>{{ s.carrier }}<span *ngIf="s.trackingNumber"> ({{ s.trackingNumber }})</span></td>
+        <td><i class="pi" [ngClass]="s.isBlindShipment ? 'pi-check text-green-600' : 'pi-minus text-500'"></i></td>
+        <td><p-tag [severity]="statusSeverity(s.status)" [value]="s.status"></p-tag></td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-dollar" label="Rates"
+                  class="p-button-text p-button-sm p-button-help" (click)="getRatesFor(s)"></button>
+          @if (s.status === 'Open') {
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-box" label="Pick"
+                    class="p-button-text p-button-sm p-button-success" (click)="pick(s)"></button>
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(s)"></button>
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(s)"></button>
+            <button *appHasPermission="'warehouse.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(s)"></button>
+          } @else if (s.status === 'Picked') {
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-send" label="Ship"
+                    class="p-button-text p-button-sm p-button-success" (click)="ship(s)"></button>
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(s)"></button>
+          } @else if (s.status === 'Shipped') {
+            <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-check" label="Deliver"
+                    class="p-button-text p-button-sm p-button-success" (click)="deliver(s)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="9" class="empty-cell">No shipments yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'New' }} Shipment" [(visible)]="showDialog" [modal]="true"
+          [appendTo]="'body'" styleClass="shipment-fullscreen-dialog" [style]="{ width: '100vw', height: '100vh', maxHeight: '100vh' }"
+          [draggable]="false" [resizable]="false">
+  <div class="form-grid">
+    <label>
+      <span>Warehouse</span>
+      <p-dropdown [options]="warehouses" [(ngModel)]="form.warehouseId" optionLabel="name" optionValue="id"
+                  placeholder="Select warehouse" [style]="{ width: '100%' }"
+                  (onChange)="onWarehouseChange()"></p-dropdown>
+    </label>
+    <label>
+      <span>Source Type</span>
+      <p-dropdown [options]="sourceTypes" [(ngModel)]="form.sourceType" optionLabel="label" optionValue="value"
+                  [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+
+    @if (form.sourceType === 'SalesOrder') {
+      <label>
+        <span>Sales Order (Confirmed)</span>
+        <p-dropdown [options]="confirmedSalesOrders()" [(ngModel)]="form.salesOrderId" optionLabel="orderNumber" optionValue="id"
+                    placeholder="Select order" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+      </label>
+    } @else {
+      <label>
+        <span>Destination Warehouse</span>
+        <p-dropdown [options]="warehouses" [(ngModel)]="form.destinationWarehouseId" optionLabel="name" optionValue="id"
+                    placeholder="Select destination" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+      </label>
+    }
+
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Ship Date</span>
+      <p-calendar [(ngModel)]="form.shipDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Carrier</span>
+      <div class="carrier-row">
+        <input pInputText [(ngModel)]="form.carrier" placeholder="e.g. BlueDart" />
+        @if (editing) {
+          <button pButton type="button" label="Get Rates" icon="pi pi-dollar" class="p-button-sm p-button-outlined"
+                  (click)="getRates()"></button>
+        }
+      </div>
+    </label>
+    <label>
+      <span>Master Tracking Number</span>
+      <input pInputText [(ngModel)]="form.trackingNumber" />
+    </label>
+    <label class="checkbox-label">
+      <p-checkbox [(ngModel)]="form.isBlindShipment" [binary]="true"></p-checkbox>
+      <span>Blind shipment (hide origin identity on shipping docs)</span>
+    </label>
+  </div>
+
+  @if (form.sourceType === 'SalesOrder') {
+    <div class="ship-to-section">
+      <h3>Ship-To Address</h3>
+      <div class="form-grid">
+        <label>
+          <span>Company</span>
+          <input pInputText [(ngModel)]="form.shipToName" />
+        </label>
+        <label>
+          <span>Contact</span>
+          <input pInputText [(ngModel)]="form.shipToContactName" />
+        </label>
+        <label>
+          <span>Email</span>
+          <input pInputText [(ngModel)]="form.shipToEmail" />
+        </label>
+        <label>
+          <span>Phone</span>
+          <input pInputText [(ngModel)]="form.shipToPhone" />
+        </label>
+        <label>
+          <span>Address 1</span>
+          <input pInputText [(ngModel)]="form.shipToAddressLine1" />
+        </label>
+        <label>
+          <span>Address 2</span>
+          <input pInputText [(ngModel)]="form.shipToAddressLine2" />
+        </label>
+        <label>
+          <span>City</span>
+          <input pInputText [(ngModel)]="form.shipToCity" />
+        </label>
+        <label>
+          <span>Zip</span>
+          <input pInputText [(ngModel)]="form.shipToPostalCode" />
+        </label>
+        <label>
+          <span>State</span>
+          <input pInputText [(ngModel)]="form.shipToState" />
+        </label>
+        <label>
+          <span>Country</span>
+          <input pInputText [(ngModel)]="form.shipToCountry" />
+        </label>
+        <label>
+          <span>Tax Type</span>
+          <input pInputText [(ngModel)]="form.shipToTaxType" />
+        </label>
+        <label>
+          <span>Tax Country</span>
+          <input pInputText [(ngModel)]="form.shipToTaxCountry" />
+        </label>
+        <label>
+          <span>Tax ID</span>
+          <input pInputText [(ngModel)]="form.shipToTaxId" />
+        </label>
+      </div>
+    </div>
+  }
+
+  <div class="ship-to-section">
+    <h3>Ship-From Address <span class="section-hint">(optional — leave blank to use the warehouse's own address)</span></h3>
+    <div class="form-grid">
+      <label>
+        <span>Company</span>
+        <input pInputText [(ngModel)]="form.shipFromName" [placeholder]="selectedWarehouseName()" />
+      </label>
+      <label>
+        <span>Contact</span>
+        <input pInputText [(ngModel)]="form.shipFromContactName" />
+      </label>
+      <label>
+        <span>Email</span>
+        <input pInputText [(ngModel)]="form.shipFromEmail" />
+      </label>
+      <label>
+        <span>Phone</span>
+        <input pInputText [(ngModel)]="form.shipFromPhone" />
+      </label>
+      <label>
+        <span>Address 1</span>
+        <input pInputText [(ngModel)]="form.shipFromAddressLine1" />
+      </label>
+      <label>
+        <span>Address 2</span>
+        <input pInputText [(ngModel)]="form.shipFromAddressLine2" />
+      </label>
+      <label>
+        <span>City</span>
+        <input pInputText [(ngModel)]="form.shipFromCity" />
+      </label>
+      <label>
+        <span>Zip</span>
+        <input pInputText [(ngModel)]="form.shipFromPostalCode" />
+      </label>
+      <label>
+        <span>State</span>
+        <input pInputText [(ngModel)]="form.shipFromState" />
+      </label>
+      <label>
+        <span>Country</span>
+        <input pInputText [(ngModel)]="form.shipFromCountry" />
+      </label>
+    </div>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Items</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Item" class="p-button-text p-button-sm" (click)="addLine()"></button>
+    </div>
+    <div class="line-row line-row-header">
+      <span>Product</span>
+      <span>Available</span>
+      <span>Ship Quantity</span>
+      <span>Weight</span>
+      <span></span>
+    </div>
+    @for (line of lines; track $index) {
+      <div class="line-row">
+        <p-dropdown [options]="products" [(ngModel)]="line.productId" optionLabel="name" optionValue="id"
+                    placeholder="Select product" [style]="{ width: '100%' }"
+                    (onChange)="onProductSelect(line)"></p-dropdown>
+        <span class="available-qty">
+          @if (line.loadingAvailable) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else if (line.availableQty != null) {
+            {{ line.availableQty | number: '1.0-4' }}
+          } @else {
+            <span class="text-muted">&mdash;</span>
+          }
+        </span>
+        <p-inputNumber [(ngModel)]="line.quantity" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+                       [min]="0" [max]="line.availableQty ?? undefined"
+                       placeholder="Qty to ship"></p-inputNumber>
+        <span class="line-weight">
+          @if (lineTotalWeight(line) != null) {
+            {{ lineTotalWeight(line) | number: '1.0-3' }} kg
+            <span class="line-weight-sub">({{ lineWeightPerUnit(line) | number: '1.0-3' }} kg/unit)</span>
+          } @else {
+            <span class="text-muted">&mdash;</span>
+          }
+        </span>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeLine($index)"></button>
+      </div>
+    }
+    @if (!lines.length) {
+      <div class="empty-cell">No items yet — add at least one.</div>
+    }
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Packages</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Package" class="p-button-text p-button-sm" (click)="addPackage()"></button>
+    </div>
+    @for (pkg of packages; track $index) {
+      <div class="package-card">
+        <div class="package-card-header">
+          <span>Package {{ pkg.packageNumber }}</span>
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                  (click)="removePackage($index)"></button>
+        </div>
+        <div class="package-card-fields">
+          <label>
+            <span>Package #</span>
+            <p-inputNumber [(ngModel)]="pkg.packageNumber" [showButtons]="false" [style]="{ width: '100%' }"></p-inputNumber>
+          </label>
+          <label>
+            <span>Weight (kg)</span>
+            <p-inputNumber [(ngModel)]="pkg.weightKg" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="3" [style]="{ width: '100%' }"></p-inputNumber>
+          </label>
+          <label>
+            <span>Tracking #</span>
+            <input pInputText [(ngModel)]="pkg.trackingNumber" />
+          </label>
+          <label>
+            <span>Length (cm)</span>
+            <p-inputNumber [(ngModel)]="pkg.lengthCm" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+          </label>
+          <label>
+            <span>Width (cm)</span>
+            <p-inputNumber [(ngModel)]="pkg.widthCm" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+          </label>
+          <label>
+            <span>Height (cm)</span>
+            <p-inputNumber [(ngModel)]="pkg.heightCm" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+          </label>
+        </div>
+
+        <div class="pack-items-section">
+          <div class="pack-items-header">
+            <span>Items Packed In This Package</span>
+            <div class="pack-items-actions">
+              <button pButton type="button" icon="pi pi-calculator" label="Calculate Weight from Items"
+                      class="p-button-text p-button-sm" [disabled]="!pkg.items.length" (click)="recalcPackageWeight(pkg)"></button>
+              <button pButton type="button" icon="pi pi-plus" label="Add Item" class="p-button-text p-button-sm"
+                      [disabled]="!lines.length" (click)="addPackageItem(pkg)"></button>
+            </div>
+          </div>
+          @for (item of pkg.items; track $index) {
+            <div class="pack-item-row">
+              <p-dropdown [options]="packableLineOptions()" [(ngModel)]="item.productId" optionLabel="label" optionValue="value"
+                          placeholder="Select item" [style]="{ width: '100%' }"></p-dropdown>
+              <p-inputNumber [(ngModel)]="item.quantity" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+                             [min]="0" placeholder="Qty in this package"></p-inputNumber>
+              <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                      (click)="removePackageItem(pkg, $index)"></button>
+            </div>
+          }
+          @if (!pkg.items.length) {
+            <div class="empty-cell pack-items-empty">No items packed yet — click "Add Item" to assign items from above.</div>
+          }
+        </div>
+      </div>
+    }
+    @if (!packages.length) {
+      <div class="empty-cell">No packages yet.</div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-sidebar [(visible)]="showRatesDialog" position="right" [appendTo]="'body'" [dismissible]="false"
+           styleClass="rates-sidebar" [showCloseIcon]="false">
+  <ng-template pTemplate="header">
+    <div class="rates-header">
+      <i class="pi pi-dollar rates-header-icon"></i>
+      <div class="rates-header-text">
+        <h3>Shipping Charges</h3>
+        <span>{{ ratesShipment?.shipmentNumber }}<span *ngIf="ratesShipment"> — {{ ratesShipment.warehouseName }} &rarr; {{ ratesShipment.sourceType === 'SalesOrder' ? ratesShipment.shipToCity : ratesShipment.destinationWarehouseName }}</span></span>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="rates-toolbar">
+    <span class="p-input-icon-left rates-search">
+      <i class="pi pi-search"></i>
+      <input pInputText type="text" placeholder="Search"
+             (input)="onRatesSearch($any($event.target).value)" />
+    </span>
+    <p-dropdown [options]="groupByOptions" [(ngModel)]="groupBy" optionLabel="label" optionValue="value"
+                placeholder="Select Group By" [style]="{ width: '13rem' }"></p-dropdown>
+    <span class="rates-count-badge">
+      <i class="pi pi-verified"></i> {{ rateQuotes.length }}
+    </span>
+    <span class="rates-toolbar-spacer"></span>
+    @if (rateErrors.length) {
+      <button pButton type="button" icon="pi pi-exclamation-triangle" [label]="rateErrors.length + ''"
+              class="p-button-text p-button-rounded p-button-danger"
+              pTooltip="Show connector errors" (click)="showRateErrorsDialog = true"></button>
+    }
+    <button pButton type="button" icon="pi pi-refresh" class="p-button-text p-button-rounded"
+            pTooltip="Refresh" [disabled]="ratesLoading" (click)="refreshRates()"></button>
+  </div>
+
+  @if (ratesLoading) {
+    <div class="empty-cell"><i class="pi pi-spin pi-spinner"></i> Fetching live rates…</div>
+  } @else {
+    <p-table #dt [value]="rateQuotes" dataKey="rateId" [expandedRowKeys]="expandedRateRows"
+             (onRowExpand)="onRateRowExpand($event)" (onRowCollapse)="onRateRowCollapse($event)"
+             [globalFilterFields]="['carrierName', 'serviceLevel', 'connectorName']"
+             [rowGroupMode]="groupBy === 'Carrier' ? 'subheader' : undefined"
+             [groupRowsBy]="groupBy === 'Carrier' ? 'carrierName' : undefined"
+             [sortField]="groupBy === 'Carrier' ? 'carrierName' : 'price'" [sortOrder]="1">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 2.25rem"></th>
+          <th style="width: 2rem"></th>
+          <th>Service Level</th>
+          <th pSortableColumn="publishedCost">Published Cost <p-sortIcon field="publishedCost"></p-sortIcon></th>
+          <th pSortableColumn="price">Discounted Cost <p-sortIcon field="price"></p-sortIcon></th>
+          <th pSortableColumn="etd">ETD <p-sortIcon field="etd"></p-sortIcon></th>
+          <th>Transit</th>
+          <th style="width: 6rem"></th>
+        </tr>
+      </ng-template>
+      @if (groupBy === 'Carrier') {
+        <ng-template pTemplate="groupheader" let-q>
+          <tr class="rate-group-row">
+            <td colspan="8">
+              <span class="carrier-avatar" [ngStyle]="{ background: carrierColor(q.carrierName) }">{{ carrierInitial(q.carrierName) }}</span>
+              <strong>{{ q.carrierName ?? 'Unknown Carrier' }}</strong>
+            </td>
+          </tr>
+        </ng-template>
+      }
+      <ng-template pTemplate="body" let-q>
+        <tr>
+          <td>
+            @if (q.surcharges?.length) {
+              <button pButton type="button" class="p-button-text p-button-sm p-button-rounded"
+                      [icon]="expandedRateRows[q.rateId] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                      [pRowToggler]="q"></button>
+            }
+          </td>
+          <td>
+            @if (groupBy !== 'Carrier') {
+              <span class="carrier-avatar carrier-avatar-sm" [ngStyle]="{ background: carrierColor(q.carrierName) }">{{ carrierInitial(q.carrierName) }}</span>
+            }
+          </td>
+          <td>
+            <div class="service-cell">
+              <strong>{{ q.serviceLevel }}</strong>
+              <span class="service-cell-sub">{{ q.carrierName ?? q.connectorName }}</span>
+            </div>
+          </td>
+          <td>{{ q.publishedCost != null ? (q.publishedCost | number: '1.2-2') : '—' }} {{ q.publishedCost != null ? q.currency : '' }}</td>
+          <td>{{ q.price != null ? (q.price | number: '1.2-2') : '—' }} {{ q.price != null ? q.currency : '' }}</td>
+          <td>{{ q.etd ? (q.etd | date: 'MMM d, y h:mm a') : '—' }}</td>
+          <td>{{ q.estimatedDays ?? '—' }}</td>
+          <td>
+            <button pButton type="button" label="Select" class="p-button-sm p-button-success" (click)="useRate(q)"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="expandedrow" let-q>
+        <tr class="surcharge-row">
+          <td colspan="8">
+            <div class="surcharge-panel">
+              <span class="surcharge-panel-label">Surcharges</span>
+              <div class="surcharge-grid">
+                <div class="surcharge-grid-header">
+                  <span>Charge</span>
+                  <span>Amount</span>
+                </div>
+                @for (s of q.surcharges; track $index) {
+                  <div class="surcharge-grid-row">
+                    <span class="surcharge-name">{{ s.name }}</span>
+                    <span class="surcharge-amount">{{ s.amount != null ? (s.amount | number: '1.2-2') : '—' }} {{ s.amount != null ? q.currency : '' }}</span>
+                  </div>
+                }
+                <div class="surcharge-grid-row surcharge-grid-total">
+                  <span>Total Surcharges</span>
+                  <span class="surcharge-amount">{{ surchargeTotal(q) | number: '1.2-2' }} {{ q.currency }}</span>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8" class="empty-cell">No rate quotes returned.</td></tr>
+      </ng-template>
+    </p-table>
+  }
+
+  <div class="rates-footer">
+    <button pButton type="button" label="Close" class="p-button-outlined" (click)="showRatesDialog = false"></button>
+  </div>
+</p-sidebar>
+
+<p-dialog header="Connector Errors" [(visible)]="showRateErrorsDialog" [modal]="true" [style]="{ width: '34rem' }" [appendTo]="'body'">
+  @for (err of rateErrors; track err) {
+    <div class="rate-error">{{ err }}</div>
+  }
+  @if (!rateErrors.length) {
+    <div class="empty-cell">No errors.</div>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showRateErrorsDialog = false"></button>
+  </ng-template>
+</p-dialog>

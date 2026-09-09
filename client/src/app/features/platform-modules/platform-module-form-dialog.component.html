@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Module' : 'New Platform Module' }}</h2>
+
+<mat-dialog-content class="form-grid">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="model.name" name="name" required />
+  </mat-form-field>
+
+  @if (!isEdit) {
+    <mat-form-field appearance="outline">
+      <mat-label>Key</mat-label>
+      <input matInput [(ngModel)]="model.key" name="key" placeholder="restaurant" required />
+    </mat-form-field>
+  }
+
+  <mat-form-field appearance="outline">
+    <mat-label>Description</mat-label>
+    <input matInput [(ngModel)]="model.description" name="description" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Icon (Material icon name)</mat-label>
+    <input matInput [(ngModel)]="model.icon" name="icon" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Color</mat-label>
+    <input matInput type="color" [(ngModel)]="model.color" name="color" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Sort Order</mat-label>
+    <input matInput type="number" [(ngModel)]="model.sortOrder" name="sortOrder" />
+  </mat-form-field>
+
+  @if (isEdit) {
+    <mat-slide-toggle [(ngModel)]="model.isActive" name="isActive">Active</mat-slide-toggle>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()">Save</button>
+</mat-dialog-actions>

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/features/workflows/workflows-list.component.scss"],
+  "sourcesContent": [".wf-link {\n  cursor: pointer;\n  color: #2563eb;\n  font-weight: 600;\n\n  &:hover {\n    text-decoration: underline;\n  }\n}\n\n.wf-desc {\n  font-size: 0.75rem;\n  color: #6b7280;\n}\n\n.version-line {\n  font-size: 0.7rem;\n  color: #6b7280;\n  margin-top: 2px;\n}\n\n.empty-cell {\n  text-align: center;\n  color: #9ca3af;\n  padding: 2rem;\n}\n\n.form-field {\n  margin-bottom: 1rem;\n  display: flex;\n  flex-direction: column;\n  gap: 0.375rem;\n\n  label {\n    font-size: 0.75rem;\n    font-weight: 600;\n    color: #374151;\n  }\n}\n"],
+  "mappings": ";AAAA,CAAA;AACE,UAAA;AACA,SAAA;AACA,eAAA;;AAEA,CALF,OAKE;AACE,mBAAA;;AAIJ,CAAA;AACE,aAAA;AACA,SAAA;;AAGF,CAAA;AACE,aAAA;AACA,SAAA;AACA,cAAA;;AAGF,CAAA;AACE,cAAA;AACA,SAAA;AACA,WAAA;;AAGF,CAAA;AACE,iBAAA;AACA,WAAA;AACA,kBAAA;AACA,OAAA;;AAEA,CANF,WAME;AACE,aAAA;AACA,eAAA;AACA,SAAA;;",
+  "names": []
+}

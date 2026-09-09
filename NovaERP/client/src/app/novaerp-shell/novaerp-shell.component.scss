@@ -1,0 +1,195 @@
+.shell-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 250px;
+  background: #1e293b;
+  color: #e2e8f0;
+
+  // Material scrolls .mat-drawer-inner-container as one block by default, which would carry
+  // the brand/search along with the nav list. Turn that off and manage the split ourselves:
+  // brand + search stay fixed-size (flex: 0 0 auto) at the top, only the nav list scrolls.
+  ::ng-deep .mat-drawer-inner-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .sidenav-header {
+    flex: 0 0 auto;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  mat-nav-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+    scroll-behavior: smooth;
+
+    // Replace the default OS scrollbar (thick, with arrow buttons) with a slim, dark-themed one.
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.35);
+      }
+    }
+  }
+
+  ::ng-deep .mat-mdc-list-item {
+    color: #cbd5e1;
+    transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, padding-left 0.25s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      transform: translateX(4px);
+    }
+  }
+
+  .active-link {
+    background: rgba(79, 70, 229, 0.25);
+    color: #fff;
+
+    &:hover {
+      background: rgba(79, 70, 229, 0.35);
+    }
+  }
+
+  .nav-group-label {
+    padding: 0.85rem 1rem 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+
+    &:first-of-type { padding-top: 0.5rem; }
+  }
+
+  .nav-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.85rem 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    &:focus-within {
+      border-color: rgba(129, 140, 248, 0.6);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .nav-search-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    input {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+
+      &::placeholder { color: #64748b; }
+    }
+
+    .nav-search-clear {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      padding: 0;
+
+      mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+      }
+
+      &:hover { color: #e2e8f0; }
+    }
+  }
+
+  .nav-search-empty {
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+  }
+}
+
+.brand {
+  padding: 1.25rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.org-name {
+  margin-right: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.caret {
+  margin-left: -0.25rem;
+}
+
+.user-menu-header {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+
+  .role { font-weight: 600; color: #4f46e5; }
+}
+
+.content {
+  position: relative;
+  padding: 1.5rem;
+  background: #f4f6f9;
+  min-height: calc(100vh - 64px);
+  overflow-x: hidden;
+}
+
+.ai-panel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}

@@ -1,0 +1,49 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Organization Settings</h1>
+</div>
+
+<div class="card">
+  <div class="form-grid">
+    <label>
+      <span>Default Language</span>
+      <p-dropdown [options]="languages" [(ngModel)]="form.defaultLanguageCode" optionLabel="name" optionValue="code"
+                  placeholder="Select Language" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Default Currency</span>
+      <p-dropdown [options]="currencies" [(ngModel)]="form.defaultCurrencyCode" optionLabel="name" optionValue="code"
+                  placeholder="Select Currency" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Default Timezone</span>
+      <input pInputText [(ngModel)]="form.defaultTimezone" />
+    </label>
+    <label>
+      <span>Fiscal Year Start Month</span>
+      <p-dropdown [options]="fiscalMonths" [(ngModel)]="form.fiscalYearStartMonth" optionLabel="label" optionValue="value"
+                  [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Date Format</span>
+      <input pInputText [(ngModel)]="form.dateFormat" />
+    </label>
+    <label>
+      <span>Time Format</span>
+      <input pInputText [(ngModel)]="form.timeFormat" />
+    </label>
+    <label>
+      <span>Invoice Number Prefix</span>
+      <input pInputText [(ngModel)]="form.invoiceNumberPrefix" />
+    </label>
+    <label class="checkbox-row mt-4">
+      <p-checkbox [(ngModel)]="form.taxInclusivePricing" [binary]="true"></p-checkbox>
+      <span>Tax-inclusive pricing</span>
+    </label>
+  </div>
+
+  <div class="form-actions" *appHasPermission="'settings.edit'">
+    <button pButton type="button" label="Save Settings" [loading]="saving" (click)="save()"></button>
+  </div>
+</div>

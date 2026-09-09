@@ -1,0 +1,144 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  @if (loading) {
+    <div class="card">Loading dashboard...</div>
+  } @else if (summary) {
+    <div class="kpi-grid">
+      <div class="card kpi-card">
+        <span class="kpi-label">Total Employees</span>
+        <span class="kpi-value">{{ summary.totalEmployees }}</span>
+      </div>
+      <div class="card kpi-card">
+        <span class="kpi-label">Present Today</span>
+        <span class="kpi-value">{{ summary.presentToday }}</span>
+      </div>
+      <div class="card kpi-card">
+        <span class="kpi-label">On Leave Today</span>
+        <span class="kpi-value">{{ summary.onLeaveToday }}</span>
+      </div>
+      <div class="card kpi-card">
+        <span class="kpi-label">Open Job Openings</span>
+        <span class="kpi-value">{{ summary.openJobOpenings }}</span>
+      </div>
+      <div class="card kpi-card">
+        <span class="kpi-label">Open Tickets</span>
+        <span class="kpi-value">{{ summary.openTickets }}</span>
+      </div>
+      <div class="card kpi-card">
+        <span class="kpi-label">Pending Leave Approvals</span>
+        <span class="kpi-value">{{ summary.pendingLeaveApprovals }}</span>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <h3>Headcount by Department</h3>
+        @if (summary.headcountByDepartment.length) {
+          <p-chart type="doughnut" [data]="departmentChartData" [options]="departmentChartOptions"></p-chart>
+        } @else {
+          <p class="empty-text">No data available.</p>
+        }
+      </div>
+      <div class="card chart-card">
+        <h3>Attendance Trend</h3>
+        @if (summary.attendanceTrend.length) {
+          <p-chart type="line" [data]="attendanceChartData" [options]="attendanceChartOptions"></p-chart>
+        } @else {
+          <p class="empty-text">No data available.</p>
+        }
+      </div>
+    </div>
+
+    <div class="list-grid">
+      <div class="card list-card">
+        <h3>Upcoming Holidays</h3>
+        @if (summary.upcomingHolidays.length) {
+          <ul>
+            @for (h of summary.upcomingHolidays; track h.name + h.date) {
+              <li><span>{{ h.name }}</span><b>{{ h.date }}</b></li>
+            }
+          </ul>
+        } @else {
+          <p class="empty-text">No upcoming holidays.</p>
+        }
+      </div>
+
+      <div class="card list-card">
+        <h3>Recent Joiners</h3>
+        @if (summary.recentJoiners.length) {
+          <ul>
+            @for (j of summary.recentJoiners; track j.employeeCode) {
+              <li>
+                <span>{{ j.fullName }} <small>({{ j.employeeCode }})</small></span>
+                <b>{{ j.joiningDate }}</b>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty-text">No recent joiners.</p>
+        }
+      </div>
+
+      <div class="card list-card">
+        <h3>Birthdays This Month</h3>
+        @if (summary.birthdaysThisMonth.length) {
+          <ul>
+            @for (b of summary.birthdaysThisMonth; track b.fullName + b.dateOfBirth) {
+              <li><span>{{ b.fullName }}</span><b>{{ b.dateOfBirth }}</b></li>
+            }
+          </ul>
+        } @else {
+          <p class="empty-text">No birthdays this month.</p>
+        }
+      </div>
+    </div>
+  }
+
+  @if (myDashboard && myDashboard.hasEmployeeProfile) {
+    <div class="card my-dashboard">
+      <h2>My Dashboard</h2>
+      <div class="my-grid">
+        <div class="my-block">
+          <h4>Today's Attendance</h4>
+          @if (myDashboard.todayAttendance) {
+            <p-tag
+              [value]="myDashboard.todayAttendance.status"
+              [severity]="myDashboard.todayAttendance.status === 'Present' ? 'success' : 'warn'">
+            </p-tag>
+            <div class="attendance-times">
+              <span>In: {{ myDashboard.todayAttendance.checkInAt || '-' }}</span>
+              <span>Out: {{ myDashboard.todayAttendance.checkOutAt || '-' }}</span>
+            </div>
+          } @else {
+            <p class="empty-text">No attendance recorded today.</p>
+          }
+        </div>
+
+        <div class="my-block">
+          <h4>Leave Balances</h4>
+          @if (myDashboard.leaveBalances.length) {
+            <ul>
+              @for (lb of myDashboard.leaveBalances; track lb.leaveTypeName) {
+                <li><span>{{ lb.leaveTypeName }}</span><b>{{ lb.available }}</b></li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-text">No leave balances found.</p>
+          }
+        </div>
+
+        <div class="my-block">
+          <h4>Pending Requests</h4>
+          <ul>
+            <li><span>Leave</span><b>{{ myDashboard.pendingRequests.pendingLeaveCount }}</b></li>
+            <li><span>Regularization</span><b>{{ myDashboard.pendingRequests.pendingRegularizationCount }}</b></li>
+            <li><span>Expense</span><b>{{ myDashboard.pendingRequests.pendingExpenseCount }}</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
+</div>

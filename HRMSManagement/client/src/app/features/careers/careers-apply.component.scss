@@ -1,0 +1,158 @@
+.careers-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: #4f46e5;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #64748b;
+  h2 { color: #1e293b; }
+}
+
+.job-detail-card, .confirmation-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.job-detail-card h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.job-meta {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.salary {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.description {
+  margin-top: 1.5rem;
+  h3 { font-size: 1rem; color: #1e293b; margin-bottom: 0.5rem; }
+  p { color: #475569; line-height: 1.6; white-space: pre-line; }
+}
+
+.cta-button {
+  margin-top: 1.5rem;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+
+  &:hover { background: #4338ca; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.apply-form {
+  margin-top: 1.75rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+
+  h3 { margin: 0 0 1rem; font-size: 1.0625rem; color: #1e293b; }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+
+  label { display: block; font-size: 0.8125rem; font-weight: 600; color: #334155; margin-bottom: 0.3rem; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    box-sizing: border-box;
+
+    &:focus { outline: none; border-color: #4f46e5; }
+  }
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.confirmation-card {
+  text-align: center;
+
+  .check-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 1.75rem;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+  }
+
+  h2 { color: #1e293b; }
+  p { color: #64748b; max-width: 420px; margin: 0.5rem auto 1.5rem; }
+}
+
+.tracking-link-box {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 420px;
+  margin: 0 auto;
+
+  input {
+    flex: 1;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    color: #475569;
+  }
+
+  button {
+    background: #eef2ff;
+    color: #4f46e5;
+    border: none;
+    border-radius: 6px;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { background: #e0e7ff; }
+  }
+}
+
+.track-now-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+}

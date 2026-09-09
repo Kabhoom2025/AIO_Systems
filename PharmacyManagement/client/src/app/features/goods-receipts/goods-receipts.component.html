@@ -1,0 +1,74 @@
+<div class="gr-page">
+  <div class="page-header">
+    <h2>Goods Receipts</h2>
+    <button class="btn-primary" (click)="openAdd()">+ Receive Stock</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="gr-table">
+      <thead><tr><th>Receipt #</th><th>PO Number</th><th>Received Date</th><th>Received By</th><th>Items</th></tr></thead>
+      <tbody>
+        @for (g of goodsReceipts(); track g.id) {
+          <tr>
+            <td>{{ g.receiptNumber }}</td>
+            <td>{{ g.poNumber }}</td>
+            <td>{{ g.receivedDate | date:'mediumDate' }}</td>
+            <td>{{ g.receivedBy || '-' }}</td>
+            <td>{{ g.items.length }}</td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="5" class="empty">No goods receipts found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>Receive Stock</h3>
+        <div class="form-grid">
+          <label>Purchase Order
+            <select [ngModel]="selectedPoId()" (ngModelChange)="onSelectPo($event)">
+              <option [ngValue]="null">Select a sent purchase order…</option>
+              @for (po of openOrders(); track po.id) {
+                <option [ngValue]="po.id">{{ po.poNumber }} — {{ po.supplierName }}</option>
+              }
+            </select>
+          </label>
+          <label>Received By <input [(ngModel)]="receivedBy" /></label>
+        </div>
+
+        @if (lines.length > 0) {
+          <table class="items-table">
+            <thead>
+              <tr><th>Medicine</th><th>Batch #</th><th>Expiry</th><th>Mfg Date</th><th>Qty</th><th>Price (₹)</th></tr>
+            </thead>
+            <tbody>
+              @for (line of lines; track line.purchaseOrderItemId) {
+                <tr>
+                  <td>{{ line.medicineName }}</td>
+                  <td><input [(ngModel)]="line.batchNumber" /></td>
+                  <td><input type="date" [(ngModel)]="line.expiryDate" /></td>
+                  <td><input type="date" [(ngModel)]="line.manufacturingDate" /></td>
+                  <td><input type="number" min="1" [(ngModel)]="line.quantityReceived" /></td>
+                  <td><input type="number" min="0" [(ngModel)]="line.purchasePrice" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else if (selectedPoId()) {
+          <div class="empty-inline">All items on this purchase order have been fully received.</div>
+        }
+
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" [disabled]="!selectedPoId() || lines.length === 0" (click)="save()">Save Receipt</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

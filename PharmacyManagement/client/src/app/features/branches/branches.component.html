@@ -1,0 +1,65 @@
+<div class="branches-page">
+  <div class="page-header">
+    <h2>Branches</h2>
+    <button *appHasPermission="'branches.create'" class="btn-primary" (click)="openAdd()">+ Add Branch</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <div class="branches-grid">
+      @for (b of branches(); track b.id) {
+        <div class="branch-card" [class.inactive]="!b.isActive">
+          <div class="card-header">
+            <div>
+              <h3>{{ b.name }}</h3>
+              <span class="code">{{ b.code }}</span>
+            </div>
+            <span class="type-badge" [class.warehouse]="b.type === 'Warehouse'">{{ b.type }}</span>
+          </div>
+          <div class="card-body">
+            <div class="info-row"><span>Address</span><b>{{ b.address || '-' }}</b></div>
+            <div class="info-row"><span>Phone</span><b>{{ b.phone || '-' }}</b></div>
+            <div class="info-row"><span>Email</span><b>{{ b.email || '-' }}</b></div>
+          </div>
+          <div class="card-actions">
+            <button *appHasPermission="'branches.edit'" (click)="openEdit(b)">Edit</button>
+            <button *appHasPermission="'branches.delete'" class="danger" (click)="delete(b.id)">Delete</button>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">No branches found. Add one to get started.</div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Branch</h3>
+        <div class="form-grid">
+          <label>Name <input [(ngModel)]="form.name" /></label>
+          <label>Code <input [(ngModel)]="form.code" placeholder="MAIN, WH1…" /></label>
+          <label>Type
+            <select [(ngModel)]="form.type">
+              @for (t of typeOptions; track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+          </label>
+          <label>Phone <input [(ngModel)]="form.phone" /></label>
+          <label>Email <input [(ngModel)]="form.email" /></label>
+          <label class="full-width">Address <input [(ngModel)]="form.address" /></label>
+          @if (editId()) {
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="form.isActive" /> Active
+            </label>
+          }
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

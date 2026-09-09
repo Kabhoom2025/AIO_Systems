@@ -1,0 +1,81 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h2>Settings</h2>
+  </div>
+
+  <div class="tab-bar">
+    @if (canViewOrg) {
+      <button class="tab-btn" [class.active]="activeTab() === 'organization'" (click)="activeTab.set('organization')">Organization</button>
+    }
+    <button class="tab-btn" [class.active]="activeTab() === 'profile'" (click)="activeTab.set('profile')">My Profile</button>
+  </div>
+
+  @if (activeTab() === 'organization' && canViewOrg) {
+    <div class="settings-card">
+      <h3>Organization Profile</h3>
+      <div class="form-grid">
+        <label>Name
+          <input [(ngModel)]="form.name" [disabled]="!canEditOrg" />
+        </label>
+        <label>License No
+          <input [(ngModel)]="form.licenseNo" [disabled]="!canEditOrg" />
+        </label>
+        <label>Phone
+          <input [(ngModel)]="form.phone" [disabled]="!canEditOrg" />
+        </label>
+        <label>Email
+          <input [(ngModel)]="form.email" [disabled]="!canEditOrg" />
+        </label>
+        <label class="full-width">Address
+          <input [(ngModel)]="form.address" [disabled]="!canEditOrg" />
+        </label>
+        <label>Currency
+          <input [(ngModel)]="form.currency" [disabled]="!canEditOrg" />
+        </label>
+        <label>GST Number
+          <input [(ngModel)]="form.gstNumber" [disabled]="!canEditOrg" />
+        </label>
+        <label>Invoice Number Prefix
+          <input [(ngModel)]="form.invoiceNumberPrefix" [disabled]="!canEditOrg" />
+        </label>
+      </div>
+      @if (canEditOrg) {
+        <div class="form-actions">
+          <button class="btn-primary" (click)="saveOrg()">Save Changes</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'profile') {
+    <div class="settings-card">
+      <h3>My Profile</h3>
+      @if (user) {
+        <div class="info-row"><span>Name</span><b>{{ user.name }}</b></div>
+        <div class="info-row"><span>Email</span><b>{{ user.email }}</b></div>
+        <div class="info-row"><span>Role</span><b>{{ user.role }}</b></div>
+        <div class="info-row"><span>Organization</span><b>{{ user.organizationName }}</b></div>
+      }
+    </div>
+
+    <div class="settings-card">
+      <h3>Change Password</h3>
+      <div class="form-grid">
+        <label>Current Password
+          <input type="password" [(ngModel)]="passwordForm.currentPassword" />
+        </label>
+        <label>New Password
+          <input type="password" [(ngModel)]="passwordForm.newPassword" />
+        </label>
+        <label>Confirm New Password
+          <input type="password" [(ngModel)]="passwordForm.confirmPassword" />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" [disabled]="changingPassword()" (click)="changePassword()">
+          {{ changingPassword() ? 'Changing…' : 'Change Password' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

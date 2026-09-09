@@ -1,0 +1,12 @@
+@if (user) {
+  <main class="home-content">
+    <div class="welcome-card">
+      <div class="eyebrow">Logged in as a patient</div>
+      <h1>Welcome, {{ user.name || ('+91 ' + user.phone) }}.</h1>
+      <p>Your account at <strong>{{ user.organizationName }}</strong> is verified and ready.</p>
+      <div class="coming-soon">
+        <span>Coming next:</span> doctor booking and the medicine store.
+      </div>
+    </div>
+  </main>
+}

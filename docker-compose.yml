@@ -1,0 +1,263 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234"
+      POSTGRES_DB: SuperAdminDB
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  aio-systems:
+    build:
+      context: ./AIO_Systems
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=SuperAdminDB;Username=postgres;Password=1234"
+    ports:
+      - "5284:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Host ports below match each service's native (dotnet run) port exactly, so the Apps
+  # page's port-probe status check works identically whether a service was started as a
+  # native process or as this container — same BaseUrl, same way of asking "is it up?".
+  foodorder-api:
+    build:
+      context: ./FoodOrderingSystemManagement/src
+      dockerfile: FoodOrder.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=FoodOrderDB;Username=postgres;Password=1234"
+    ports:
+      - "5275:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  pharmacy-api:
+    build:
+      context: ./PharmacyManagement
+      dockerfile: Pharmacy.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=PharmacyDB;Username=postgres;Password=1234"
+    ports:
+      - "5002:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  hrms-api:
+    build:
+      context: ./HRMSManagement
+      dockerfile: HRMS.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=HRMSDB;Username=postgres;Password=1234"
+    ports:
+      - "5003:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  novaerp-api:
+    build:
+      context: ./NovaERP
+      dockerfile: NovaERP.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DatabaseProvider: "PostgreSql"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=NovaERPDB;Username=postgres;Password=1234"
+    ports:
+      - "5004:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  workflow-api:
+    build:
+      context: ./WorkflowBuilder
+      dockerfile: Workflow.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=WorkflowBuilderDB;Username=postgres;Password=1234"
+    ports:
+      - "5005:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  flowsphere-api:
+    build:
+      context: ./FlowSphereAI
+      dockerfile: FlowSphere.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=FlowSphereAIDB;Username=postgres;Password=1234"
+      ConnectionStrings__Redis: "redis:6379"
+    ports:
+      - "5006:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  flowsphere-client:
+    build:
+      context: ./FlowSphereAI/client
+      # NEXT_PUBLIC_* vars are compiled into the client bundle at build time, so they must be
+      # passed as build args, not `environment:` (which only affects the running container and
+      # would silently have no effect on an already-built Next.js bundle).
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "http://localhost:5000/api/flowsphere"
+        NEXT_PUBLIC_HUB_BASE_URL: "http://localhost:5000/hubs/flowsphere/execution"
+    ports:
+      - "4206:3000"
+    depends_on:
+      - flowsphere-api
+
+  projectflowai-api:
+    build:
+      context: ./ProjectFlowAI
+      dockerfile: ProjectFlowAI.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ProjectFlowAIDB;Username=postgres;Password=1234"
+    ports:
+      - "5007:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Dockerfile for this client is owned by a separate in-progress task — this block is only
+  # structurally wired up (context/ports/depends_on) ahead of that Dockerfile landing.
+  projectflowai-client:
+    build:
+      context: ./ProjectFlowAI/client
+      args:
+        VITE_API_BASE_URL: "http://localhost:5000/api/projectflow"
+    ports:
+      - "4207:80"
+    depends_on:
+      - projectflowai-api
+
+  lineagestudio-api:
+    build:
+      context: ./LineageStudio
+      dockerfile: src/Platform.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=LineageStudioDB;Username=postgres;Password=1234"
+    ports:
+      - "5009:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  lineagestudio-client:
+    build:
+      context: ./LineageStudio/client
+      args:
+        VITE_API_BASE_URL: "http://localhost:5000/api/lineagestudio"
+        VITE_HUB_BASE_URL: "http://localhost:5000/hubs/lineagestudio"
+    ports:
+      - "4209:80"
+    depends_on:
+      - lineagestudio-api
+
+  linkshield-api:
+    build:
+      context: ./LinkShield
+      dockerfile: LinkShield.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=LinkShieldDB;Username=postgres;Password=1234"
+      ConnectionStrings__Redis: "redis:6379"
+      MlService__BaseUrl: "http://linkshield-ml:8001"
+    ports:
+      - "5008:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  linkshield-worker:
+    build:
+      context: ./LinkShield
+      dockerfile: LinkShield.Worker/Dockerfile
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=LinkShieldDB;Username=postgres;Password=1234"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      linkshield-api:
+        condition: service_started
+
+  linkshield-ml:
+    build:
+      context: ./LinkShield/ml-service
+    ports:
+      - "8001:8001"
+
+  linkshield-client:
+    build:
+      context: ./LinkShield/client
+    ports:
+      - "4208:80"
+    depends_on:
+      - linkshield-api
+
+  apigateway:
+    build:
+      context: ./ApiGateway/ApiGateway
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ReverseProxy__Clusters__restaurant-cluster__Destinations__primary__Address: "http://foodorder-api:8080"
+      ReverseProxy__Clusters__pharmacy-cluster__Destinations__primary__Address: "http://pharmacy-api:8080"
+      ReverseProxy__Clusters__superadmin-cluster__Destinations__primary__Address: "http://aio-systems:8080"
+      ReverseProxy__Clusters__hrms-cluster__Destinations__primary__Address: "http://hrms-api:8080"
+      ReverseProxy__Clusters__novaerp-cluster__Destinations__primary__Address: "http://novaerp-api:8080"
+      ReverseProxy__Clusters__workflow-cluster__Destinations__primary__Address: "http://workflow-api:8080"
+      ReverseProxy__Clusters__flowsphere-cluster__Destinations__primary__Address: "http://flowsphere-api:8080"
+      ReverseProxy__Clusters__projectflow-cluster__Destinations__primary__Address: "http://projectflowai-api:8080"
+      ReverseProxy__Clusters__linkshield-cluster__Destinations__primary__Address: "http://linkshield-api:8080"
+      ReverseProxy__Clusters__lineagestudio-cluster__Destinations__primary__Address: "http://lineagestudio-api:8080"
+    ports:
+      - "5000:8080"
+    depends_on:
+      - aio-systems
+      - foodorder-api
+      - pharmacy-api
+      - hrms-api
+      - novaerp-api
+      - workflow-api
+      - linkshield-api
+      - flowsphere-api
+      - projectflowai-api
+      - lineagestudio-api
+
+volumes:
+  postgres-data:
+  redis-data:

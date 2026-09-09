@@ -1,0 +1,134 @@
+<div class="sb-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>settings_applications</mat-icon>
+      <div>
+        <h1>Organization Settings</h1>
+        <p>View and configure tax, GST and restaurant details for each organization</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <mat-icon>search</mat-icon>
+    <input [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search branches…" />
+    @if (searchTerm()) {
+      <button class="clear-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner><p>Loading branches…</p></div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>corporate_fare</mat-icon>
+      <h3>{{ searchTerm() ? 'No matching organizations' : 'No organizations found' }}</h3>
+      <p>Add organizations from the Organization Management page first.</p>
+    </div>
+  } @else {
+    <div class="branches-list">
+      @for (branch of filtered(); track branch.id) {
+        <div class="branch-card" [class.expanded]="expandedId() === branch.id">
+
+          <!-- Card header / clickable row -->
+          <div class="branch-row" (click)="toggle(branch.id)">
+            <div class="branch-avatar"
+                 [style.background]="expandedId() === branch.id ? '#1a237e' : '#e8eaf6'"
+                 [style.color]="expandedId() === branch.id ? '#fff' : '#1a237e'">
+              {{ orgInitial(branch.name) }}
+            </div>
+            <div class="branch-info">
+              <span class="branch-name">{{ branch.name }}</span>
+              @if (branch.address) {
+                <span class="branch-addr"><mat-icon>location_on</mat-icon>{{ branch.address }}</span>
+              }
+            </div>
+            <span class="status-pill" [class.active]="branch.isActive" [class.inactive]="!branch.isActive">
+              {{ branch.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <mat-icon class="expand-icon">{{ expandedId() === branch.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+
+          <!-- Expanded: settings form -->
+          @if (expandedId() === branch.id) {
+            <div class="settings-panel">
+
+              @if (isLoading(branch.id)) {
+                <div class="loading-center small">
+                  <mat-spinner diameter="28"></mat-spinner>
+                  <p>Loading settings…</p>
+                </div>
+              } @else if (getForm(branch.id)) {
+                <form [formGroup]="getForm(branch.id)!" (ngSubmit)="saveSettings(branch)" class="settings-form">
+
+                  <div class="form-section-title"><mat-icon>restaurant</mat-icon> Restaurant Info</div>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Restaurant Name *</mat-label>
+                      <input matInput formControlName="restaurantName" />
+                      @if (getForm(branch.id)!.get('restaurantName')!.hasError('required') && getForm(branch.id)!.get('restaurantName')!.touched) {
+                        <mat-error>Name is required.</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Phone</mat-label>
+                      <input matInput formControlName="phone" />
+                      <mat-icon matPrefix>phone</mat-icon>
+                    </mat-form-field>
+                  </div>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Address</mat-label>
+                    <textarea matInput formControlName="address" rows="2"></textarea>
+                    <mat-icon matPrefix>location_on</mat-icon>
+                  </mat-form-field>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>GST Number</mat-label>
+                      <input matInput formControlName="gstNumber" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>UPI ID</mat-label>
+                      <input matInput formControlName="upiId" />
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-section-title"><mat-icon>percent</mat-icon> Tax &amp; Currency</div>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tax Name</mat-label>
+                      <input matInput formControlName="taxName" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tax Percentage (%)</mat-label>
+                      <input matInput type="number" formControlName="taxPercentage" min="0" max="100" />
+                    </mat-form-field>
+                  </div>
+                  <div class="toggle-row">
+                    <mat-slide-toggle formControlName="taxInclusive" color="primary">Tax Inclusive Pricing</mat-slide-toggle>
+                  </div>
+
+                  <div class="form-actions">
+                    <button type="submit" class="btn-save" [disabled]="isSaving(branch.id) || getForm(branch.id)!.invalid">
+                      @if (isSaving(branch.id)) {
+                        <mat-spinner diameter="18"></mat-spinner>
+                      } @else {
+                        <mat-icon>save</mat-icon>
+                      }
+                      Save Settings
+                    </button>
+                  </div>
+
+                </form>
+              }
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

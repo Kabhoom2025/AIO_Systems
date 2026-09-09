@@ -1,0 +1,165 @@
+<div class="chat-page">
+  @if (connectionState() === 'reconnecting') {
+    <div class="connection-banner">
+      <mat-icon>wifi_off</mat-icon>
+      Reconnecting to chat...
+    </div>
+  }
+
+  <div class="messages-scroll" #scrollContainer>
+    @if (!hasMessages() && !isLoadingConversation()) {
+      <div class="welcome-screen">
+        <mat-icon class="welcome-icon">auto_awesome</mat-icon>
+        <h1>How can I help you today?</h1>
+        <p>Type a message below, or press the microphone to speak.</p>
+        <button mat-stroked-button (click)="openVoiceConversation()" [disabled]="!isVoiceSupported">
+          <mat-icon>graphic_eq</mat-icon>
+          Start voice conversation
+        </button>
+      </div>
+    }
+
+    <div class="message-list">
+      @for (message of messages(); track message.id) {
+        <div class="message-row" [class.user]="message.role === 'User'" [class.assistant]="message.role !== 'User'">
+          <div class="message-bubble" [class.streaming]="message.isStreaming" appCodeCopy>
+            @if (message.role === 'User') {
+              <div class="message-content">{{ message.content }}</div>
+            } @else {
+              <div class="message-content markdown-content" [innerHTML]="message.content | markdown"></div>
+              @if (message.isStreaming && !message.content) {
+                <div class="typing-indicator" aria-label="AI is typing">
+                  <span></span><span></span><span></span>
+                </div>
+              }
+            }
+
+            <div class="message-meta">
+              <span class="message-time">{{ message.createdAt | date: 'shortTime' }}</span>
+
+              <div class="message-actions">
+                <button mat-icon-button matTooltip="Copy" (click)="copyMessage(message)" aria-label="Copy message">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+
+                @if (message.role === 'Assistant' && isTtsSupported) {
+                  <button mat-icon-button matTooltip="Read aloud" (click)="speak(message.content)" aria-label="Read message aloud">
+                    <mat-icon>volume_up</mat-icon>
+                  </button>
+                }
+
+                @if (message.role === 'Assistant' && !message.isStreaming) {
+                  <button mat-icon-button matTooltip="Regenerate response" (click)="regenerate(message)" aria-label="Regenerate response">
+                    <mat-icon>refresh</mat-icon>
+                  </button>
+                }
+
+                <button mat-icon-button matTooltip="Delete" (click)="deleteMessage(message)" aria-label="Delete message">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="chat-input-area">
+    @if (isSpeaking()) {
+      <div class="voice-status speaking" (click)="stopSpeaking()">
+        <mat-icon>volume_up</mat-icon>
+        Speaking... (tap to stop)
+      </div>
+    }
+    @if (isListening()) {
+      <div class="voice-status listening">
+        <mat-icon>mic</mat-icon>
+        Listening... {{ interimTranscript() }}
+      </div>
+    }
+
+    @if (isReadingFolder()) {
+      <div class="voice-status">
+        <mat-icon>hourglass_top</mat-icon>
+        Reading folder...
+      </div>
+    }
+
+    @if (attachedFileCount() > 0) {
+      <div class="attachments-bar">
+        <mat-icon>folder</mat-icon>
+        <span class="attachments-summary">{{ attachedFileCount() }} file(s) attached, will be sent with your next message</span>
+        <button mat-button class="attachments-clear" (click)="clearAttachments()">Clear</button>
+      </div>
+    }
+
+    <div class="chat-input-box">
+      <input
+        #folderInput
+        type="file"
+        hidden
+        webkitdirectory
+        multiple
+        (change)="onFolderSelected($event)" />
+
+      <button
+        mat-icon-button
+        class="attach-btn"
+        (click)="folderInput.click()"
+        [disabled]="isReadingFolder()"
+        matTooltip="Attach a folder as context"
+        aria-label="Attach a folder as context">
+        <mat-icon>drive_folder_upload</mat-icon>
+      </button>
+
+      <textarea
+        #messageInput
+        class="chat-textarea"
+        rows="1"
+        placeholder="Ask anything..."
+        [ngModel]="inputText()"
+        (ngModelChange)="inputText.set($event)"
+        (keydown)="onInputKeydown($event)"
+        aria-label="Message input">
+      </textarea>
+
+      @if (isVoiceSupported) {
+        <button
+          mat-icon-button
+          class="live-conversation-btn"
+          (click)="openVoiceConversation()"
+          matTooltip="Start a live voice conversation — listens, replies, and talks back automatically"
+          aria-label="Start live voice conversation">
+          <mat-icon>record_voice_over</mat-icon>
+        </button>
+
+        <button
+          mat-icon-button
+          class="mic-btn"
+          [class.active]="isListening()"
+          (click)="toggleMic()"
+          [matTooltip]="isListening() ? 'Stop listening' : 'Start voice input'"
+          aria-label="Toggle voice input">
+          <mat-icon>{{ isListening() ? 'mic' : 'mic_none' }}</mat-icon>
+        </button>
+      }
+
+      @if (isGenerating()) {
+        <button mat-icon-button color="warn" (click)="stopGeneration()" matTooltip="Stop generating" aria-label="Stop generating">
+          <mat-icon>stop_circle</mat-icon>
+        </button>
+      } @else {
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="sendMessage()"
+          [disabled]="!inputText().trim()"
+          matTooltip="Send"
+          aria-label="Send message">
+          <mat-icon>send</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+</div>

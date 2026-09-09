@@ -1,0 +1,206 @@
+<div class="page-header">
+  <h1>Help Desk</h1>
+  <button pButton type="button" icon="pi pi-plus" label="New Ticket"
+          (click)="openNewTicket()"></button>
+</div>
+
+<!-- Summary Cards -->
+@if (summary) {
+  <div class="summary-cards">
+    <div class="summary-card open">
+      <span class="label">Open</span>
+      <span class="count">{{ summary.open }}</span>
+    </div>
+    <div class="summary-card inprogress">
+      <span class="label">In Progress</span>
+      <span class="count">{{ summary.inProgress }}</span>
+    </div>
+    <div class="summary-card resolved">
+      <span class="label">Resolved</span>
+      <span class="count">{{ summary.resolved }}</span>
+    </div>
+    <div class="summary-card closed">
+      <span class="label">Closed</span>
+      <span class="count">{{ summary.closed }}</span>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <p-tabView>
+
+    <!-- ======== My Tickets ======== -->
+    <p-tabPanel header="My Tickets">
+      <p-table [value]="myTickets" [loading]="loadingMy" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>#</th><th>Subject</th><th>Category</th><th>Priority</th>
+            <th>Status</th><th>Created</th><th style="width:8rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td class="text-muted text-sm">{{ t.ticketNumber }}</td>
+            <td class="font-semibold">{{ t.subject }}</td>
+            <td>{{ t.category }}</td>
+            <td><p-tag [value]="t.priority" [severity]="prioritySeverity(t.priority)"></p-tag></td>
+            <td><p-tag [value]="t.status" [severity]="statusSeverity(t.status)"></p-tag></td>
+            <td>{{ t.createdDate | date:'dd MMM yyyy' }}</td>
+            <td><button pButton type="button" icon="pi pi-eye" class="p-button-text p-button-sm"
+                        (click)="openDetail(t)" title="View Details"></button></td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7" class="empty-cell">You haven't raised any tickets yet.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ======== All Tickets (Admin/HR) ======== -->
+    <p-tabPanel *appHasPermission="'helpdesk.view'" header="All Tickets">
+      <div class="tab-toolbar">
+        <div class="filter-group">
+          <p-dropdown [options]="statuses" [(ngModel)]="statusFilter" placeholder="Filter by Status"
+                      [showClear]="true" (onChange)="onFilterChange()" styleClass="w-44"></p-dropdown>
+          <p-dropdown [options]="categories" [(ngModel)]="categoryFilter" placeholder="Filter by Category"
+                      [showClear]="true" (onChange)="onFilterChange()" styleClass="w-44 ml-2"></p-dropdown>
+        </div>
+        <span></span>
+      </div>
+
+      <p-table [value]="allTickets" [loading]="loadingAll" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>#</th><th>Subject</th><th>Category</th><th>Priority</th>
+            <th>Status</th><th>Raised By</th><th>Assigned To</th><th>Created</th>
+            <th style="width:10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td class="text-muted text-sm">{{ t.ticketNumber }}</td>
+            <td class="font-semibold">{{ t.subject }}</td>
+            <td>{{ t.category }}</td>
+            <td><p-tag [value]="t.priority" [severity]="prioritySeverity(t.priority)"></p-tag></td>
+            <td><p-tag [value]="t.status" [severity]="statusSeverity(t.status)"></p-tag></td>
+            <td>{{ t.raisedByName }}</td>
+            <td>{{ t.assignedToName || '—' }}</td>
+            <td>{{ t.createdDate | date:'dd MMM yyyy' }}</td>
+            <td class="actions-cell">
+              <button pButton type="button" icon="pi pi-eye" class="p-button-text p-button-sm"
+                      (click)="openDetail(t)" title="View"></button>
+              <button *appHasPermission="'helpdesk.manage'" pButton type="button" icon="pi pi-user-edit"
+                      class="p-button-text p-button-sm" (click)="openAssign(t)" title="Assign"></button>
+              <button *appHasPermission="'helpdesk.manage'" pButton type="button" icon="pi pi-sync"
+                      class="p-button-text p-button-sm" (click)="openStatusChange(t)" title="Change Status"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="9" class="empty-cell">No tickets found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- ======== New Ticket Dialog ======== -->
+<p-dialog header="Raise a New Ticket" [(visible)]="showTicketDialog" [modal]="true" [style]="{width:'34rem'}">
+  <div class="form-grid">
+    <label>
+      <span>Category</span>
+      <p-dropdown [options]="categories" [(ngModel)]="ticketForm.category" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+    <label>
+      <span>Priority</span>
+      <p-dropdown [options]="priorities" [(ngModel)]="ticketForm.priority" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Subject</span>
+      <input pInputText [(ngModel)]="ticketForm.subject" />
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="ticketForm.description" rows="5"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showTicketDialog=false"></button>
+    <button pButton label="Submit Ticket" icon="pi pi-send" (click)="submitTicket()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Ticket Detail Dialog ======== -->
+<p-dialog header="Ticket Details" [(visible)]="showDetailDialog" [modal]="true" [style]="{width:'46rem'}">
+  @if (detailTicket) {
+    <div class="ticket-detail">
+      <div class="ticket-meta">
+        <span class="ticket-number">#{{ detailTicket.ticketNumber }}</span>
+        <p-tag [value]="detailTicket.status" [severity]="statusSeverity(detailTicket.status)"></p-tag>
+        <p-tag [value]="detailTicket.priority" [severity]="prioritySeverity(detailTicket.priority)"></p-tag>
+      </div>
+      <h3 class="ticket-subject">{{ detailTicket.subject }}</h3>
+      <div class="ticket-info-row">
+        <span><strong>Category:</strong> {{ detailTicket.category }}</span>
+        <span><strong>Raised by:</strong> {{ detailTicket.raisedByName }}</span>
+        <span><strong>Assigned to:</strong> {{ detailTicket.assignedToName || '—' }}</span>
+        <span><strong>Created:</strong> {{ detailTicket.createdDate | date:'dd MMM yyyy, HH:mm' }}</span>
+      </div>
+      <div class="ticket-description">
+        <h4>Description</h4>
+        <p>{{ detailTicket.description }}</p>
+      </div>
+
+      @if (detailTicket.comments.length) {
+        <div class="comments-section">
+          <h4>Comments ({{ detailTicket.comments.length }})</h4>
+          @for (c of detailTicket.comments; track c.id) {
+            <div class="comment-item">
+              <div class="comment-author">{{ c.authorName }}</div>
+              <div class="comment-text">{{ c.comment }}</div>
+              <div class="comment-date text-muted text-sm">{{ c.createdDate | date:'dd MMM yyyy, HH:mm' }}</div>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="add-comment">
+        <h4>Add Comment</h4>
+        <textarea pInputTextarea [(ngModel)]="newComment" rows="3" placeholder="Write your comment..."></textarea>
+        <div class="comment-action">
+          <button pButton label="Post Comment" icon="pi pi-comment" class="p-button-sm"
+                  [disabled]="!newComment.trim()" (click)="submitComment()"></button>
+        </div>
+      </div>
+    </div>
+  }
+</p-dialog>
+
+<!-- ======== Assign Dialog ======== -->
+<p-dialog header="Assign Ticket" [(visible)]="showAssignDialog" [modal]="true" [style]="{width:'26rem'}">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Assign to User ID</span>
+      <p-inputNumber [(ngModel)]="assignUserId" [useGrouping]="false" [style]="{width:'100%'}"></p-inputNumber>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showAssignDialog=false"></button>
+    <button pButton label="Assign" (click)="submitAssign()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Status Change Dialog ======== -->
+<p-dialog header="Change Ticket Status" [(visible)]="showStatusDialog" [modal]="true" [style]="{width:'26rem'}">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>New Status</span>
+      <p-dropdown [options]="statuses" [(ngModel)]="newStatus" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showStatusDialog=false"></button>
+    <button pButton label="Update Status" (click)="submitStatusChange()"></button>
+  </ng-template>
+</p-dialog>

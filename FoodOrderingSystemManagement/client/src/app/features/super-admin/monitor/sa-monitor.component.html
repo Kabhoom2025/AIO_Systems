@@ -1,0 +1,184 @@
+<div class="monitor-page">
+
+  <!-- Header -->
+  <div class="monitor-header">
+    <div>
+      <h1>Platform Monitor</h1>
+      <span class="last-update">Last updated: {{ lastUpdate() | date:'HH:mm:ss' }}</span>
+    </div>
+    <button class="refresh-btn" (click)="loadAll()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading platform data...</p>
+    </div>
+  } @else {
+
+  <!-- API Health Strip -->
+  <div class="section-title">API Health</div>
+  <div class="health-strip">
+    @for (api of summary().apis; track api.name) {
+      <div class="health-card" [class]="'health-' + api.status">
+        <span class="status-dot"></span>
+        <div class="api-info">
+          <span class="api-name">{{ api.name }}</span>
+          @if (api.status === 'up') {
+            <span class="api-latency">{{ api.latency }}ms</span>
+          } @else if (api.status === 'down') {
+            <span class="api-latency">Unreachable</span>
+          } @else {
+            <span class="api-latency">Checking...</span>
+          }
+        </div>
+        <span class="status-label">{{ api.status | uppercase }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Platform KPIs -->
+  <div class="section-title">Platform Overview</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon org-icon">business</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().totalOrgs }}</span>
+        <span class="kpi-label">Total Organizations</span>
+        <span class="kpi-sub">{{ summary().activeOrgs }} active</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon user-icon">people</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().totalUsers }}</span>
+        <span class="kpi-label">Total Users</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon order-icon">receipt_long</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().restaurant.todayOrders }}</span>
+        <span class="kpi-label">Today's Orders</span>
+        <span class="kpi-sub">{{ summary().restaurant.weekOrders }} this week</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon revenue-icon">payments</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().restaurant.todayRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+        <span class="kpi-label">Today's Revenue</span>
+        <span class="kpi-sub">{{ summary().restaurant.monthRevenue | currency:'INR':'symbol':'1.0-0' }} this month</span>
+      </div>
+    </div>
+    <div class="kpi-card" [class.alert-card]="summary().pharmacy.expiryAlerts > 0">
+      <mat-icon class="kpi-icon expiry-icon">warning_amber</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().pharmacy.expiryAlerts }}</span>
+        <span class="kpi-label">Expiry Alerts</span>
+        <span class="kpi-sub">{{ summary().pharmacy.totalMedicines }} total medicines</span>
+      </div>
+    </div>
+    <div class="kpi-card" [class.alert-card]="summary().pharmacy.pendingRx > 0">
+      <mat-icon class="kpi-icon rx-icon">assignment</mat-icon>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ summary().pharmacy.pendingRx }}</span>
+        <span class="kpi-label">Pending Prescriptions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-Organization Cards -->
+  <div class="section-title">
+    Organizations
+    <span class="section-count">{{ orgs().length }}</span>
+  </div>
+  <div class="orgs-grid">
+    @for (org of orgs(); track org.id) {
+      <div class="org-card" [class.inactive]="!org.isActive">
+        <div class="org-header">
+          <div class="org-name-row">
+            <span class="org-name">{{ org.name }}</span>
+            <span class="org-status" [class.active]="org.isActive">{{ org.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+          <div class="org-modules">
+            @for (mod of org.enabledModules; track mod) {
+              <span class="module-badge" [style.background]="moduleColor(mod)">
+                <mat-icon>{{ moduleIcon(mod) }}</mat-icon>
+                {{ mod | titlecase }}
+              </span>
+            }
+            @empty {
+              <span class="no-modules">No modules enabled</span>
+            }
+          </div>
+        </div>
+
+        <div class="org-stats">
+          @if (org.restaurant) {
+            <div class="stat-group">
+              <div class="stat-group-title">
+                <mat-icon>restaurant</mat-icon> Restaurant
+              </div>
+              <div class="stat-row">
+                <div class="stat-item">
+                  <span class="stat-val">{{ org.restaurant.todayOrders }}</span>
+                  <span class="stat-lbl">Today Orders</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val">{{ org.restaurant.todayRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+                  <span class="stat-lbl">Today Revenue</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val">{{ org.restaurant.totalOrders }}</span>
+                  <span class="stat-lbl">All-time Orders</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (org.pharmacy) {
+            <div class="stat-group pharmacy-group">
+              <div class="stat-group-title">
+                <mat-icon>local_pharmacy</mat-icon> Pharmacy
+              </div>
+              <div class="stat-row">
+                <div class="stat-item">
+                  <span class="stat-val">{{ org.pharmacy.totalMedicines }}</span>
+                  <span class="stat-lbl">Medicines</span>
+                </div>
+                <div class="stat-item" [class.alert-stat]="org.pharmacy.expiryAlerts > 0">
+                  <span class="stat-val">{{ org.pharmacy.expiryAlerts }}</span>
+                  <span class="stat-lbl">Expiry Alerts</span>
+                </div>
+                <div class="stat-item" [class.alert-stat]="org.pharmacy.pendingPrescriptions > 0">
+                  <span class="stat-val">{{ org.pharmacy.pendingPrescriptions }}</span>
+                  <span class="stat-lbl">Pending Rx</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (!org.restaurant && !org.pharmacy) {
+            <div class="no-stats">No module data available</div>
+          }
+        </div>
+
+        <div class="org-footer">
+          <span class="user-count">
+            <mat-icon>person</mat-icon> {{ org.userCount }} users
+          </span>
+        </div>
+      </div>
+    }
+    @empty {
+      <div class="empty-orgs">No organizations found.</div>
+    }
+  </div>
+
+  } <!-- end @if loading -->
+
+</div>

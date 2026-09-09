@@ -1,0 +1,120 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">verified</mat-icon>
+      <div>
+        <h1 class="page-title">License Management</h1>
+        <p class="page-subtitle">Manage organization subscription plans and license status</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" class="add-btn" (click)="openAssign()">
+      <mat-icon>add</mat-icon>
+      Assign License
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon total"><mat-icon>list_alt</mat-icon></div>
+      <div><span class="stat-value">{{ stats().total }}</span><span class="stat-label">Total</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active"><mat-icon>check_circle</mat-icon></div>
+      <div><span class="stat-value">{{ stats().active }}</span><span class="stat-label">Active</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon trial"><mat-icon>hourglass_bottom</mat-icon></div>
+      <div><span class="stat-value">{{ stats().trial }}</span><span class="stat-label">Trial</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon expired"><mat-icon>cancel</mat-icon></div>
+      <div><span class="stat-value">{{ stats().expired }}</span><span class="stat-label">Expired</span></div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <mat-icon>search</mat-icon>
+    <input [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search by branch or plan…" />
+    @if (searchTerm()) {
+      <button class="clear-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading licenses…</p>
+    </div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">verified_user</mat-icon>
+      <h3>{{ searchTerm() ? 'No matching licenses' : 'No Licenses Found' }}</h3>
+      <p>{{ searchTerm() ? 'Try a different search term.' : 'Assign a license to an organization to get started.' }}</p>
+    </div>
+  } @else {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Plan</th>
+            <th>Status</th>
+            <th>Expiry Date</th>
+            <th>Max Users</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lic of filtered(); track lic.id) {
+            <tr>
+              <td>
+                <div class="org-cell">
+                  <mat-icon class="row-icon">business</mat-icon>
+                  {{ lic.orgName }}
+                </div>
+              </td>
+              <td>
+                <span class="plan-chip" [class]="lic.plan.toLowerCase()">{{ lic.plan }}</span>
+              </td>
+              <td>
+                <span class="status-chip" [class]="lic.status.toLowerCase()">
+                  <mat-icon>circle</mat-icon>
+                  {{ lic.status }}
+                </span>
+              </td>
+              <td>
+                <span [class.expiring-soon]="isExpiringSoon(lic.expiryDate)" [class.expired-date]="daysUntilExpiry(lic.expiryDate) < 0">
+                  <mat-icon class="date-icon">calendar_today</mat-icon>
+                  {{ lic.expiryDate | date:'dd MMM yyyy' }}
+                  <span class="expiry-time">
+                    <mat-icon class="time-icon">schedule</mat-icon>
+                    {{ lic.expiryDate | date:'HH:mm' }}
+                  </span>
+                  @if (isExpiringSoon(lic.expiryDate)) {
+                    <mat-icon class="warn-icon" [matTooltip]="'Expiring in ' + daysUntilExpiry(lic.expiryDate) + ' days'">warning</mat-icon>
+                  }
+                </span>
+              </td>
+              <td>{{ lic.maxUsers }}</td>
+              <td>
+                <div class="action-btns">
+                  <button mat-icon-button (click)="openEdit(lic)" matTooltip="Edit License">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="confirmDelete(lic)" matTooltip="Remove License" class="delete-btn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>

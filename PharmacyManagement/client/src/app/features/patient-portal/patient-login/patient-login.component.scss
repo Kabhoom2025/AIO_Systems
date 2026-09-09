@@ -1,0 +1,98 @@
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+.patient-auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  background: #F5F7F3;
+}
+@media (min-width: 900px) {
+  .patient-auth-page { grid-template-columns: 1.1fr 1fr; }
+}
+
+.brand-panel {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px;
+  background: linear-gradient(180deg, #0E4D42, #0A3931);
+  color: #F5F7F3;
+}
+@media (min-width: 900px) { .brand-panel { display: flex; } }
+
+.brand-mark {
+  display: flex; align-items: center; gap: 10px;
+  font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700;
+  margin-bottom: 40px;
+}
+.brand-panel h1 {
+  font-family: Georgia, serif;
+  font-size: 2.3rem;
+  line-height: 1.15;
+  margin: 0 0 18px;
+}
+.brand-panel h1 em { font-style: normal; color: #E98A2E; }
+.brand-panel p { max-width: 40ch; color: rgba(245,247,243,0.82); font-size: 1.02rem; }
+
+.form-panel {
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 44px -20px rgba(18,35,31,0.22);
+  padding: 36px 32px;
+}
+.auth-card h2 { font-family: Georgia, serif; margin: 0 0 6px; color: #12231F; font-size: 1.5rem; }
+.auth-card .sub { margin: 0 0 26px; color: #4B5D58; font-size: 0.9rem; }
+
+.field { display: block; margin-bottom: 8px; }
+.field span { display: block; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #4B5D58; margin-bottom: 8px; }
+
+.phone-input {
+  display: flex; align-items: center;
+  border: 1px solid #DCE6E1; border-radius: 10px; overflow: hidden;
+}
+.phone-input .prefix { padding: 12px 12px; background: #F5F7F3; color: #4B5D58; font-weight: 600; font-size: 0.92rem; }
+.phone-input input {
+  flex: 1; border: none; outline: none; padding: 12px 14px; font-size: 0.98rem; color: #12231F;
+  min-width: 0;
+}
+
+.otp-input {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid #DCE6E1; border-radius: 10px; padding: 14px;
+  font-size: 1.3rem; letter-spacing: 0.5em; text-align: center; font-variant-numeric: tabular-nums;
+  color: #12231F; margin-bottom: 8px;
+}
+
+.error-msg {
+  background: #FCEBEB; color: #B23A3A; font-size: 0.84rem;
+  padding: 10px 12px; border-radius: 8px; margin: 10px 0;
+}
+
+.dev-banner {
+  background: #FDF2E3; border: 1px dashed #E98A2E; color: #8A5A16;
+  font-size: 0.82rem; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+  line-height: 1.5;
+}
+.dev-banner strong { font-variant-numeric: tabular-nums; letter-spacing: 0.1em; font-size: 1rem; }
+
+.btn-primary {
+  width: 100%; background: #E98A2E; color: #21140A; border: none;
+  font-weight: 700; font-size: 0.96rem; padding: 13px; border-radius: 999px;
+  cursor: pointer; margin-top: 14px;
+}
+.btn-primary:hover { background: #C96F1B; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-link {
+  width: 100%; background: none; border: none; color: #0E4D42; font-weight: 600;
+  font-size: 0.86rem; padding: 10px; cursor: pointer;
+}
+
+.fine-print { font-size: 0.76rem; color: #4B5D58; margin: 18px 0 0; text-align: center; }

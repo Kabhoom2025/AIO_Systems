@@ -1,0 +1,34 @@
+<div class="appts-page">
+  <div class="page-header">
+    <div class="eyebrow">Your visits</div>
+    <h1>My Appointments</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading appointments…</div>
+  } @else {
+    <div class="appt-list">
+      @for (a of appointments(); track a.id) {
+        <div class="appt-card">
+          <div class="appt-main">
+            <h3>{{ a.doctorName }}</h3>
+            <div class="specialty">{{ a.doctorSpecialty || 'General Medicine' }}</div>
+            <div class="meta">{{ a.branchName }} &middot; {{ a.preferredDate | date:'mediumDate' }} &middot; {{ a.timeSlot }}</div>
+            @if (a.notes) { <div class="notes">"{{ a.notes }}"</div> }
+          </div>
+          <div class="appt-side">
+            <span class="status-badge" [style.background]="statusColor(a.status)">{{ a.status }}</span>
+            @if (canCancel(a.status)) {
+              <button class="btn-cancel" [disabled]="cancellingId() === a.id" (click)="cancel(a)">
+                {{ cancellingId() === a.id ? 'Cancelling…' : 'Cancel' }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">You don't have any appointments yet. Book one from the Doctors page.</div>
+      }
+    </div>
+  }
+</div>

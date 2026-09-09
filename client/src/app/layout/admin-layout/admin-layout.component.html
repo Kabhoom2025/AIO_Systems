@@ -1,0 +1,49 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="sidebar">
+    <div class="brand">
+      <mat-icon>admin_panel_settings</mat-icon>
+      @if (!collapsed()) {
+        <span>AIO Systems</span>
+      }
+    </div>
+
+    <nav>
+      @for (item of navItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [matTooltip]="collapsed() ? item.label : ''"
+          matTooltipPosition="right"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          @if (!collapsed()) {
+            <span>{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <button mat-icon-button class="collapse-toggle" (click)="toggleSidebar()">
+      <mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </aside>
+
+  <div class="main">
+    <header>
+      <div class="header-title">
+        <mat-icon>admin_panel_settings</mat-icon>
+        <span>Platform Control Panel</span>
+      </div>
+      <div class="header-user">
+        <span class="user-name">{{ auth.userName() }}</span>
+        <button mat-icon-button matTooltip="Logout" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <router-outlet />
+    </main>
+  </div>
+</div>

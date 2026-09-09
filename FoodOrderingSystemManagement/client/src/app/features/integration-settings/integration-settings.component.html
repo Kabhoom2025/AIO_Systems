@@ -1,0 +1,94 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>cable</mat-icon></div>
+      <div>
+        <h1 class="page-title">Integration Settings</h1>
+        <p class="page-subtitle">Connect third-party services and manage API credentials</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="center-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  <!-- Grid -->
+  @if (!loading() && settings()) {
+    <div class="integrations-grid">
+      @for (intg of integrations; track intg.id) {
+
+        <div class="integration-card" [class.connected]="isConnected(intg)" [class.open]="expanded() === intg.id">
+
+          <!-- Card top row -->
+          <div class="card-top">
+            <div class="intg-icon-wrap" [class.active]="isConnected(intg)">
+              <mat-icon>{{ intg.icon }}</mat-icon>
+            </div>
+            <div class="intg-meta">
+              <div class="intg-name">{{ intg.name }}</div>
+              <div class="intg-category">{{ intg.category }}</div>
+            </div>
+            <span class="status-chip" [class.connected]="isConnected(intg)">
+              @if (isConnected(intg)) { <mat-icon>check_circle</mat-icon> Connected }
+              @else { <mat-icon>radio_button_unchecked</mat-icon> Not configured }
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p class="intg-desc">{{ intg.description }}</p>
+
+          <!-- Action buttons -->
+          <div class="card-actions">
+            <button mat-stroked-button color="primary" (click)="toggleExpand(intg.id)">
+              @if (expanded() === intg.id) { <mat-icon>expand_less</mat-icon> }
+              @if (expanded() !== intg.id) { <mat-icon>{{ isConnected(intg) ? 'settings' : 'add_link' }}</mat-icon> }
+              {{ expanded() === intg.id ? 'Hide' : (isConnected(intg) ? 'Configure' : 'Connect') }}
+            </button>
+            @if (isConnected(intg)) {
+              <button mat-stroked-button color="warn" (click)="disconnect(intg)"
+                      [disabled]="saving() === intg.id">
+                <mat-icon>link_off</mat-icon>
+                Disconnect
+              </button>
+            }
+          </div>
+
+          <!-- Configure panel -->
+          @if (expanded() === intg.id) {
+            <div class="configure-panel">
+              <div class="panel-fields">
+                @for (field of intg.fields; track field.key) {
+                  <mat-form-field appearance="outline" class="panel-field">
+                    <mat-label>{{ field.label }}</mat-label>
+                    <input matInput
+                           [type]="field.type ?? 'text'"
+                           [placeholder]="field.placeholder"
+                           [value]="getField(field.key)"
+                           (input)="setField(field.key, $any($event.target).value)">
+                    @if (field.hint) { <mat-hint>{{ field.hint }}</mat-hint> }
+                  </mat-form-field>
+                }
+              </div>
+              <div class="panel-actions">
+                <button mat-button (click)="toggleExpand(intg.id)">Cancel</button>
+                <button mat-raised-button color="primary"
+                        (click)="saveIntegration(intg)"
+                        [disabled]="saving() === intg.id">
+                  @if (saving() === intg.id) { <mat-spinner diameter="16"></mat-spinner> }
+                  @if (saving() !== intg.id) { <mat-icon>save</mat-icon> }
+                  {{ saving() === intg.id ? 'Saving...' : 'Save' }}
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

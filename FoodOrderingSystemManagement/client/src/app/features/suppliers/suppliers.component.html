@@ -1,0 +1,210 @@
+<div class="suppliers-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>storefront</mat-icon>
+      <div>
+        <h1>Suppliers</h1>
+        <p>Manage suppliers, purchase orders &amp; payments</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> New Supplier
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <mat-icon>storefront</mat-icon>
+      <div><span class="stat-value">{{ totalSuppliers() }}</span><span class="stat-label">Total Suppliers</span></div>
+    </div>
+    <div class="stat-card">
+      <mat-icon>check_circle</mat-icon>
+      <div><span class="stat-value">{{ activeCount() }}</span><span class="stat-label">Active</span></div>
+    </div>
+    <div class="stat-card">
+      <mat-icon>payments</mat-icon>
+      <div><span class="stat-value">&#8377;{{ totalPaid() | number:'1.0-0' }}</span><span class="stat-label">Total Paid</span></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <mat-icon>search</mat-icon>
+      <input [(ngModel)]="searchTerm" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search by name, contact, email…" />
+      @if (searchTerm()) {
+        <button class="clear-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+      }
+    </div>
+    <div class="filter-tabs">
+      <button class="ftab" [class.active]="filterActive() === 'all'"      (click)="filterActive.set('all')">All</button>
+      <button class="ftab" [class.active]="filterActive() === 'active'"   (click)="filterActive.set('active')">Active</button>
+      <button class="ftab" [class.active]="filterActive() === 'inactive'" (click)="filterActive.set('inactive')">Inactive</button>
+    </div>
+    <span class="count-badge">{{ filtered().length }} supplier{{ filtered().length !== 1 ? 's' : '' }}</span>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="44" /><p>Loading suppliers…</p></div>
+  }
+
+  @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>storefront</mat-icon>
+      <h3>{{ searchTerm() ? 'No results found' : 'No suppliers yet' }}</h3>
+      <p>{{ searchTerm() ? 'Try clearing the search.' : 'Click "New Supplier" to add your first supplier.' }}</p>
+    </div>
+  }
+
+  @else {
+    <div class="content-area" [class.has-detail]="selectedId() !== null">
+
+      <!-- Supplier list -->
+      <div class="supplier-list">
+        <div class="list-head">
+          <span>Supplier</span>
+          <span>Contact</span>
+          <span>Orders</span>
+          <span>Total Paid</span>
+          <span>Status</span>
+          <span>Actions</span>
+        </div>
+
+        @for (s of filtered(); track s.id) {
+          <div class="list-row" [class.selected]="selectedId() === s.id" [class.inactive]="!s.isActive"
+               (click)="selectSupplier(s.id)">
+            <div class="supplier-info">
+              <div class="supplier-avatar">{{ s.name.charAt(0).toUpperCase() }}</div>
+              <div>
+                <span class="supplier-name">{{ s.name }}</span>
+                @if (s.paymentTerms) { <span class="supplier-terms">{{ s.paymentTerms }}</span> }
+              </div>
+            </div>
+            <div class="contact-info">
+              @if (s.contactPerson) { <span class="contact-name"><mat-icon>person</mat-icon> {{ s.contactPerson }}</span> }
+              @if (s.phone) { <span class="contact-phone"><mat-icon>phone</mat-icon> {{ s.phone }}</span> }
+            </div>
+            <span class="orders-count">{{ s.purchaseOrderCount }}</span>
+            <span class="total-paid">&#8377;{{ s.totalPaid | number:'1.0-0' }}</span>
+            <span class="status-badge" [class.active]="s.isActive" [class.inactive]="!s.isActive">
+              {{ s.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <div class="row-actions" (click)="$event.stopPropagation()">
+              <button mat-icon-button (click)="openPurchaseOrder(s)" matTooltip="New Purchase Order" color="primary">
+                <mat-icon>receipt_long</mat-icon>
+              </button>
+              <button mat-icon-button (click)="openPayment(s)" matTooltip="Record Payment" style="color:#2e7d32">
+                <mat-icon>payments</mat-icon>
+              </button>
+              <button mat-icon-button (click)="openEdit(s)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="confirmDelete(s)" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Detail panel -->
+      @if (selectedSupplier(); as s) {
+        <div class="detail-panel">
+          <div class="dp-header">
+            <div class="dp-avatar">{{ s.name.charAt(0).toUpperCase() }}</div>
+            <div class="dp-info">
+              <h2>{{ s.name }}</h2>
+              @if (s.contactPerson) { <p><mat-icon>person</mat-icon> {{ s.contactPerson }}</p> }
+              @if (s.email) { <p><mat-icon>email</mat-icon> {{ s.email }}</p> }
+              @if (s.phone) { <p><mat-icon>phone</mat-icon> {{ s.phone }}</p> }
+              @if (s.address) { <p><mat-icon>location_on</mat-icon> {{ s.address }}</p> }
+              @if (s.taxNumber) { <p><mat-icon>badge</mat-icon> {{ s.taxNumber }}</p> }
+            </div>
+            <button class="dp-close" (click)="selectedId.set(null)"><mat-icon>close</mat-icon></button>
+          </div>
+
+          <div class="dp-tabs">
+            <button class="dp-tab" [class.active]="detailTab() === 'orders'" (click)="detailTab.set('orders')">
+              <mat-icon>receipt_long</mat-icon> Purchase Orders ({{ purchaseOrders().length }})
+            </button>
+            <button class="dp-tab" [class.active]="detailTab() === 'payments'" (click)="detailTab.set('payments')">
+              <mat-icon>payments</mat-icon> Payments ({{ payments().length }})
+            </button>
+          </div>
+
+          @if (detailTab() === 'orders') {
+            <div class="dp-content">
+              <div class="dp-toolbar">
+                <button class="btn-new-po" (click)="openPurchaseOrder(s)">
+                  <mat-icon>add</mat-icon> New PO
+                </button>
+              </div>
+              @if (purchaseOrders().length === 0) {
+                <div class="dp-empty"><mat-icon>receipt_long</mat-icon><p>No purchase orders yet</p></div>
+              } @else {
+                @for (po of purchaseOrders(); track po.id) {
+                  <div class="po-card">
+                    <div class="po-top">
+                      <span class="po-number">{{ po.poNumber }}</span>
+                      <span class="po-status-badge" [style.color]="poStatusColor(po.status)" [style.background]="poStatusBg(po.status)">
+                        {{ po.status }}
+                      </span>
+                    </div>
+                    <div class="po-meta">
+                      <span><mat-icon>calendar_today</mat-icon> {{ po.orderDate | date:'dd MMM yyyy' }}</span>
+                      @if (po.expectedDate) { <span><mat-icon>event</mat-icon> Expected: {{ po.expectedDate | date:'dd MMM yyyy' }}</span> }
+                    </div>
+                    <div class="po-items-count">{{ po.items.length }} item{{ po.items.length !== 1 ? 's' : '' }}</div>
+                    <div class="po-footer">
+                      <span class="po-total">&#8377;{{ po.totalAmount | number:'1.2-2' }}</span>
+                      @if (nextStatuses(po.status).length > 0) {
+                        <div class="po-actions">
+                          @for (ns of nextStatuses(po.status); track ns) {
+                            <button class="po-status-btn" [style.border-color]="poStatusColor(ns)" [style.color]="poStatusColor(ns)"
+                                    (click)="updatePoStatus(po, ns)">{{ ns }}</button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          @if (detailTab() === 'payments') {
+            <div class="dp-content">
+              <div class="dp-toolbar">
+                <button class="btn-new-po" (click)="openPayment(s)">
+                  <mat-icon>add</mat-icon> Record Payment
+                </button>
+              </div>
+              @if (payments().length === 0) {
+                <div class="dp-empty"><mat-icon>payments</mat-icon><p>No payments recorded yet</p></div>
+              } @else {
+                @for (p of payments(); track p.id) {
+                  <div class="payment-card">
+                    <div class="pay-left">
+                      <span class="pay-method-icon"><mat-icon>payments</mat-icon></span>
+                      <div>
+                        <span class="pay-method">{{ p.paymentMethod }}</span>
+                        @if (p.poNumber) { <span class="pay-po">{{ p.poNumber }}</span> }
+                        <span class="pay-date">{{ p.paymentDate | date:'dd MMM yyyy' }}</span>
+                      </div>
+                    </div>
+                    <span class="pay-amount">&#8377;{{ p.amount | number:'1.2-2' }}</span>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/features/login/login.component.scss"],
+  "sourcesContent": [".login-page {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  height: 100vh;\n  background: #f4f6f9;\n}\n\n.login-card {\n  width: 360px;\n}\n\n.form-field {\n  margin-bottom: 1rem;\n  display: flex;\n  flex-direction: column;\n  gap: 0.375rem;\n\n  label {\n    font-size: 0.8rem;\n    font-weight: 600;\n    color: #374151;\n  }\n}\n\n.full-width {\n  width: 100%;\n}\n\n:host ::ng-deep .full-width input {\n  width: 100%;\n}\n"],
+  "mappings": ";AAAA,CAAA;AACE,WAAA;AACA,eAAA;AACA,mBAAA;AACA,UAAA;AACA,cAAA;;AAGF,CAAA;AACE,SAAA;;AAGF,CAAA;AACE,iBAAA;AACA,WAAA;AACA,kBAAA;AACA,OAAA;;AAEA,CANF,WAME;AACE,aAAA;AACA,eAAA;AACA,SAAA;;AAIJ,CAAA;AACE,SAAA;;AAGF,MAAA,UAAA,CAJA,WAIA;AACE,SAAA;;",
+  "names": []
+}

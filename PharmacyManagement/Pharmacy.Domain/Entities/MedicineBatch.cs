@@ -1,0 +1,16 @@
+namespace Pharmacy.Domain.Entities;
+
+public class MedicineBatch : BaseEntity
+{
+    public int      MedicineId          { get; set; }
+    public int      BranchId            { get; set; }
+    public string   BatchNumber         { get; set; } = string.Empty;
+    public DateTime ExpiryDate          { get; set; }
+    public DateTime? ManufacturingDate  { get; set; }
+    public int      QuantityReceived    { get; set; }
+    public int      CurrentQuantity     { get; set; }
+    public decimal  PurchasePrice       { get; set; }
+
+    public Medicine Medicine { get; set; } = null!;
+    public Branch   Branch   { get; set; } = null!;
+}

@@ -1,0 +1,29 @@
+.orders-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+
+.orders-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  th, td { text-align: left; padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f8f9fa; color: #555; }
+  a { color: #1a237e; cursor: pointer; font-weight: 600; }
+  button { padding: 4px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; font-size: 0.75rem; }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+.status-badge { color: #fff; font-weight: 600; font-size: 0.74rem; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.02em; }
+.loading, .empty { text-align: center; padding: 3rem; color: #999; }
+
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.dialog { background: #fff; border-radius: 12px; padding: 2rem; width: 650px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  h3 { margin: 0 0 1rem; color: #1a237e; }
+}
+.info-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; color: #555;
+  b { color: #222; }
+  &.total { font-size: 1.05rem; border-top: 1px solid #eee; padding-top: 8px; margin-top: 8px; }
+}
+.items-table { width: 100%; border-collapse: collapse; margin: 1rem 0;
+  th, td { text-align: left; padding: 6px 8px; font-size: 0.8rem; border-bottom: 1px solid #f0f0f0; }
+}
+.dialog-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;
+  button { padding: 8px 20px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
+}

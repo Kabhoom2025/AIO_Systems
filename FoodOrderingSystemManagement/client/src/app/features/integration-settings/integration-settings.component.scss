@@ -1,0 +1,97 @@
+:host { display: block; }
+
+.page-container { padding: 24px; max-width: 1100px; }
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
+}
+
+.header-left { display: flex; align-items: center; gap: 14px; }
+
+.header-icon-wrap {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  mat-icon { color: #fff; font-size: 26px; width: 26px; height: 26px; }
+}
+
+.page-title    { margin: 0; font-size: 1.55rem; font-weight: 700; color: #1e293b; }
+.page-subtitle { margin: 4px 0 0; font-size: .85rem; color: #64748b; }
+
+/* ── Loading ─────────────────────────────────────────────────────── */
+.center-spinner { display: flex; justify-content: center; padding: 60px 0; }
+
+/* ── Grid ────────────────────────────────────────────────────────── */
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────── */
+.integration-card {
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  border: 1.5px solid #e2e8f0;
+  padding: 20px; transition: border-color .2s;
+
+  &.connected { border-color: #bbf7d0; }
+  &.open      { border-color: #bae6fd; box-shadow: 0 2px 12px rgba(14,165,233,.1); }
+}
+
+/* ── Card top row ────────────────────────────────────────────────── */
+.card-top {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+
+.intg-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: #f1f5f9; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+  mat-icon { color: #94a3b8; font-size: 22px; width: 22px; height: 22px; transition: color .2s; }
+
+  &.active {
+    background: #e0f2fe;
+    mat-icon { color: #0284c7; }
+  }
+}
+
+.intg-meta { flex: 1; min-width: 0; }
+.intg-name     { font-size: .9rem; font-weight: 600; color: #1e293b; }
+.intg-category { font-size: .75rem; color: #94a3b8; margin-top: 1px; }
+
+/* ── Status chip ─────────────────────────────────────────────────── */
+.status-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .7rem; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px; white-space: nowrap;
+  background: #f1f5f9; color: #94a3b8;
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+
+  &.connected { background: #dcfce7; color: #16a34a; }
+}
+
+/* ── Description ─────────────────────────────────────────────────── */
+.intg-desc { font-size: .8rem; color: #64748b; margin: 0 0 14px; line-height: 1.5; }
+
+/* ── Action buttons ──────────────────────────────────────────────── */
+.card-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Configure panel ─────────────────────────────────────────────── */
+.configure-panel {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.panel-fields {
+  display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px;
+}
+
+.panel-field { width: 100%; }
+
+.panel-actions {
+  display: flex; justify-content: flex-end; gap: 10px; align-items: center;
+}

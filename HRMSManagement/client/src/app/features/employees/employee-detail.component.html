@@ -1,0 +1,335 @@
+<div class="employee-detail-page">
+  <div class="page-header">
+    <div class="header-title">
+      <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()"></button>
+      <h1>{{ employee?.fullName || 'Employee' }}</h1>
+      @if (employee) {
+        <p-tag [value]="employee.status" [severity]="statusSeverity(employee.status)"></p-tag>
+      }
+    </div>
+    <div class="header-actions">
+      <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-pencil" label="Edit" (click)="openEditDialog()"></button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="card">Loading employee...</div>
+  } @else if (employee) {
+    <p-tabView>
+      <!-- Profile Tab -->
+      <p-tabPanel header="Profile">
+        <div class="card">
+          <div class="profile-grid">
+            <div class="profile-field"><span>Employee Code</span><b>{{ employee.employeeCode }}</b></div>
+            <div class="profile-field"><span>First Name</span><b>{{ employee.firstName }}</b></div>
+            <div class="profile-field"><span>Last Name</span><b>{{ employee.lastName }}</b></div>
+            <div class="profile-field"><span>Gender</span><b>{{ employee.gender }}</b></div>
+            <div class="profile-field"><span>Date of Birth</span><b>{{ employee.dateOfBirth || '-' }}</b></div>
+            <div class="profile-field"><span>Marital Status</span><b>{{ employee.maritalStatus || '-' }}</b></div>
+            <div class="profile-field"><span>Blood Group</span><b>{{ employee.bloodGroup || '-' }}</b></div>
+            <div class="profile-field"><span>Nationality</span><b>{{ employee.nationality || '-' }}</b></div>
+            <div class="profile-field"><span>Work Email</span><b>{{ employee.workEmail }}</b></div>
+            <div class="profile-field"><span>Personal Email</span><b>{{ employee.personalEmail || '-' }}</b></div>
+            <div class="profile-field"><span>Phone</span><b>{{ employee.phone || '-' }}</b></div>
+            <div class="profile-field"><span>Branch</span><b>{{ employee.branchName }}</b></div>
+            <div class="profile-field"><span>Department</span><b>{{ employee.departmentName }}</b></div>
+            <div class="profile-field"><span>Designation</span><b>{{ employee.designationTitle }}</b></div>
+            <div class="profile-field"><span>Shift</span><b>{{ employee.shiftName || '-' }}</b></div>
+            <div class="profile-field"><span>Manager</span><b>{{ employee.managerName || '-' }}</b></div>
+            <div class="profile-field"><span>Joining Date</span><b>{{ employee.joiningDate }}</b></div>
+            <div class="profile-field"><span>Confirmation Date</span><b>{{ employee.confirmationDate || '-' }}</b></div>
+            <div class="profile-field"><span>Exit Date</span><b>{{ employee.exitDate || '-' }}</b></div>
+            <div class="profile-field"><span>Employment Type</span><b>{{ employee.employmentType }}</b></div>
+            <div class="profile-field"><span>Current Address</span><b>{{ employee.currentAddress || '-' }}</b></div>
+            <div class="profile-field"><span>Permanent Address</span><b>{{ employee.permanentAddress || '-' }}</b></div>
+            <div class="profile-field"><span>National ID</span><b>{{ employee.nationalIdNumber || '-' }}</b></div>
+            <div class="profile-field"><span>Tax ID</span><b>{{ employee.taxIdNumber || '-' }}</b></div>
+            <div class="profile-field"><span>PF Number</span><b>{{ employee.pfNumber || '-' }}</b></div>
+            <div class="profile-field"><span>ESI Number</span><b>{{ employee.esiNumber || '-' }}</b></div>
+            <div class="profile-field"><span>Passport Number</span><b>{{ employee.passportNumber || '-' }}</b></div>
+            <div class="profile-field"><span>Bank Name</span><b>{{ employee.bankName || '-' }}</b></div>
+            <div class="profile-field"><span>Bank Account</span><b>{{ employee.bankAccountNumber || '-' }}</b></div>
+            <div class="profile-field"><span>IFSC Code</span><b>{{ employee.bankIfscCode || '-' }}</b></div>
+            <div class="profile-field"><span>Skills</span><b>{{ employee.skills || '-' }}</b></div>
+            <div class="profile-field"><span>Languages</span><b>{{ employee.languages || '-' }}</b></div>
+            <div class="profile-field full-width"><span>Notes</span><b>{{ employee.notes || '-' }}</b></div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Documents Tab -->
+      <p-tabPanel header="Documents">
+        <div class="card">
+          <div class="tab-header">
+            <h3>Documents</h3>
+            <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-plus" label="Add Document" (click)="openAddDocument()"></button>
+          </div>
+          <p-table [value]="employee.documents" dataKey="id" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Type</th><th>Name</th><th>Expiry Date</th><th>Notes</th><th></th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-doc>
+              <tr>
+                <td>{{ doc.type }}</td>
+                <td>{{ doc.name }}</td>
+                <td>{{ doc.expiryDate || '-' }}</td>
+                <td>{{ doc.notes || '-' }}</td>
+                <td>
+                  <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteDocument(doc)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="empty-row">No documents found.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Education Tab -->
+      <p-tabPanel header="Education">
+        <div class="card">
+          <div class="tab-header">
+            <h3>Education</h3>
+            <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-plus" label="Add Education" (click)="openAddEducation()"></button>
+          </div>
+          <p-table [value]="employee.educations" dataKey="id" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Degree</th><th>Institution</th><th>Field of Study</th><th>Start Year</th><th>End Year</th><th>Grade</th><th></th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-edu>
+              <tr>
+                <td>{{ edu.degree }}</td>
+                <td>{{ edu.institution }}</td>
+                <td>{{ edu.fieldOfStudy || '-' }}</td>
+                <td>{{ edu.startYear || '-' }}</td>
+                <td>{{ edu.endYear || '-' }}</td>
+                <td>{{ edu.grade || '-' }}</td>
+                <td>
+                  <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteEducation(edu)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="7" class="empty-row">No education records found.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Experience Tab -->
+      <p-tabPanel header="Experience">
+        <div class="card">
+          <div class="tab-header">
+            <h3>Experience</h3>
+            <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-plus" label="Add Experience" (click)="openAddExperience()"></button>
+          </div>
+          <p-table [value]="employee.experiences" dataKey="id" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Company</th><th>Title</th><th>Start Date</th><th>End Date</th><th>Description</th><th></th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-exp>
+              <tr>
+                <td>{{ exp.company }}</td>
+                <td>{{ exp.title }}</td>
+                <td>{{ exp.startDate || '-' }}</td>
+                <td>{{ exp.endDate || '-' }}</td>
+                <td>{{ exp.description || '-' }}</td>
+                <td>
+                  <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteExperience(exp)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="6" class="empty-row">No experience records found.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Family Members Tab -->
+      <p-tabPanel header="Family Members">
+        <div class="card">
+          <div class="tab-header">
+            <h3>Family Members</h3>
+            <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-plus" label="Add Family Member" (click)="openAddFamilyMember()"></button>
+          </div>
+          <p-table [value]="employee.familyMembers" dataKey="id" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Date of Birth</th><th>Emergency Contact</th><th></th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-member>
+              <tr>
+                <td>{{ member.name }}</td>
+                <td>{{ member.relationship }}</td>
+                <td>{{ member.phone || '-' }}</td>
+                <td>{{ member.dateOfBirth || '-' }}</td>
+                <td>{{ member.isEmergencyContact ? 'Yes' : 'No' }}</td>
+                <td>
+                  <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteFamilyMember(member)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="6" class="empty-row">No family members found.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Timeline Tab -->
+      <p-tabPanel header="Timeline">
+        <div class="card">
+          <div class="tab-header">
+            <h3>Lifecycle Events</h3>
+            <button *appHasPermission="'employees.edit'" pButton type="button" icon="pi pi-plus" label="Add Event" (click)="openAddEvent()"></button>
+          </div>
+          @if (lifecycleEventsSorted.length) {
+            <ul class="timeline-list">
+              @for (event of lifecycleEventsSorted; track event.id) {
+                <li class="timeline-item">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">
+                      <b>{{ event.eventType }}</b>
+                      <span class="timeline-date">{{ event.eventDate }}</span>
+                    </div>
+                    @if (event.fromValue || event.toValue) {
+                      <div class="timeline-change">{{ event.fromValue || '-' }} &rarr; {{ event.toValue || '-' }}</div>
+                    }
+                    @if (event.remarks) {
+                      <div class="timeline-remarks">{{ event.remarks }}</div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="empty-text">No lifecycle events recorded.</p>
+          }
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  }
+
+  <!-- Edit Profile Dialog -->
+  <p-dialog header="Edit Employee" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '720px' }">
+    <div class="form-grid">
+      <label>First Name <input pInputText [(ngModel)]="editForm.firstName" name="firstName" /></label>
+      <label>Last Name <input pInputText [(ngModel)]="editForm.lastName" name="lastName" /></label>
+      <label>Gender
+        <p-dropdown [options]="genderOptions" [(ngModel)]="editForm.gender" name="gender" optionLabel="label" optionValue="value"></p-dropdown>
+      </label>
+      <label>Work Email <input pInputText type="email" [(ngModel)]="editForm.workEmail" name="workEmail" /></label>
+      <label>Personal Email <input pInputText type="email" [(ngModel)]="editForm.personalEmail" name="personalEmail" /></label>
+      <label>Phone <input pInputText [(ngModel)]="editForm.phone" name="phone" /></label>
+      <label>Branch
+        <p-dropdown [options]="branches" [(ngModel)]="editForm.branchId" name="branchId" optionLabel="name" optionValue="id"></p-dropdown>
+      </label>
+      <label>Department
+        <p-dropdown [options]="departments" [(ngModel)]="editForm.departmentId" name="departmentId" optionLabel="name" optionValue="id"></p-dropdown>
+      </label>
+      <label>Designation
+        <p-dropdown [options]="designations" [(ngModel)]="editForm.designationId" name="designationId" optionLabel="name" optionValue="id"></p-dropdown>
+      </label>
+      <label>Shift
+        <p-dropdown [options]="shifts" [(ngModel)]="editForm.shiftId" name="shiftId" optionLabel="name" optionValue="id" [showClear]="true"></p-dropdown>
+      </label>
+      <label>Joining Date <input pInputText type="date" [(ngModel)]="editForm.joiningDate" name="joiningDate" /></label>
+      <label>Exit Date <input pInputText type="date" [(ngModel)]="editForm.exitDate" name="exitDate" /></label>
+      <label>Employment Type
+        <p-dropdown [options]="employmentTypeOptions" [(ngModel)]="editForm.employmentType" name="employmentType" optionLabel="label" optionValue="value"></p-dropdown>
+      </label>
+      <label>Status
+        <p-dropdown [options]="statusOptions" [(ngModel)]="editForm.status" name="status" optionLabel="label" optionValue="value"></p-dropdown>
+      </label>
+      <label class="full-width">Notes <input pInputText [(ngModel)]="editForm.notes" name="notes" /></label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showEditDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" [loading]="saving" (click)="saveProfile()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Add Document Dialog -->
+  <p-dialog header="Add Document" [(visible)]="showDocDialog" [modal]="true" [style]="{ width: '480px' }">
+    <div class="form-grid">
+      <label>Type <input pInputText [(ngModel)]="docForm.type" name="type" /></label>
+      <label>Name <input pInputText [(ngModel)]="docForm.name" name="name" /></label>
+      <label>File Path / URL <input pInputText [(ngModel)]="docForm.filePath" name="filePath" /></label>
+      <label>Expiry Date <input pInputText type="date" [(ngModel)]="docForm.expiryDate" name="expiryDate" /></label>
+      <label class="full-width">Notes <input pInputText [(ngModel)]="docForm.notes" name="notes" /></label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDocDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveDocument()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Add Education Dialog -->
+  <p-dialog header="Add Education" [(visible)]="showEduDialog" [modal]="true" [style]="{ width: '480px' }">
+    <div class="form-grid">
+      <label>Degree <input pInputText [(ngModel)]="eduForm.degree" name="degree" /></label>
+      <label>Institution <input pInputText [(ngModel)]="eduForm.institution" name="institution" /></label>
+      <label>Field of Study <input pInputText [(ngModel)]="eduForm.fieldOfStudy" name="fieldOfStudy" /></label>
+      <label>Start Year <input pInputText type="number" [(ngModel)]="eduForm.startYear" name="startYear" /></label>
+      <label>End Year <input pInputText type="number" [(ngModel)]="eduForm.endYear" name="endYear" /></label>
+      <label>Grade <input pInputText [(ngModel)]="eduForm.grade" name="grade" /></label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showEduDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveEducation()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Add Experience Dialog -->
+  <p-dialog header="Add Experience" [(visible)]="showExpDialog" [modal]="true" [style]="{ width: '480px' }">
+    <div class="form-grid">
+      <label>Company <input pInputText [(ngModel)]="expForm.company" name="company" /></label>
+      <label>Title <input pInputText [(ngModel)]="expForm.title" name="title" /></label>
+      <label>Start Date <input pInputText type="date" [(ngModel)]="expForm.startDate" name="startDate" /></label>
+      <label>End Date <input pInputText type="date" [(ngModel)]="expForm.endDate" name="endDate" /></label>
+      <label class="full-width">Description <input pInputText [(ngModel)]="expForm.description" name="description" /></label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showExpDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveExperience()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Add Family Member Dialog -->
+  <p-dialog header="Add Family Member" [(visible)]="showFamilyDialog" [modal]="true" [style]="{ width: '480px' }">
+    <div class="form-grid">
+      <label>Name <input pInputText [(ngModel)]="familyForm.name" name="name" /></label>
+      <label>Relationship <input pInputText [(ngModel)]="familyForm.relationship" name="relationship" /></label>
+      <label>Phone <input pInputText [(ngModel)]="familyForm.phone" name="phone" /></label>
+      <label>Date of Birth <input pInputText type="date" [(ngModel)]="familyForm.dateOfBirth" name="dateOfBirth" /></label>
+      <label class="checkbox-row">
+        <input type="checkbox" [(ngModel)]="familyForm.isEmergencyContact" name="isEmergencyContact" /> Emergency Contact
+      </label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showFamilyDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveFamilyMember()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Add Lifecycle Event Dialog -->
+  <p-dialog header="Add Lifecycle Event" [(visible)]="showEventDialog" [modal]="true" [style]="{ width: '480px' }">
+    <div class="form-grid">
+      <label>Event Type
+        <p-dropdown [options]="eventTypeOptions" [(ngModel)]="eventForm.eventType" name="eventType" optionLabel="label" optionValue="value"></p-dropdown>
+      </label>
+      <label>Event Date <input pInputText type="date" [(ngModel)]="eventForm.eventDate" name="eventDate" /></label>
+      <label>From Value <input pInputText [(ngModel)]="eventForm.fromValue" name="fromValue" /></label>
+      <label>To Value <input pInputText [(ngModel)]="eventForm.toValue" name="toValue" /></label>
+      <label class="full-width">Remarks <input pInputText [(ngModel)]="eventForm.remarks" name="remarks" /></label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="showEventDialog = false"></button>
+      <button pButton type="button" label="Save" icon="pi pi-check" (click)="saveEvent()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog></p-confirmDialog>
+</div>

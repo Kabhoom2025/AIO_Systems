@@ -1,0 +1,42 @@
+<div class="careers-page">
+  @if (notFound) {
+    <div class="empty-state">
+      <h2>Company not found</h2>
+      <p>This careers page doesn't exist or is no longer available.</p>
+    </div>
+  } @else {
+    <header class="careers-header">
+      <h1>{{ org?.name ?? 'Careers' }}</h1>
+      <p>Explore open roles and apply in minutes.</p>
+    </header>
+
+    @if (loading) {
+      <div class="loading">Loading open positions…</div>
+    } @else if (openings.length === 0) {
+      <div class="empty-state">
+        <h2>No open positions right now</h2>
+        <p>Check back soon — new roles are posted regularly.</p>
+      </div>
+    } @else {
+      <div class="job-grid">
+        @for (o of openings; track o.id) {
+          <div class="job-card" (click)="viewJob(o.id)">
+            <div class="job-card-top">
+              <h3>{{ o.title }}</h3>
+              <span class="badge">{{ o.employmentType }}</span>
+            </div>
+            <div class="job-meta">
+              <span>{{ o.departmentName }}</span>
+              @if (o.location) { <span>· {{ o.location }}</span> }
+              <span>· {{ experienceRange(o) }}</span>
+            </div>
+            <div class="job-card-bottom">
+              <span>{{ o.vacancies }} opening(s)</span>
+              <a [routerLink]="['/careers', orgCode, 'jobs', o.id]" class="apply-link">View & Apply →</a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

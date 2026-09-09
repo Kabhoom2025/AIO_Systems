@@ -1,0 +1,37 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Notifications</h1>
+  <button pButton type="button" icon="pi pi-check" label="Mark All Read" class="p-button-outlined"
+          (click)="markAllRead()" [disabled]="loading || !notifications.length"></button>
+</div>
+
+<div class="card">
+  @if (loading) {
+    <div class="empty-cell">Loading notifications...</div>
+  } @else if (!notifications.length) {
+    <div class="empty-cell">No notifications yet.</div>
+  } @else {
+    <ul class="notification-list">
+      @for (n of notifications; track n.id) {
+        <li class="notification-item" [class.unread]="!n.isRead">
+          <div class="notification-main">
+            <div class="notification-title-row">
+              <p-tag [value]="n.type" [severity]="severityFor(n.type)"></p-tag>
+              <span class="title">{{ n.title }}</span>
+              @if (!n.isRead) {
+                <span class="unread-dot"></span>
+              }
+            </div>
+            <p class="message">{{ n.message }}</p>
+            <span class="timestamp">{{ n.createdDate | date: 'dd MMM yyyy, HH:mm' }}</span>
+          </div>
+          @if (!n.isRead) {
+            <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm"
+                    label="Mark read" (click)="markRead(n)"></button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

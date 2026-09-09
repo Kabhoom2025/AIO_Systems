@@ -1,0 +1,85 @@
+<p-toast />
+
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav [opened]="sidenavOpen()" mode="side" class="shell-sidenav">
+    <div class="brand">
+      <mat-icon>local_pharmacy</mat-icon>
+      <span>Pharmacy ERP</span>
+    </div>
+    <mat-nav-list>
+      @for (item of navItems; track item.route) {
+        <a mat-list-item *appHasPermission="item.permission ?? []"
+           [routerLink]="item.route" routerLinkActive="active-link">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="shell-toolbar">
+      <button mat-icon-button (click)="toggleSidenav()" aria-label="Toggle sidebar">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <app-breadcrumb />
+
+      <span class="spacer"></span>
+
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search…" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
+      </div>
+
+      <a mat-icon-button [href]="docsUrl" target="_blank" rel="noopener" aria-label="Documentation" title="Documentation">
+        <mat-icon>menu_book</mat-icon>
+      </a>
+
+      <button mat-icon-button (click)="theme.toggle()" [attr.aria-label]="theme.isDark() ? 'Switch to light theme' : 'Switch to dark theme'">
+        <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <button mat-icon-button [matMenuTriggerFor]="notificationMenu" (menuOpened)="onNotificationMenuOpened()" aria-label="Notifications">
+        <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+      </button>
+      <mat-menu #notificationMenu="matMenu" class="notification-panel">
+        <div class="notification-header" (click)="$event.stopPropagation()">
+          <span>Notifications</span>
+          <button mat-button (click)="markAllNotificationsRead()">Mark all read</button>
+        </div>
+        @if (notifications().length === 0) {
+          <div class="notification-empty">No notifications</div>
+        } @else {
+          @for (n of notifications(); track n.id) {
+            <button mat-menu-item class="notification-item" [class.unread]="!n.isRead" (click)="markNotificationRead(n)">
+              <div class="notification-title">{{ n.title }}</div>
+              <div class="notification-message">{{ n.message }}</div>
+              <div class="notification-time">{{ relativeTime(n.createdDate) }}</div>
+            </button>
+          }
+        }
+      </mat-menu>
+
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        @if (user) {
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-meta">{{ user.role }} &middot; {{ user.organizationName }}</div>
+          </div>
+        }
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <div class="shell-content">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

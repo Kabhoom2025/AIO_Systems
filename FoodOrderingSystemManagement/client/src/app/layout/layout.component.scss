@@ -1,0 +1,48 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.shell-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--background);
+  padding: 24px;
+  position: relative;
+
+  // Watermark overlay when a logo is set
+  &.has-logo::before {
+    content: '';
+    position: fixed;
+    top: 64px; // below header
+    left: 220px; // sidebar width — adjust if sidebar width changes
+    right: 0;
+    bottom: 0;
+    background-image: var(--watermark-url, none);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 340px 340px;
+    opacity: 0.045;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // POS screen bleeds to full height — override padding for that route
+  &:has(app-pos) {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}

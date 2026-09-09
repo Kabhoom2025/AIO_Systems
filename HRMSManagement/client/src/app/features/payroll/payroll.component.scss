@@ -1,0 +1,144 @@
+.payroll-card {
+  padding: 0.5rem 1.25rem 1.25rem;
+}
+
+.tab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.empty-cell {
+  text-align: center;
+  padding: 1.5rem;
+  color: #6b7280;
+}
+
+.text-success {
+  color: #16a34a;
+}
+
+.text-muted {
+  color: #9ca3af;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .checkbox-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.salary-summary-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.5rem;
+
+  .summary-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .effective-from {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+  }
+
+  .summary-figures {
+    display: flex;
+    gap: 2rem;
+    margin: 0.75rem 0;
+  }
+
+  .summary-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .item-chip {
+    background: #e0f2fe;
+    color: #075985;
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.78rem;
+
+    &.deduction {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  }
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+
+  .label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .value {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}
+
+.payslip-detail {
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  .detail-figures {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .detail-attendance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-bottom: 1rem;
+  }
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}

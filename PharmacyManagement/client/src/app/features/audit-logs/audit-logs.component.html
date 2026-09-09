@@ -1,0 +1,31 @@
+<div class="audit-page">
+  <div class="page-header">
+    <h2>Audit Log</h2>
+  </div>
+
+  <div class="report-card">
+    @if (loading()) {
+      <div class="loading">Loading...</div>
+    } @else {
+      <table class="audit-table">
+        <thead>
+          <tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Entity Id</th></tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td>{{ log.timestamp | date:'medium' }}</td>
+              <td>{{ log.userName }}</td>
+              <td><span class="action-badge" [style.background]="actionColor(log.action)">{{ log.action }}</span></td>
+              <td>{{ log.entityType }}</td>
+              <td>{{ log.entityId ?? '-' }}</td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="5" class="empty">No activity recorded yet.</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

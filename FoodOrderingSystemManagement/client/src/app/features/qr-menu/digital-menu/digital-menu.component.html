@@ -1,0 +1,95 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>restaurant_menu</mat-icon></div>
+      <div>
+        <h1 class="page-title">Digital Menu</h1>
+        <p class="page-subtitle">Public menu link and QR code for customers</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-layout">
+
+    <!-- ── QR & Link card ──────────────────────────────── -->
+    <div class="qr-card">
+      <div class="qr-card-top">
+        <div class="card-section-label">Menu QR Code</div>
+        <div class="qr-area">
+          @if (generatingQr()) {
+            <div class="qr-loading"><mat-spinner diameter="40"></mat-spinner></div>
+          } @else if (qrDataUrl()) {
+            <div class="qr-frame">
+              <img [src]="qrDataUrl()!" alt="Digital Menu QR" />
+            </div>
+          }
+        </div>
+        <p class="qr-hint">Customers scan this to browse the full menu and place orders</p>
+      </div>
+
+      <div class="link-row">
+        <div class="link-chip">
+          <mat-icon>link</mat-icon>
+          <span class="link-url">{{ menuUrl }}</span>
+        </div>
+      </div>
+
+      <div class="qr-actions">
+        <button mat-stroked-button (click)="copyUrl()">
+          <mat-icon>content_copy</mat-icon> Copy Link
+        </button>
+        <button mat-stroked-button (click)="openMenu()">
+          <mat-icon>open_in_new</mat-icon> Open Menu
+        </button>
+        <button mat-stroked-button (click)="download()" [disabled]="!qrDataUrl()">
+          <mat-icon>download</mat-icon> Download QR
+        </button>
+        <button mat-raised-button color="primary" (click)="print()" [disabled]="!qrDataUrl()">
+          <mat-icon>print</mat-icon> Print QR
+        </button>
+      </div>
+
+      <!-- How it works -->
+      <div class="how-it-works">
+        <div class="how-title">How it works</div>
+        <div class="how-steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <p>Print the QR and place it on tables</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <p>Customer scans with their phone camera</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <p>They browse the menu and place their order</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Live preview ────────────────────────────────── -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <div class="card-section-label">Live Preview</div>
+        <button mat-stroked-button (click)="openMenu()">
+          <mat-icon>open_in_new</mat-icon> Full Screen
+        </button>
+      </div>
+      <div class="iframe-wrap">
+        <iframe [src]="safeMenuUrl" (load)="previewLoaded.set(true)" class="menu-iframe"
+                title="Digital Menu Preview" sandbox="allow-scripts allow-same-origin allow-forms">
+        </iframe>
+        @if (!previewLoaded()) {
+          <div class="iframe-loading">
+            <mat-spinner diameter="36"></mat-spinner>
+            <p>Loading preview…</p>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

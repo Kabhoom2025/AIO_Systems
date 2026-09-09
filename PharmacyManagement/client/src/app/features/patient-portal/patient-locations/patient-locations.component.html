@@ -1,0 +1,27 @@
+<div class="locations-page">
+  <div class="page-header">
+    <div class="eyebrow">Find us</div>
+    <h1>Our Locations</h1>
+    <p>Visit any of our hospitals for consultations, lab tests, and pharmacy services.</p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading locations…</div>
+  } @else {
+    <div class="location-grid">
+      @for (loc of locations(); track loc.id) {
+        <div class="location-card">
+          <h3>{{ loc.name }}</h3>
+          @if (loc.address) { <p class="address">{{ loc.address }}</p> }
+          <div class="contact-row">
+            @if (loc.phone) { <a class="tel" [href]="'tel:' + loc.phone">📞 {{ loc.phone }}</a> }
+          </div>
+          <a class="btn-directions" [href]="mapsUrl(loc.address)" target="_blank" rel="noopener">Get Directions →</a>
+        </div>
+      }
+      @empty {
+        <div class="empty">No locations available right now.</div>
+      }
+    </div>
+  }
+</div>

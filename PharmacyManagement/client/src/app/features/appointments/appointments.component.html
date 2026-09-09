@@ -1,0 +1,46 @@
+<div class="appointments-page">
+  <div class="page-header">
+    <h2>Appointments</h2>
+    <div class="filters">
+      <select [(ngModel)]="statusFilter">
+        @for (s of statusOptions; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <input type="text" placeholder="Search patient or doctor…" [(ngModel)]="searchTerm" />
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="appointments-table">
+      <thead>
+        <tr>
+          <th>Patient</th><th>Doctor</th><th>Branch</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of filteredAppointments; track a.id) {
+          <tr>
+            <td>{{ a.patientName }}<br/><span class="sub">{{ a.patientPhone }}</span></td>
+            <td>{{ a.doctorName }}<br/><span class="sub">{{ a.doctorSpecialty }}</span></td>
+            <td>{{ a.branchName }}</td>
+            <td>{{ a.preferredDate | date:'mediumDate' }}</td>
+            <td>{{ a.timeSlot }}</td>
+            <td><span class="status-badge" [style.background]="statusColor(a.status)">{{ a.status }}</span></td>
+            <td class="row-actions">
+              @if (nextAction(a.status); as label) {
+                <button *appHasPermission="'appointments.edit'" [disabled]="updatingId() === a.id" (click)="advance(a)">{{ label }}</button>
+              }
+              @if (canCancel(a.status)) {
+                <button *appHasPermission="'appointments.edit'" class="danger" [disabled]="updatingId() === a.id" (click)="cancel(a)">Cancel</button>
+              }
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="7" class="empty">No appointments found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

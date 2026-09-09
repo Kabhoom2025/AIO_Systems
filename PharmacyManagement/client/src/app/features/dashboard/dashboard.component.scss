@@ -1,0 +1,49 @@
+.dashboard-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.header-actions { display: flex; gap: 0.6rem;
+  button { background: #fff; border: 1px solid #ddd; padding: 0.55rem 1.1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+  .btn-primary { background: #1a237e; color: #fff; border: none; }
+}
+
+.widget-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+.widget-card {
+  background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.06); padding: 1.1rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.widget-header { display: flex; align-items: center; gap: 8px;
+  h3 { margin: 0; font-size: 0.95rem; color: #1a237e; flex: 1; }
+}
+.drag-handle { cursor: grab; color: #999; font-size: 1.1rem; }
+.hide-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 0.9rem; padding: 2px 6px; }
+.hide-btn:hover { color: #e53935; }
+
+.big-stat { font-size: 1.8rem; font-weight: 700; color: #222; }
+.sub-stat { font-size: 0.8rem; color: #777; }
+.widget-link { font-size: 0.8rem; color: #1a237e; text-decoration: none; cursor: pointer; }
+.widget-link:hover { text-decoration: underline; }
+
+.widget-table { width: 100%; border-collapse: collapse;
+  td { padding: 4px 0; font-size: 0.82rem; border-bottom: 1px solid #f5f5f5; }
+  td:last-child { text-align: right; color: #555; }
+}
+.risk-badge { padding: 2px 8px; border-radius: 10px; color: #fff; font-size: 0.7rem; font-weight: 700; }
+.empty { color: #999; text-align: center; padding: 0.5rem 0; }
+
+.cdk-drag-preview {
+  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  border-radius: 10px;
+}
+.cdk-drag-placeholder { opacity: 0.3; }
+.cdk-drop-list-dragging .widget-card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
+}
+
+.hidden-strip {
+  margin-top: 1.25rem; padding: 0.9rem 1.1rem; background: #f5f5f5; border-radius: 10px;
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; font-size: 0.82rem; color: #777;
+}
+.hidden-chip { background: #fff; border: 1px dashed #bbb; border-radius: 14px; padding: 4px 12px; cursor: pointer; font-size: 0.78rem; color: #555; }
+.hidden-chip:hover { border-color: #1a237e; color: #1a237e; }

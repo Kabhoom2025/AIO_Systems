@@ -1,0 +1,27 @@
+<div class="scan-submit">
+  <h1>Scan a URL</h1>
+  <p class="scan-submit__subtitle">
+    Runs URL structure, domain/RDAP, DNS, SSL/TLS, redirect, threat-intelligence, and brand
+    impersonation analysis, then combines every signal into an explainable risk score.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <input
+      type="text"
+      formControlName="url"
+      placeholder="https://example.com/path"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Submitting…' : 'Analyze' }}
+    </button>
+  </form>
+
+  @if (form.controls.url.invalid && form.controls.url.touched) {
+    <p class="scan-submit__error">Enter a full http:// or https:// URL.</p>
+  }
+  @if (errorMessage()) {
+    <p class="scan-submit__error">{{ errorMessage() }}</p>
+  }
+</div>

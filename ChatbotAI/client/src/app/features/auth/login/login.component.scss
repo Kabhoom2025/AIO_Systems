@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--app-primary) 0%, var(--app-bg) 60%);
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  border-radius: 16px;
+  animation: fade-in-up 0.35s ease;
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 24px;
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: var(--app-primary);
+  }
+
+  h1 {
+    margin: 8px 0 4px;
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--app-text-muted);
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auth-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.auth-submit {
+  margin-top: 8px;
+  height: 44px;
+}
+
+.auth-error {
+  color: var(--app-danger);
+  font-size: 0.875rem;
+  margin: 0 0 4px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin: 20px 0 0;
+  color: var(--app-text-muted);
+
+  a {
+    color: var(--app-primary);
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px;
+  }
+}

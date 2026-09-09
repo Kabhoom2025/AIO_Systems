@@ -1,0 +1,81 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Dashboard Builder</h1>
+  <button pButton type="button" icon="pi pi-plus" label="New Dashboard" (click)="openNewDashboard()"></button>
+</div>
+
+@if (loading) {
+  <div class="card empty-state"><i class="pi pi-spin pi-spinner"></i></div>
+} @else if (!dashboards.length) {
+  <div class="card empty-state">
+    <i class="pi pi-info-circle"></i>
+    <p>You don't have any dashboards yet. Create one to get started.</p>
+  </div>
+} @else {
+  <div class="card">
+    <div class="dashboard-picker">
+      @for (d of dashboards; track d.id) {
+        <div class="dashboard-picker-item">
+          <button pButton type="button" [label]="d.name"
+                  [class]="current?.id === d.id ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+                  (click)="selectDashboard(d.id)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-sm p-button-text p-button-danger"
+                  (click)="$event.stopPropagation(); deleteDashboard(d)" aria-label="Delete dashboard"></button>
+        </div>
+      }
+    </div>
+
+    @if (current) {
+      <div class="palette">
+        <span class="palette-label">Add widget:</span>
+        @for (t of availableWidgetTypes; track t) {
+          <button pButton type="button" class="p-button-sm p-button-text" icon="pi pi-plus"
+                  [label]="widgetTypeLabel(t)" (click)="addWidget(t)"></button>
+        }
+        @if (!availableWidgetTypes.length) {
+          <span class="text-muted">All widgets added.</span>
+        }
+      </div>
+
+      <div class="widget-grid" cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="onDrop($event)">
+        @for (widget of current.widgets; track widget.id) {
+          <div class="widget-card" cdkDrag [style.grid-column]="sizeColSpan(widget.sizeOption)">
+            <div class="widget-card-header" cdkDragHandle>
+              <i class="pi pi-arrows-alt drag-handle"></i>
+              <span class="widget-title">{{ widget.title }}</span>
+              <p-dropdown [options]="sizeOptions" [(ngModel)]="widget.sizeOption"
+                          (onChange)="onSizeChange(widget)" [style]="{ width: '7rem' }"></p-dropdown>
+              <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                      (click)="removeWidget(widget)"></button>
+            </div>
+            <div class="widget-card-body">
+              @if (chartData[widget.id]) {
+                <p-chart type="bar" [data]="chartData[widget.id]" [options]="chartOptions" [height]="'180px'"></p-chart>
+              } @else {
+                <div class="empty-cell">Loading…</div>
+              }
+            </div>
+          </div>
+        }
+        @if (!current.widgets.length) {
+          <div class="empty-cell">No widgets yet — add one from the palette above.</div>
+        }
+      </div>
+    }
+  </div>
+}
+
+<p-dialog header="New Dashboard" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="newDashboardName" placeholder="e.g. My Dashboard" />
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showNewDialog = false"></button>
+    <button pButton type="button" label="Create" [loading]="saving" (click)="createDashboard()"></button>
+  </ng-template>
+</p-dialog>

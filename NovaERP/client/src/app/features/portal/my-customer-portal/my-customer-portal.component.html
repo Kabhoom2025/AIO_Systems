@@ -1,0 +1,78 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>My Customer Portal</h1>
+</div>
+
+@if (noContactLinked) {
+  <div class="card empty-state">
+    <i class="pi pi-info-circle"></i>
+    <p>No customer record is linked to your account. Contact an administrator if you believe this is a mistake.</p>
+  </div>
+} @else {
+  <div class="card">
+    <p-tabView>
+      <p-tabPanel header="Profile">
+        @if (profile) {
+          <div class="profile-grid">
+            <div><span class="field-label">Name</span><span class="field-value">{{ profile.firstName }} {{ profile.lastName }}</span></div>
+            <div><span class="field-label">Account</span><span class="field-value">{{ profile.accountName ?? '—' }}</span></div>
+            <div><span class="field-label">Title</span><span class="field-value">{{ profile.title ?? '—' }}</span></div>
+            <div><span class="field-label">Email</span><span class="field-value">{{ profile.email ?? '—' }}</span></div>
+            <div><span class="field-label">Phone</span><span class="field-value">{{ profile.phone ?? '—' }}</span></div>
+          </div>
+        }
+      </p-tabPanel>
+
+      <p-tabPanel header="Orders">
+        <p-table [value]="orders" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Order #</th>
+              <th>Order Date</th>
+              <th>Status</th>
+              <th>Grand Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-o>
+            <tr>
+              <td><code class="code-badge">{{ o.orderNumber }}</code></td>
+              <td>{{ o.orderDate | date: 'mediumDate' }}</td>
+              <td><p-tag [severity]="orderStatusSeverity(o.status)" [value]="o.status"></p-tag></td>
+              <td class="font-semibold">{{ o.grandTotal | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="4" class="empty-cell">No orders yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="Invoices">
+        <p-table [value]="invoices" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Invoice #</th>
+              <th>Invoice Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-i>
+            <tr>
+              <td><code class="code-badge">{{ i.invoiceNumber }}</code></td>
+              <td>{{ i.invoiceDate | date: 'mediumDate' }}</td>
+              <td>{{ i.dueDate | date: 'mediumDate' }}</td>
+              <td><p-tag [severity]="invoiceStatusSeverity(i.status)" [value]="i.status"></p-tag></td>
+              <td class="font-semibold">{{ i.totalAmount | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5" class="empty-cell">No invoices yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+}

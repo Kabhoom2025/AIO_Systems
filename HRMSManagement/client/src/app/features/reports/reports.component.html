@@ -1,0 +1,262 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Reports</h1>
+</div>
+
+<p-tabView>
+  <!-- ===================== HEADCOUNT ===================== -->
+  <p-tabPanel header="Headcount">
+    <div class="card">
+      <div class="page-header">
+        <h3>Headcount by Department &amp; Branch</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadHeadcount()"></p-button>
+      </div>
+
+      <p-table [value]="headcountRows" [loading]="headcountLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Department</th>
+            <th>Branch</th>
+            <th>Active</th>
+            <th>On Notice</th>
+            <th>Exited</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.departmentName }}</td>
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.activeCount }}</td>
+            <td>{{ row.onNoticeCount }}</td>
+            <td>{{ row.exitedCount }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="5">No headcount data available.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== ATTENDANCE ===================== -->
+  <p-tabPanel header="Attendance">
+    <div class="card">
+      <div class="page-header">
+        <h3>Monthly Attendance</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadAttendance()"></p-button>
+      </div>
+
+      <div class="filters-row">
+        <label>
+          Year
+          <p-dropdown [options]="years" [(ngModel)]="attendanceYear" (onChange)="loadAttendance()"></p-dropdown>
+        </label>
+        <label>
+          Month
+          <p-dropdown [options]="months" optionLabel="label" optionValue="value" [(ngModel)]="attendanceMonth" (onChange)="loadAttendance()"></p-dropdown>
+        </label>
+      </div>
+
+      <p-table [value]="attendanceRows" [loading]="attendanceLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Present Days</th>
+            <th>Leave Days</th>
+            <th>Late Count</th>
+            <th>Overtime (hrs)</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.employeeCode }}</td>
+            <td>{{ row.employeeName }}</td>
+            <td>{{ row.presentDays }}</td>
+            <td>{{ row.leaveDays }}</td>
+            <td>{{ row.lateCount }}</td>
+            <td>{{ row.overtimeHours }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6">No attendance data for this period.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== LEAVE ===================== -->
+  <p-tabPanel header="Leave">
+    <div class="card">
+      <div class="page-header">
+        <h3>Leave Balances</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadLeave()"></p-button>
+      </div>
+
+      <div class="filters-row">
+        <label>
+          Year
+          <p-dropdown [options]="years" [(ngModel)]="leaveYear" (onChange)="loadLeave()"></p-dropdown>
+        </label>
+      </div>
+
+      <p-table [value]="leaveRows" [loading]="leaveLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Leave Type</th>
+            <th>Allocated</th>
+            <th>Used</th>
+            <th>Available</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.employeeCode }}</td>
+            <td>{{ row.employeeName }}</td>
+            <td>{{ row.leaveTypeName }}</td>
+            <td>{{ row.allocated }}</td>
+            <td>{{ row.used }}</td>
+            <td>{{ row.available }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6">No leave data for this year.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== PAYROLL SUMMARY ===================== -->
+  <p-tabPanel header="Payroll Summary">
+    <div class="card">
+      <div class="page-header">
+        <h3>Payroll Summary</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadPayrollSummary()"></p-button>
+      </div>
+
+      <div class="filters-row">
+        <label>
+          Year
+          <p-dropdown [options]="years" [(ngModel)]="payrollYear" (onChange)="loadPayrollSummary()"></p-dropdown>
+        </label>
+      </div>
+
+      <p-table [value]="payrollRows" [loading]="payrollLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Year</th>
+            <th>Month</th>
+            <th>Status</th>
+            <th>Employees</th>
+            <th>Total Gross</th>
+            <th>Total Deductions</th>
+            <th>Total Net</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.year }}</td>
+            <td>{{ row.month }}</td>
+            <td><p-tag [value]="row.status"></p-tag></td>
+            <td>{{ row.employeeCount }}</td>
+            <td>{{ row.totalGross | number:'1.2-2' }}</td>
+            <td>{{ row.totalDeductions | number:'1.2-2' }}</td>
+            <td>{{ row.totalNet | number:'1.2-2' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7">No payroll summary data for this year.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== RECRUITMENT PIPELINE ===================== -->
+  <p-tabPanel header="Recruitment Pipeline">
+    <div class="card">
+      <div class="page-header">
+        <h3>Recruitment Pipeline</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadRecruitmentPipeline()"></p-button>
+      </div>
+
+      <p-table [value]="recruitmentRows" [loading]="recruitmentLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Vacancies</th>
+            <th>Total</th>
+            <th>Applied</th>
+            <th>Screening</th>
+            <th>Interview</th>
+            <th>Offered</th>
+            <th>Hired</th>
+            <th>Rejected</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.title }}</td>
+            <td>{{ row.departmentName }}</td>
+            <td><p-tag [value]="row.status"></p-tag></td>
+            <td>{{ row.vacancies }}</td>
+            <td>{{ row.totalCandidates }}</td>
+            <td>{{ row.applied }}</td>
+            <td>{{ row.screening }}</td>
+            <td>{{ row.interview }}</td>
+            <td>{{ row.offered }}</td>
+            <td>{{ row.hired }}</td>
+            <td>{{ row.rejected }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="11">No recruitment pipeline data available.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== ASSETS ===================== -->
+  <p-tabPanel header="Assets">
+    <div class="card">
+      <div class="page-header">
+        <h3>Assets</h3>
+        <p-button label="Download CSV" icon="pi pi-download" (onClick)="downloadAssets()"></p-button>
+      </div>
+
+      <p-table [value]="assetRows" [loading]="assetLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Tag</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Condition</th>
+            <th>Current Holder</th>
+            <th>Purchase Cost</th>
+            <th>Warranty Until</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.assetTag }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.category }}</td>
+            <td><p-tag [value]="row.status"></p-tag></td>
+            <td>{{ row.condition }}</td>
+            <td>{{ row.currentHolder || '-' }}</td>
+            <td>{{ row.purchaseCost != null ? (row.purchaseCost | number:'1.2-2') : '-' }}</td>
+            <td>{{ row.warrantyUntil ? (row.warrantyUntil | date:'mediumDate') : '-' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8">No asset data available.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+</p-tabView>

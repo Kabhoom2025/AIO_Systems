@@ -1,0 +1,64 @@
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+.doctors-page { padding: 40px 32px; max-width: 1100px; margin: 0 auto; }
+
+.page-header { margin-bottom: 28px; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #C96F1B; margin-bottom: 8px; }
+.page-header h1 { font-family: Georgia, serif; font-size: 1.9rem; margin: 0 0 8px; color: #12231F; }
+.page-header p { color: #4B5D58; margin: 0 0 18px; }
+
+.search-box {
+  width: 100%; max-width: 420px; box-sizing: border-box;
+  border: 1px solid #DCE6E1; border-radius: 999px; padding: 11px 18px; font-size: 0.92rem;
+}
+
+.doctor-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.doctor-card {
+  background: #fff; border-radius: 14px; padding: 22px;
+  box-shadow: 0 10px 26px -18px rgba(18,35,31,0.25);
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
+}
+.avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #0E4D42, #1B6F60); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Georgia, serif; font-weight: 700; font-size: 1.2rem; margin-bottom: 6px;
+}
+.doctor-card h3 { font-family: Georgia, serif; margin: 0; color: #12231F; font-size: 1.05rem; }
+.specialty { color: #0E4D42; font-weight: 600; font-size: 0.84rem; }
+.hospital { color: #4B5D58; font-size: 0.78rem; }
+
+.btn-primary {
+  margin-top: 10px; width: 100%; background: #E98A2E; color: #21140A; border: none;
+  font-weight: 700; font-size: 0.86rem; padding: 10px; border-radius: 999px; cursor: pointer;
+}
+.btn-primary:hover { background: #C96F1B; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-secondary {
+  background: none; border: 1px solid #DCE6E1; border-radius: 999px; padding: 10px 20px;
+  font-weight: 600; font-size: 0.86rem; color: #12231F; cursor: pointer;
+}
+
+.loading, .empty { text-align: center; padding: 40px; color: #4B5D58; }
+
+.dialog-overlay {
+  position: fixed; inset: 0; background: rgba(18,35,31,0.5);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.dialog {
+  background: #fff; border-radius: 16px; padding: 30px; width: 420px; max-width: 100%;
+}
+.dialog h2 { font-family: Georgia, serif; margin: 0 0 4px; color: #12231F; font-size: 1.3rem; }
+.dialog .sub { margin: 0 0 20px; color: #4B5D58; font-size: 0.88rem; }
+
+.field { display: block; margin-bottom: 14px; }
+.field span { display: block; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #4B5D58; margin-bottom: 6px; }
+.field select, .field input, .field textarea {
+  width: 100%; box-sizing: border-box; border: 1px solid #DCE6E1; border-radius: 8px;
+  padding: 10px 12px; font-size: 0.9rem; color: #12231F; font-family: inherit;
+}
+
+.error-msg { background: #FCEBEB; color: #B23A3A; font-size: 0.84rem; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; }
+.success-msg { background: #E6F4EA; color: #2E7D4F; font-size: 0.84rem; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; }
+
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }

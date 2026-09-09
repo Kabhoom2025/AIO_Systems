@@ -1,0 +1,101 @@
+<div class="categories-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>category</mat-icon>
+      <div>
+        <h1>Categories</h1>
+        <p>Manage your menu categories</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Add Category
+    </button>
+  </div>
+
+  <!-- Search + count bar -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search categories</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)" placeholder="Type to filter..." />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="onSearch('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+    <span class="count-badge">
+      {{ filtered().length }} {{ filtered().length === 1 ? 'category' : 'categories' }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Loading categories...</p>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @else if (!loading() && filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>category</mat-icon>
+      <h3>{{ searchTerm() ? 'No results found' : 'No categories yet' }}</h3>
+      <p>{{ searchTerm() ? 'Try a different search term.' : 'Click "Add Category" to create your first category.' }}</p>
+      @if (!searchTerm()) {
+        <button mat-raised-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Add Category
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Category grid -->
+  @else {
+    <div class="category-grid">
+      @for (cat of filtered(); track cat.id) {
+        <mat-card class="category-card" [class.inactive]="!cat.isActive">
+          <mat-card-content>
+
+            <!-- Emoji icon -->
+            <div class="cat-emoji">{{ getCategoryIcon(cat.categoryName) }}</div>
+
+            <!-- Name & description -->
+            <h3 class="cat-name">{{ cat.categoryName }}</h3>
+            @if (cat.description) {
+              <p class="cat-desc">{{ cat.description }}</p>
+            }
+
+            <!-- Status + order -->
+            <div class="cat-meta">
+              <span class="status-badge" [class.active]="cat.isActive" [class.inactive]="!cat.isActive">
+                <mat-icon>{{ cat.isActive ? 'check_circle' : 'cancel' }}</mat-icon>
+                {{ cat.isActive ? 'Active' : 'Inactive' }}
+              </span>
+              <span class="order-badge">
+                <mat-icon>sort</mat-icon>
+                #{{ cat.displayOrder }}
+              </span>
+            </div>
+
+          </mat-card-content>
+
+          <!-- Actions -->
+          <mat-card-actions>
+            <button mat-icon-button color="primary" (click)="openEdit(cat)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="confirmDelete(cat)" matTooltip="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
+
+</div>

@@ -1,0 +1,131 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Vendor Bills</h1>
+  <button *appHasPermission="'finance.create'" pButton type="button" icon="pi pi-plus" label="Add Vendor Bill"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="bills" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Bill #</th>
+        <th>Vendor</th>
+        <th>Bill Date</th>
+        <th>Due Date</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 18rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-b>
+      <tr>
+        <td><code class="code-badge">{{ b.billNumber }}</code></td>
+        <td>{{ b.vendorName }}</td>
+        <td>{{ b.billDate | date: 'mediumDate' }}</td>
+        <td>{{ b.dueDate | date: 'mediumDate' }}</td>
+        <td class="font-semibold">{{ b.totalAmount | number: '1.2-2' }}</td>
+        <td><p-tag [severity]="statusSeverity(b.status)" [value]="b.status"></p-tag></td>
+        <td>{{ b.ownerName }}</td>
+        <td class="actions-cell">
+          @if (b.status === 'Draft') {
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-check" label="Approve"
+                    class="p-button-text p-button-sm p-button-success" (click)="approve(b)"></button>
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(b)"></button>
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancel(b)"></button>
+            <button *appHasPermission="'finance.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(b)"></button>
+          } @else if (b.status === 'Approved') {
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-wallet" label="Pay"
+                    class="p-button-text p-button-sm p-button-success" (click)="openPay(b)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No vendor bills yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Vendor Bill" [(visible)]="showDialog" [modal]="true" [style]="{ width: '42rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Vendor</span>
+      <p-dropdown [options]="vendors" [(ngModel)]="form.vendorId" optionLabel="name" optionValue="id"
+                  placeholder="Select vendor" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Payable Account</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="form.payableLedgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select payable account" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Bill Date</span>
+      <p-calendar [(ngModel)]="form.billDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Due Date</span>
+      <p-calendar [(ngModel)]="form.dueDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Lines</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Line" class="p-button-text p-button-sm" (click)="addLine()"></button>
+    </div>
+    <div class="line-row line-row-header">
+      <span>Ledger Account</span>
+      <span>Description</span>
+      <span>Amount</span>
+      <span></span>
+    </div>
+    @for (line of lines; track $index) {
+      <div class="line-row">
+        <p-dropdown [options]="ledgerAccounts" [(ngModel)]="line.ledgerAccountId" optionLabel="name" optionValue="id"
+                    placeholder="Select account"></p-dropdown>
+        <input pInputText [(ngModel)]="line.description" placeholder="Optional" />
+        <p-inputNumber [(ngModel)]="line.amount" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeLine($index)"></button>
+      </div>
+    }
+    @if (!lines.length) {
+      <div class="empty-cell">No lines yet — add at least one.</div>
+    } @else {
+      <div class="totals-row">
+        <span>Total: <strong>{{ totalAmount() | number: '1.2-2' }}</strong></span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Pay Vendor Bill" [(visible)]="showPayDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid single-column">
+    <label>
+      <span>Payment Account (Cash/Bank)</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="paymentLedgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select payment account" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showPayDialog = false"></button>
+    <button pButton type="button" label="Pay" (click)="confirmPay()"></button>
+  </ng-template>
+</p-dialog>

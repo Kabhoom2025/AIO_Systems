@@ -1,0 +1,135 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.011em;
+  background: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Inter', Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+// Colors mirror the Material theme in theme.scss (deep-purple primary) so Angular Material's
+// own components (dropdowns, sliders, form fields, snackbars) and our hand-styled surfaces
+// (chat bubbles, sidebar, toolbar) read as one consistent system instead of two clashing ones.
+:root {
+  --app-bg: #f8f7fb;
+  --app-surface: #ffffff;
+  --app-surface-alt: #f1eefa;
+  --app-text: #201c2e;
+  --app-text-muted: #6b6677;
+  --app-border: #e4e0ee;
+  --app-primary: #673ab7;
+  --app-primary-hover: #5a2fa8;
+  --app-primary-contrast: #ffffff;
+  --app-accent: #00897b;
+  --app-bubble-user: #673ab7;
+  --app-bubble-user-text: #ffffff;
+  --app-bubble-assistant: #ffffff;
+  --app-bubble-assistant-text: #201c2e;
+  --app-danger: #d64545;
+  --app-success: #2e9e5b;
+  --app-warning: #b26a00;
+  color-scheme: light;
+}
+
+body.theme-dark {
+  --app-bg: #16141c;
+  --app-surface: #201e29;
+  --app-surface-alt: #2b2836;
+  --app-text: #eeecf5;
+  --app-text-muted: #a7a2b8;
+  --app-border: #383543;
+  --app-primary: #b39ddb;
+  --app-primary-hover: #c9b8e8;
+  --app-primary-contrast: #16141c;
+  --app-accent: #4db6ac;
+  --app-bubble-user: #6d4bc9;
+  --app-bubble-user-text: #ffffff;
+  --app-bubble-assistant: #2b2836;
+  --app-bubble-assistant-text: #eeecf5;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--app-border);
+  border-radius: 4px;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(214, 69, 69, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(214, 69, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(214, 69, 69, 0);
+  }
+}
+
+pre {
+  background: var(--app-surface-alt);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text-muted);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--app-text);
+  }
+}
+
+:not(pre) > code {
+  background: var(--app-surface-alt);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.85em;
+}

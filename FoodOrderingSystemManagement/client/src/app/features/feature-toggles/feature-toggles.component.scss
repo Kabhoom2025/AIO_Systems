@@ -1,0 +1,76 @@
+:host { display: block; }
+
+.page-container { padding: 24px; max-width: 860px; }
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
+}
+
+.header-left { display: flex; align-items: center; gap: 14px; }
+
+.header-icon-wrap {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  mat-icon { color: #fff; font-size: 26px; width: 26px; height: 26px; }
+}
+
+.page-title  { margin: 0; font-size: 1.55rem; font-weight: 700; color: #1e293b; }
+.page-subtitle { margin: 4px 0 0; font-size: .85rem; color: #64748b; }
+
+/* ── Loading ─────────────────────────────────────────────────────── */
+.center-spinner { display: flex; justify-content: center; padding: 60px 0; }
+
+/* ── Category sections ───────────────────────────────────────────── */
+.category-section { margin-bottom: 24px; }
+
+.category-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: #94a3b8;
+  margin: 0 0 10px 4px;
+}
+
+/* ── Feature card ────────────────────────────────────────────────── */
+.features-card {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden;
+}
+
+.feature-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #fafbff; }
+  &.enabled { background: #fafffe; }
+}
+
+.feature-icon-wrap {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 10px;
+  background: #f1f5f9; flex-shrink: 0; transition: background .2s;
+
+  mat-icon { color: #94a3b8; font-size: 22px; width: 22px; height: 22px; transition: color .2s; }
+
+  &.active {
+    background: #ede9fe;
+    mat-icon { color: #6366f1; }
+  }
+}
+
+.feature-info { flex: 1; min-width: 0; }
+.feature-name { display: block; font-size: .9rem; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+.feature-desc { display: block; font-size: .78rem; color: #64748b; }
+
+.toggle-col {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+}
+
+.status-label {
+  font-size: .7rem; font-weight: 600; letter-spacing: .04em;
+  color: #94a3b8;
+  &.on { color: #16a34a; }
+}

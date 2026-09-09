@@ -1,0 +1,99 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">api</mat-icon>
+      <div>
+        <h1 class="page-title">API Configuration</h1>
+        <p class="page-subtitle">Configure global API settings and security parameters</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+    <form [formGroup]="configForm" (ngSubmit)="onSave()">
+
+      <div class="form-grid">
+
+        <!-- Rate Limit -->
+        <div class="form-group">
+          <label class="form-label">
+            <mat-icon>speed</mat-icon>
+            API Rate Limit (req/min)
+          </label>
+          <input type="number" class="form-control" formControlName="rateLimit" min="1" />
+          <span class="form-hint">Maximum requests per minute per client</span>
+        </div>
+
+        <!-- JWT Expiry -->
+        <div class="form-group">
+          <label class="form-label">
+            <mat-icon>timer</mat-icon>
+            JWT Expiry (hours)
+          </label>
+          <input type="number" class="form-control" formControlName="jwtExpiryHours" min="1" />
+          <span class="form-hint">Token validity duration in hours</span>
+        </div>
+
+        <!-- Max Upload -->
+        <div class="form-group">
+          <label class="form-label">
+            <mat-icon>upload_file</mat-icon>
+            Max Upload Size (MB)
+          </label>
+          <input type="number" class="form-control" formControlName="maxUploadMb" min="1" />
+          <span class="form-hint">Maximum file upload size allowed</span>
+        </div>
+
+      </div>
+
+      <!-- CORS Origins -->
+      <div class="form-group full-width">
+        <label class="form-label">
+          <mat-icon>language</mat-icon>
+          CORS Allowed Origins
+        </label>
+        <textarea class="form-control" formControlName="corsOrigins" rows="4"
+                  placeholder="https://example.com&#10;https://app.example.com"></textarea>
+        <span class="form-hint">One origin per line. Use * to allow all (not recommended in production).</span>
+      </div>
+
+      <!-- Toggles -->
+      <div class="toggle-section">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <mat-icon>bug_report</mat-icon>
+            <div>
+              <span class="toggle-label">Debug Mode</span>
+              <span class="toggle-desc">Enable verbose logging and error details in API responses</span>
+            </div>
+          </div>
+          <mat-slide-toggle formControlName="debugMode" color="primary"></mat-slide-toggle>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <mat-icon>build_circle</mat-icon>
+            <div>
+              <span class="toggle-label">Maintenance Mode</span>
+              <span class="toggle-desc">Temporarily block all API requests (except Super Admin)</span>
+            </div>
+          </div>
+          <mat-slide-toggle formControlName="maintenanceMode" color="warn"></mat-slide-toggle>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="configForm.invalid">
+          <mat-icon>save</mat-icon>
+          Save Configuration
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

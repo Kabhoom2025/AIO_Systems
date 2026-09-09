@@ -1,0 +1,56 @@
+@use '@angular/material' as mat;
+
+// A single custom palette (both light and dark schemes below reference these same hues) keeps
+// Angular Material's own components — dropdowns, sliders, form fields, buttons, snackbars —
+// visually in sync with the app's own hand-styled surfaces (chat bubbles, sidebar, toolbar)
+// instead of the two drifting apart, which is what a static prebuilt theme + custom CSS
+// variables produced before this file existed.
+$app-primary-palette: mat.m2-define-palette(mat.$m2-deep-purple-palette, 500, 300, 700);
+$app-accent-palette: mat.m2-define-palette(mat.$m2-teal-palette, A400, A100, A700);
+$app-warn-palette: mat.m2-define-palette(mat.$m2-red-palette);
+
+$app-typography: mat.m2-define-typography-config(
+  $font-family: 'Inter, "Helvetica Neue", Arial, sans-serif'
+);
+
+$app-light-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $app-primary-palette,
+    accent: $app-accent-palette,
+    warn: $app-warn-palette,
+  ),
+  typography: $app-typography,
+  density: 0,
+));
+
+$app-dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $app-primary-palette,
+    accent: $app-accent-palette,
+    warn: $app-warn-palette,
+  ),
+  typography: $app-typography,
+  density: 0,
+));
+
+@include mat.core();
+@include mat.all-component-themes($app-light-theme);
+
+// Toggled at runtime by AppComponent based on the user's Settings → Theme choice (see
+// styles.scss for the matching `--app-*` custom-property overrides used by our own components).
+body.theme-dark {
+  @include mat.all-component-colors($app-dark-theme);
+
+  // `all-component-colors` doesn't reliably re-derive the elevated-surface container color for
+  // every MDC component (cards render as their light-theme white regardless) — these are also
+  // rendered via CDK Overlay directly under <body>, so a scoped override here is simpler and
+  // more robust than chasing individual M3 color tokens per component.
+  .mat-mdc-card,
+  .mat-mdc-menu-panel,
+  .mat-mdc-select-panel,
+  .mat-mdc-autocomplete-panel,
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    background-color: var(--app-surface);
+    color: var(--app-text);
+  }
+}

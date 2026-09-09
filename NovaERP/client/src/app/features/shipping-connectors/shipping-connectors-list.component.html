@@ -1,0 +1,41 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Carrier Connectors</h1>
+  <button *appHasPermission="'carrier-connector.create'" pButton type="button" icon="pi pi-plus" label="New Connector"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="connectors" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>TMS Type</th>
+        <th>Base URL</th>
+        <th>Active</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr>
+        <td class="font-semibold">{{ c.name }}</td>
+        <td>{{ c.tmsType }}</td>
+        <td class="url-cell">{{ c.baseUrl }}</td>
+        <td>
+          <p-tag [severity]="c.isActive ? 'success' : 'danger'" [value]="c.isActive ? 'Active' : 'Inactive'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button *appHasPermission="'carrier-connector.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(c)"></button>
+          <button *appHasPermission="'carrier-connector.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(c)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No carrier connectors yet — connect any TMS's rate-shop API by mapping its fields to your shipment data.</td></tr>
+    </ng-template>
+  </p-table>
+</div>

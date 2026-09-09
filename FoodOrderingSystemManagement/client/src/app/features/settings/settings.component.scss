@@ -1,0 +1,260 @@
+.settings-page {
+  width: 100%;
+}
+
+/* ── Page header ── */
+.page-header { margin-bottom: 28px; }
+
+.page-title {
+  display: flex; align-items: center; gap: 14px;
+
+  .title-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
+  }
+
+  h1 { font-size: 1.4rem; font-weight: 700; margin: 0 0 2px; }
+  p  { font-size: .83rem; color: #888; margin: 0; }
+}
+
+/* ── Accordion ── */
+.settings-accordion {
+  display: block;
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+
+  /* Flat gap between panels */
+  ::ng-deep .mat-expansion-panel {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid #ebebeb;
+
+    &:last-child { border-bottom: none; }
+
+    &.mat-expanded .mat-expansion-panel-header {
+      background: #fafafa;
+    }
+  }
+
+  ::ng-deep .mat-expansion-panel-header {
+    height: 58px !important;
+    padding: 0 20px;
+
+    &:hover { background: #f5f5f5 !important; }
+  }
+
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0;
+  }
+
+  ::ng-deep mat-panel-description {
+    font-size: .8rem;
+    color: #999;
+    justify-content: flex-end;
+  }
+}
+
+/* ── Panel header title ── */
+.panel-title {
+  display: flex; align-items: center; gap: 12px;
+
+  span { font-size: .93rem; font-weight: 600; color: #222; }
+}
+
+.panel-icon {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: #fff; }
+}
+
+.store-icon   { background: linear-gradient(135deg, #e65100, #f57c00); }
+.maps-icon    { background: linear-gradient(135deg, #00695c, #00897b); }
+.tax-icon     { background: linear-gradient(135deg, #1565c0, #1976d2); }
+.sms-icon     { background: linear-gradient(135deg, #6a1b9a, #8e24aa); }
+.wa-icon      { background: linear-gradient(135deg, #1b5e20, #25d366); }
+.pos-icon     { background: linear-gradient(135deg, #37474f, #546e7a); }
+.menu-icon    { background: linear-gradient(135deg, #bf360c, #e64a19); }
+.printer-icon { background: linear-gradient(135deg, #4a148c, #7b1fa2); }
+.payment-icon { background: linear-gradient(135deg, #1b5e20, #388e3c); }
+.email-icon   { background: linear-gradient(135deg, #0d47a1, #1565c0); }
+.backup-icon  { background: linear-gradient(135deg, #e65100, #f9a825); }
+.theme-icon   { background: linear-gradient(135deg, #880e4f, #c2185b); }
+
+/* ── Panel body fields ── */
+.panel-body {
+  padding: 18px 20px 12px;
+  background: #fff;
+}
+
+.full-width { width: 100%; }
+
+.settings-load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #757575;
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; color: #ef5350; }
+  p { margin: 0; font-size: .95rem; }
+}
+
+.settings-hint {
+  font-size: .8rem;
+  color: #757575;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.two-col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+.tax-field { width: 220px; }
+
+/* ── Info chips ── */
+.info-chip {
+  display: flex; gap: 8px; align-items: flex-start;
+  border-radius: 8px; padding: 9px 12px; margin-bottom: 16px;
+  font-size: .8rem; line-height: 1.5;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+}
+
+.blue-chip  { background: #e8f0fe; color: #1a56db; mat-icon { color: #1a56db; } }
+.green-chip { background: #e6f4ea; color: #1e7e34; mat-icon { color: #2e7d32; } }
+
+/* ── WA note ── */
+.wa-note {
+  display: flex; gap: 7px; align-items: flex-start;
+  font-size: .78rem; color: #666; line-height: 1.5; margin-top: 4px;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: #25d366; flex-shrink: 0; margin-top: 2px; }
+}
+
+/* ── Logo upload ── */
+.logo-section { margin-top: 20px; }
+
+.logo-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .82rem; font-weight: 700; color: #444; margin: 0 0 12px;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--primary); }
+  .logo-hint { font-weight: 400; color: #999; font-size: .78rem; margin-left: 4px; }
+}
+
+.logo-row {
+  display: flex; align-items: flex-start; gap: 20px;
+  flex-wrap: wrap;
+}
+
+.logo-preview-box {
+  width: 120px; height: 120px;
+  border: 2px dashed #ddd; border-radius: 12px;
+  overflow: hidden; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #fafafa; transition: border-color .15s;
+  &:hover { border-color: var(--primary); }
+}
+
+.logo-preview-img {
+  width: 100%; height: 100%; object-fit: contain; padding: 6px;
+}
+
+.logo-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: #bbb;
+  mat-icon { font-size: 32px; width: 32px; height: 32px; }
+  span { font-size: .75rem; }
+}
+
+.logo-actions {
+  display: flex; flex-direction: column; gap: 8px; justify-content: center;
+  button { display: flex; align-items: center; gap: 6px; font-size: .82rem; }
+}
+
+/* ── Toggle row (Display & Promotions panel) ── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; padding: 4px 0;
+
+  .toggle-info {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .toggle-label {
+    font-size: .95rem; font-weight: 600; color: #212121;
+  }
+
+  .toggle-hint {
+    font-size: .82rem; color: #757575; max-width: 480px; line-height: 1.4;
+  }
+}
+
+/* ── Section sub-label (used inside panels to group related fields) ── */
+.section-sub-label {
+  font-size: .8rem; font-weight: 700; color: #666;
+  text-transform: uppercase; letter-spacing: .05em;
+  margin: 16px 0 8px;
+}
+
+/* ── Google Maps picker ── */
+.map-picker-wrap {
+  margin-top: 16px;
+}
+.map-picker-hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .8rem; color: #546e7a; margin: 0 0 10px;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+.map-container {
+  width: 100%; height: 380px;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+.map-loading {
+  display: flex; align-items: center; gap: 12px;
+  height: 380px; justify-content: center; color: #888;
+}
+.map-error {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #fff3e0; border: 1px solid #ffcc02; border-radius: 8px;
+  padding: 12px 14px; font-size: .85rem; color: #e65100;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+}
+
+/* ── Save row ── */
+.save-row {
+  display: flex; justify-content: flex-end; margin-top: 20px;
+
+  button {
+    height: 40px; border-radius: 8px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: .9rem; font-weight: 600; padding: 0 24px;
+    mat-spinner { margin-right: 2px; }
+  }
+}
+
+/* ── SSO Panel ── */
+.sso-icon { background: linear-gradient(135deg, #1a73e8, #4285f4); }
+
+.section-hint {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px;
+  padding: 10px 14px; font-size: .85rem; color: #1565c0; margin-bottom: 20px;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+}
+
+.provider-heading {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .9rem; font-weight: 600; color: #424242;
+  margin: 20px 0 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px;
+}
+
+.provider-logo { width: 20px; height: 20px; flex-shrink: 0; }

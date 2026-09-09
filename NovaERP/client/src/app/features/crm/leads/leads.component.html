@@ -1,0 +1,112 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Leads</h1>
+  <button *appHasPermission="'crm.create'" pButton type="button" icon="pi pi-plus" label="Add Lead"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="leads" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Company</th>
+        <th>Source</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 14rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-l>
+      <tr>
+        <td class="font-semibold">{{ l.name }}</td>
+        <td>{{ l.companyName || '—' }}</td>
+        <td>{{ l.source || '—' }}</td>
+        <td><p-tag [severity]="statusSeverity(l.status)" [value]="l.status"></p-tag></td>
+        <td>{{ l.ownerName }}</td>
+        <td class="actions-cell">
+          @if (l.status !== 'Converted') {
+            <button *appHasPermission="'crm.edit'" pButton type="button" icon="pi pi-arrow-right-arrow-left"
+                    label="Convert" class="p-button-text p-button-sm" (click)="openConvert(l)"></button>
+          }
+          <button *appHasPermission="'crm.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" [disabled]="l.status === 'Converted'" (click)="openEdit(l)"></button>
+          <button *appHasPermission="'crm.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(l)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="empty-cell">No leads yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Lead" [(visible)]="showDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="form.name" />
+    </label>
+    <label>
+      <span>Company Name</span>
+      <input pInputText [(ngModel)]="form.companyName" />
+    </label>
+    <label>
+      <span>Email</span>
+      <input pInputText [(ngModel)]="form.email" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input pInputText [(ngModel)]="form.phone" />
+    </label>
+    <label>
+      <span>Source</span>
+      <input pInputText [(ngModel)]="form.source" placeholder="e.g. Website, Referral" />
+    </label>
+    @if (editing) {
+      <label>
+        <span>Status</span>
+        <p-dropdown [options]="statuses" [(ngModel)]="form.status" [style]="{ width: '100%' }"></p-dropdown>
+      </label>
+    }
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Convert Lead" [(visible)]="showConvertDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid single-col">
+    <label>
+      <span>Account Name</span>
+      <input pInputText [(ngModel)]="convertForm.accountName" />
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="convertForm.createOpportunity" [binary]="true"></p-checkbox>
+      <span>Also create an opportunity</span>
+    </label>
+    @if (convertForm.createOpportunity) {
+      <label>
+        <span>Opportunity Name</span>
+        <input pInputText [(ngModel)]="convertForm.opportunityName" />
+      </label>
+      <label>
+        <span>Opportunity Amount</span>
+        <p-inputNumber [(ngModel)]="convertForm.opportunityAmount" mode="decimal" [minFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showConvertDialog = false"></button>
+    <button pButton type="button" label="Convert" [loading]="convertSaving" (click)="convert()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,78 @@
+<div class="deliveries-page">
+  <div class="page-header">
+    <h2>Deliveries</h2>
+    <button *appHasPermission="'deliveries.create'" class="btn-primary" (click)="openAdd()">+ Schedule Delivery</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="deliveries-table">
+      <thead>
+        <tr><th>Invoice #</th><th>Customer</th><th>Address</th><th>Scheduled</th><th>Staff</th><th>Status</th><th>OTP</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        @for (d of deliveries(); track d.id) {
+          <tr>
+            <td>{{ d.saleInvoiceNumber }}</td>
+            <td>{{ d.customerName || 'Walk-in' }}</td>
+            <td>{{ d.address }}</td>
+            <td>{{ d.scheduledDate | date:'mediumDate' }}</td>
+            <td>{{ d.deliveryStaffName || '-' }}</td>
+            <td><span class="status-badge" [style.background]="statusColor(d.status)">{{ d.status }}</span></td>
+            <td>{{ d.status === 'Delivered' ? '✓ verified' : d.otpCode }}</td>
+            <td class="row-actions" *appHasPermission="'deliveries.edit'">
+              @if (d.status === 'Pending' || d.status === 'Assigned') {
+                <select (change)="assignStaff(d, $any($event.target).value)">
+                  <option value="">Assign staff…</option>
+                  @for (s of deliveryStaff(); track s.id) {
+                    <option [value]="s.id" [selected]="s.id === d.deliveryStaffId">{{ s.name }}</option>
+                  }
+                </select>
+              }
+              @if (d.status === 'Assigned') {
+                <button (click)="updateStatus(d, 'OutForDelivery')">Out for Delivery</button>
+              }
+              @if (d.status === 'OutForDelivery') {
+                <input class="otp-input" placeholder="OTP" [(ngModel)]="otpInputs[d.id]" />
+                <button (click)="verifyOtp(d)">Verify</button>
+              }
+              @if (d.status === 'Pending' || d.status === 'Assigned' || d.status === 'OutForDelivery') {
+                <button class="danger" (click)="updateStatus(d, 'Cancelled')">Cancel</button>
+              }
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="8" class="empty">No deliveries scheduled yet.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>Schedule Delivery</h3>
+        <div class="form-grid">
+          <label>Sale
+            <select [(ngModel)]="form.saleId">
+              <option [ngValue]="null">Select a sale…</option>
+              @for (s of sales(); track s.id) {
+                <option [ngValue]="s.id">{{ s.invoiceNumber }} — {{ s.customerName || 'Walk-in' }}</option>
+              }
+            </select>
+          </label>
+          <label>Scheduled Date <input type="date" [(ngModel)]="form.scheduledDate" /></label>
+          <label class="full-width">Delivery Address <input [(ngModel)]="form.address" /></label>
+          <label>Delivery Charge (₹) <input type="number" min="0" [(ngModel)]="form.deliveryCharge" /></label>
+          <label class="full-width">Notes <input [(ngModel)]="form.notes" /></label>
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" [disabled]="!form.saleId || !form.address" (click)="save()">Schedule</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

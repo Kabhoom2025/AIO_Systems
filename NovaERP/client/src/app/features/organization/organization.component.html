@@ -1,0 +1,75 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Organization Profile</h1>
+</div>
+
+<div class="card">
+  @if (loading) {
+    <div class="empty-cell">Loading organization profile...</div>
+  } @else if (profile) {
+    <div class="profile-container">
+      <div class="profile-header-info">
+        <div class="logo-placeholder">
+          @if (profile.logoUrl) {
+            <img [src]="profile.logoUrl" alt="Organization Logo" class="logo-image" />
+          } @else {
+            <i class="pi pi-building company-icon"></i>
+          }
+        </div>
+        <div>
+          <h2>{{ profile.name }}</h2>
+          <p class="text-muted">{{ profile.legalName || 'No legal name set' }} &middot; Code: {{ profile.code }}</p>
+        </div>
+      </div>
+
+      <div class="form-grid mt-4">
+        <label>
+          <span>Organization Name</span>
+          <input pInputText [(ngModel)]="form.name" />
+        </label>
+        <label>
+          <span>Legal Name</span>
+          <input pInputText [(ngModel)]="form.legalName" />
+        </label>
+        <label>
+          <span>Email Address</span>
+          <input pInputText type="email" [(ngModel)]="form.email" />
+        </label>
+        <label>
+          <span>Phone Number</span>
+          <input pInputText [(ngModel)]="form.phone" />
+        </label>
+        <label>
+          <span>Website URL</span>
+          <input pInputText [(ngModel)]="form.website" />
+        </label>
+        <label>
+          <span>Tax / Registration Number</span>
+          <input pInputText [(ngModel)]="form.taxNumber" />
+        </label>
+        <label>
+          <span>Currency</span>
+          <input pInputText [(ngModel)]="form.currency" />
+        </label>
+        <label>
+          <span>Timezone</span>
+          <input pInputText [(ngModel)]="form.timezone" />
+        </label>
+        <label class="col-span-2">
+          <span>Address</span>
+          <textarea pInputTextarea [(ngModel)]="form.address" rows="3"></textarea>
+        </label>
+        <label class="col-span-2">
+          <span>Logo URL</span>
+          <input pInputText [(ngModel)]="form.logoUrl" />
+        </label>
+      </div>
+
+      <div class="form-actions mt-4">
+        <button *appHasPermission="'organization.edit'" pButton type="button" label="Save Changes" icon="pi pi-save"
+                [loading]="saving" (click)="save()"></button>
+      </div>
+    </div>
+  }
+</div>

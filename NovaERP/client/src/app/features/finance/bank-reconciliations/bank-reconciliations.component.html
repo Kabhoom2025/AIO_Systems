@@ -1,0 +1,138 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Bank Reconciliations</h1>
+  <button *appHasPermission="'finance.create'" pButton type="button" icon="pi pi-plus" label="Add Bank Reconciliation"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="reconciliations" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Ledger Account</th>
+        <th>Statement Date</th>
+        <th>Statement Balance</th>
+        <th>Book Balance</th>
+        <th>Difference</th>
+        <th>Unmatched</th>
+        <th>Status</th>
+        <th style="width: 16rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-r>
+      <tr>
+        <td>{{ r.ledgerAccountName }}</td>
+        <td>{{ r.statementDate | date: 'mediumDate' }}</td>
+        <td class="font-semibold">{{ r.statementEndingBalance | number: '1.2-2' }}</td>
+        <td>{{ r.bookBalance | number: '1.2-2' }}</td>
+        <td [class.difference-nonzero]="r.difference !== 0">{{ r.difference | number: '1.2-2' }}</td>
+        <td>{{ r.unmatchedCount }}</td>
+        <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+        <td class="actions-cell">
+          @if (r.status === 'Draft') {
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-link" label="Match / Complete"
+                    class="p-button-text p-button-sm p-button-success" (click)="openMatch(r)"></button>
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(r)"></button>
+            <button *appHasPermission="'finance.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(r)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No bank reconciliations yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Bank Reconciliation" [(visible)]="showDialog" [modal]="true" [style]="{ width: '38rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Ledger Account</span>
+      <p-dropdown [options]="ledgerAccounts" [(ngModel)]="form.ledgerAccountId" optionLabel="name" optionValue="id"
+                  placeholder="Select ledger account" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Statement Date</span>
+      <p-calendar [(ngModel)]="form.statementDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Statement Ending Balance</span>
+      <p-inputNumber [(ngModel)]="form.statementEndingBalance" mode="decimal" [minFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Statement Lines</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Line" class="p-button-text p-button-sm" (click)="addLine()"></button>
+    </div>
+    <div class="line-row line-row-header">
+      <span>Date</span>
+      <span>Description</span>
+      <span>Amount</span>
+      <span></span>
+    </div>
+    @for (line of lines; track $index) {
+      <div class="line-row">
+        <p-calendar [(ngModel)]="line.transactionDate" dateFormat="dd/mm/yy"></p-calendar>
+        <input pInputText [(ngModel)]="line.description" placeholder="Optional" />
+        <p-inputNumber [(ngModel)]="line.amount" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeLine($index)"></button>
+      </div>
+    }
+    @if (!lines.length) {
+      <div class="empty-cell">No lines yet — add at least one.</div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Match Statement Lines" [(visible)]="showMatchDialog" [modal]="true" [style]="{ width: '44rem' }">
+  @if (matching) {
+    <div class="match-summary">
+      <span>Book Balance: <strong>{{ matching.bookBalance | number: '1.2-2' }}</strong></span>
+      <span>Statement Balance: <strong>{{ matching.statementEndingBalance | number: '1.2-2' }}</strong></span>
+      <span [class.difference-nonzero]="matching.difference !== 0">Difference: <strong>{{ matching.difference | number: '1.2-2' }}</strong></span>
+    </div>
+
+    @for (line of matching.lines; track line.id) {
+      <div class="match-line">
+        <div class="match-line-info">
+          <span class="font-semibold">{{ line.description }}</span>
+          <span>{{ line.transactionDate | date: 'mediumDate' }} — {{ line.amount | number: '1.2-2' }}</span>
+        </div>
+        @if (line.isMatched) {
+          <button pButton type="button" label="Unmatch" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                  (click)="unmatchLine(line.id)"></button>
+        } @else {
+          <p-dropdown [options]="matchCandidates" [(ngModel)]="selectedCandidateByLine[line.id]"
+                      optionValue="journalEntryLineId" placeholder="Select journal entry line" [style]="{ width: '16rem' }">
+            <ng-template let-candidate pTemplate="item">
+              {{ candidate.journalEntryNumber }} — {{ candidate.amount | number: '1.2-2' }}
+            </ng-template>
+          </p-dropdown>
+          <button pButton type="button" label="Match" icon="pi pi-link" class="p-button-text p-button-sm p-button-success"
+                  (click)="matchLine(line.id)"></button>
+        }
+      </div>
+    }
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showMatchDialog = false"></button>
+    <button pButton type="button" label="Complete" icon="pi pi-check" (click)="completeFromMatchDialog()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,11 @@
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f2f8; }
+.login-card { background: #fff; border-radius: 12px; padding: 2.5rem; width: 380px; max-width: 90vw; box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  h2 { margin: 0 0 4px; color: #1a237e; }
+  .subtitle { margin: 0 0 1.5rem; color: #888; font-size: 0.85rem; }
+}
+.field { display: flex; flex-direction: column; font-size: 0.85rem; color: #555; gap: 4px; margin-bottom: 1rem;
+  input, ::ng-deep .p-password input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; font-size: 0.95rem; }
+  ::ng-deep .p-password { width: 100%; }
+}
+::ng-deep .p-button.w-full { width: 100%; margin-top: 0.5rem; }
+.hint { margin-top: 1.25rem; font-size: 0.75rem; color: #999; text-align: center; }

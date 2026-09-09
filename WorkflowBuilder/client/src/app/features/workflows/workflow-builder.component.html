@@ -1,0 +1,370 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="builder-root" *ngIf="!loading; else loadingTpl">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span class="crumb-link" (click)="backToList()">Workflows</span>
+      </div>
+      <h1>{{ workflow?.name }}</h1>
+      <div class="subtitle">
+        <span *ngIf="savedText">{{ savedText }}</span>
+        <span *ngIf="savedText"> &middot; </span>
+        <span *ngIf="draftVersion">Version {{ draftVersion.versionNumber }} [Draft]</span>
+        <span *ngIf="workflow?.publishedVersionNumber"> &middot; Published: v{{ workflow?.publishedVersionNumber }}</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button pButton type="button" icon="pi pi-undo" class="p-button-text p-button-sm icon-btn" [disabled]="!canUndo()" title="Undo (Ctrl+Z)" (click)="undo()"></button>
+      <button pButton type="button" icon="pi pi-refresh" class="p-button-text p-button-sm icon-btn" [disabled]="!canRedo()" title="Redo (Ctrl+Y)" (click)="redo()"></button>
+      <button pButton type="button" label="Test Run" icon="pi pi-play" class="p-button-outlined p-button-sm" (click)="openRunDialog()"></button>
+      <button pButton type="button" label="View Runs" icon="pi pi-history" class="p-button-outlined p-button-sm" (click)="openExecutions()"></button>
+      <button
+        pButton
+        type="button"
+        [label]="previewMode ? 'Exit Preview' : 'Preview'"
+        icon="pi pi-eye"
+        class="p-button-outlined"
+        (click)="togglePreview()"
+      ></button>
+      <button pButton type="button" label="Publish" class="publish-btn" (click)="confirmPublish()"></button>
+    </div>
+  </div>
+
+  <!-- Body: palette + canvas + properties panel -->
+  <div class="body-row">
+    <app-node-palette></app-node-palette>
+    <div class="canvas-wrapper" #canvasWrapperEl (wheel)="onCanvasWheel($event)" (mousedown)="onCanvasMouseDown($event)">
+      <div
+        class="canvas-inner"
+        [style.width.px]="canvasWidth()"
+        [style.height.px]="canvasHeight()"
+        [style.transform]="canvasTransform()"
+        (click)="onCanvasClick()"
+        (dragover)="onCanvasDragOver($event)"
+        (drop)="onCanvasDrop($event)"
+      >
+        <svg class="edges-svg" [attr.width]="canvasWidth()" [attr.height]="canvasHeight()">
+          <path *ngFor="let edge of graph.edges" [attr.d]="edgePath(edge)" stroke="#9ca3af" stroke-width="2" fill="none" />
+          <path
+            *ngFor="let edge of graph.edges"
+            [attr.d]="edgePath(edge)"
+            class="edge-hit"
+            [class.edge-hit-selected]="selectedEdgeId === edge.id"
+            stroke-width="14"
+            fill="none"
+            (click)="selectEdge(edge, $event)"
+          />
+          <path *ngIf="connectingFrom" [attr.d]="connectingLinePath()" stroke="#2563eb" stroke-width="2" stroke-dasharray="5,4" fill="none" />
+        </svg>
+
+        <ng-container *ngFor="let edge of graph.edges">
+          <div *ngIf="edge.label" class="edge-label" [ngStyle]="edgeLabelStyle(edge)">{{ edge.label }}</div>
+          <button
+            *ngIf="selectedEdgeId === edge.id"
+            type="button"
+            class="edge-delete-btn"
+            [ngStyle]="edgeLabelStyle(edge)"
+            (click)="deleteEdge(edge.id); $event.stopPropagation()"
+          >✕</button>
+        </ng-container>
+
+        <div
+          *ngFor="let node of graph.nodes; trackBy: trackById"
+          class="node-card"
+          [class.node-end]="node.type === 'end'"
+          [class.selected]="selectedNode?.id === node.id"
+          [class.executing]="executingNodeId === node.id"
+          [style.left.px]="node.x"
+          [style.top.px]="node.y"
+          [style.width.px]="nodeWidth(node)"
+          [style.border-color]="nodeBorderColor(node)"
+          (click)="selectNode(node); $event.stopPropagation()"
+        >
+          <div class="node-header" [style.background]="nodeHeaderBg(node)" (mousedown)="onNodeMouseDown($event, node)">
+            <i
+              class="pi node-icon"
+              [ngClass]="{
+                'pi-file': node.type === 'trigger',
+                'pi-directions': node.type === 'condition',
+                'pi-bolt': node.type === 'action',
+                'pi-flag': node.type === 'end'
+              }"
+            ></i>
+            <span class="node-title">{{ nodeTypeLabel(node) }}</span>
+            <span class="node-badge" *ngIf="node.type !== 'end'">{{
+              node.type === 'trigger' ? 'Trigger' : node.type === 'condition' ? 'Condition' : 'Action'
+            }}</span>
+          </div>
+          <div class="node-body" *ngIf="node.type !== 'end'">
+            <ng-container [ngSwitch]="node.type">
+              <span *ngSwitchCase="'trigger'">{{ triggerBodyText(node) }}</span>
+              <span *ngSwitchCase="'condition'">{{ conditionSummary(node) }}</span>
+              <span *ngSwitchCase="'action'">{{ actionBodyText(node) }}</span>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Connection ports (drag from an output port to another node's input to wire them) -->
+        <ng-container *ngFor="let node of graph.nodes">
+          <div
+            *ngIf="hasInputPort(node)"
+            class="port port-input"
+            [style.left.px]="inputPortPos(node).x - 6"
+            [style.top.px]="inputPortPos(node).y - 6"
+          ></div>
+          <div
+            *ngFor="let port of outputPorts(node)"
+            class="port port-output"
+            [style.left.px]="outputPortPos(node, port.id).x - 6"
+            [style.top.px]="outputPortPos(node, port.id).y - 6"
+            (mousedown)="onPortMouseDown($event, node, port.id)"
+            [title]="port.label || 'Drag to connect'"
+          ></div>
+        </ng-container>
+      </div>
+
+      <div class="zoom-controls">
+        <button pButton type="button" icon="pi pi-plus" class="p-button-text p-button-sm" (click)="zoomIn()" title="Zoom in"></button>
+        <button pButton type="button" icon="pi pi-minus" class="p-button-text p-button-sm" (click)="zoomOut()" title="Zoom out"></button>
+        <span class="zoom-pct">{{ viewport.scale * 100 | number: '1.0-0' }}%</span>
+        <button pButton type="button" icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="resetZoom()" title="Reset zoom"></button>
+        <button pButton type="button" icon="pi pi-arrows-alt" class="p-button-text p-button-sm" (click)="fitToView()" title="Fit to view"></button>
+      </div>
+    </div>
+
+    <div class="properties-panel" *ngIf="showPropertiesPanel && selectedNode as sn">
+      <div class="panel-header">
+        <span>Properties</span>
+        <div class="panel-header-actions">
+          <button
+            type="button"
+            class="close-btn"
+            (click)="deleteNode(sn)"
+            [disabled]="previewMode || sn.type === 'trigger'"
+            title="Delete node (Del)"
+          ><i class="pi pi-trash"></i></button>
+          <button type="button" class="close-btn" (click)="closePanel()"><i class="pi pi-times"></i></button>
+        </div>
+      </div>
+
+      <div class="panel-type-row">
+        <span class="type-badge" [style.background]="nodeHeaderBg(sn)" [style.border-color]="nodeBorderColor(sn)">{{
+          nodeTypeLabel(sn)
+        }}</span>
+        <button pButton type="button" label="Change" class="p-button-text p-button-sm" [disabled]="true"></button>
+      </div>
+
+      <div class="form-field">
+        <label>Description</label>
+        <input
+          pInputText
+          type="text"
+          [ngModel]="descriptionOf(sn)"
+          (ngModelChange)="onDescriptionChange(sn, $event)"
+          placeholder="Add description here"
+          [disabled]="previewMode"
+        />
+      </div>
+
+      <ng-container [ngSwitch]="sn.type">
+        <!-- Trigger -->
+        <div *ngSwitchCase="'trigger'">
+          <div class="form-field">
+            <label>Trigger</label>
+            <input pInputText type="text" [value]="asTriggerData(sn).label" disabled />
+          </div>
+          <div class="form-field" *ngIf="workflow?.triggerType === 'Webhook'">
+            <label>Webhook URL</label>
+            <input pInputText type="text" [value]="webhookUrl()" readonly />
+            <span class="muted">POST JSON here to trigger the published version.</span>
+          </div>
+        </div>
+
+        <!-- Decision (condition) -->
+        <div *ngSwitchCase="'condition'">
+          <div class="section-title">Branches</div>
+          <div class="group-card" *ngFor="let branch of asConditionData(sn).branches; let bi = index">
+            <div class="group-header branch-name-row">
+              <input
+                pInputText
+                type="text"
+                class="branch-name-input"
+                [(ngModel)]="branch.name"
+                (ngModelChange)="renameBranch(branch, $event)"
+                [disabled]="previewMode"
+              />
+              <button
+                type="button"
+                class="row-remove"
+                (click)="removeBranch(sn, branch.id)"
+                [disabled]="previewMode || asConditionData(sn).branches.length <= 1"
+              >✕</button>
+            </div>
+            <div class="condition-row" *ngFor="let rule of branch.conditions; let ri = index">
+              <p-dropdown
+                [options]="triggerFields"
+                optionLabel="label"
+                optionValue="key"
+                [(ngModel)]="rule.field"
+                (onChange)="onConditionFieldChange(rule)"
+                placeholder="Field"
+                [disabled]="previewMode"
+              ></p-dropdown>
+              <p-dropdown
+                [options]="operatorOptionsFor(rule)"
+                [(ngModel)]="rule.operator"
+                (ngModelChange)="scheduleAutosave()"
+                placeholder="Operator"
+                [disabled]="previewMode"
+              ></p-dropdown>
+              <ng-container [ngSwitch]="valueKind(rule)">
+                <p-dropdown
+                  *ngSwitchCase="'boolean'"
+                  [options]="['true', 'false']"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                ></p-dropdown>
+                <p-dropdown
+                  *ngSwitchCase="'options'"
+                  [options]="triggerFieldOptions(rule)"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                ></p-dropdown>
+                <input
+                  *ngSwitchCase="'number'"
+                  pInputText
+                  type="number"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                />
+                <input
+                  *ngSwitchDefault
+                  pInputText
+                  type="text"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                />
+              </ng-container>
+              <button type="button" class="row-remove" (click)="removeCondition(branch, ri)" [disabled]="previewMode">✕</button>
+            </div>
+            <button
+              pButton
+              type="button"
+              label="Add Condition"
+              class="p-button-text p-button-sm"
+              (click)="addCondition(branch)"
+              [disabled]="previewMode"
+            ></button>
+          </div>
+          <button
+            pButton
+            type="button"
+            label="Add Branch"
+            icon="pi pi-plus"
+            class="p-button-outlined p-button-sm"
+            (click)="addBranch(sn)"
+            [disabled]="previewMode"
+          ></button>
+
+          <div class="section-title" style="margin-top: 1.25rem">Next Step</div>
+          <div class="branch-card" *ngFor="let branch of asConditionData(sn).branches; let bi = index">
+            <ng-container *ngIf="edgeForBranch(sn.id, branch.id) as be">
+              <span class="branch-pill pill-other">{{ branch.name }}</span>
+              <span class="branch-target">{{ be.target && nodeById(be.target) ? nodeTypeLabel(nodeById(be.target)!) : '' }}</span>
+              <button pButton type="button" icon="pi pi-arrow-right" class="p-button-text p-button-sm" (click)="jumpToNode(be.target)"></button>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Action -->
+        <div *ngSwitchCase="'action'">
+          <div class="form-field">
+            <label>Action Type</label>
+            <p-dropdown
+              [options]="actionTypes"
+              optionLabel="label"
+              optionValue="key"
+              [(ngModel)]="asActionData(sn).actionType"
+              (onChange)="onActionTypeChange(sn)"
+              placeholder="Select action"
+              [disabled]="previewMode"
+            ></p-dropdown>
+          </div>
+          <div class="form-field" *ngFor="let f of configFieldsFor(sn)">
+            <label>{{ f.label }}</label>
+            <p-dropdown
+              *ngIf="f.options && f.options.length"
+              [options]="f.options"
+              [ngModel]="asActionData(sn).config[f.key]"
+              (ngModelChange)="updateConfigValue(sn, f.key, $event)"
+              [disabled]="previewMode"
+            ></p-dropdown>
+            <input
+              *ngIf="!f.options || !f.options.length"
+              pInputText
+              [type]="f.type === 'number' ? 'number' : 'text'"
+              [ngModel]="asActionData(sn).config[f.key]"
+              (ngModelChange)="updateConfigValue(sn, f.key, $event)"
+              [disabled]="previewMode"
+            />
+          </div>
+        </div>
+
+        <!-- End -->
+        <div *ngSwitchCase="'end'">
+          <p class="muted">This path ends here. No further configuration is needed.</p>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">Loading workflow…</div>
+</ng-template>
+
+<p-dialog header="Recent Executions" [(visible)]="showExecutionsDialog" [modal]="true" [style]="{ width: '700px' }">
+  <div *ngIf="executionsLoading" class="muted">Loading…</div>
+  <div *ngIf="!executionsLoading && executions.length === 0" class="muted">No executions yet.</div>
+  <div class="execution-row" *ngFor="let ex of executions">
+    <div class="execution-head">
+      <p-tag [value]="ex.status" [severity]="executionSeverity(ex.status)"></p-tag>
+      <span>{{ ex.triggerEntityType }}</span>
+      <span class="muted">{{ ex.createdDate | date: 'medium' }}</span>
+    </div>
+    <div *ngIf="ex.errorMessage" class="error-text">{{ ex.errorMessage }}</div>
+    <pre>{{ prettyPath(ex.pathJson) }}</pre>
+  </div>
+</p-dialog>
+
+<p-dialog header="Test Run" [(visible)]="showRunDialog" [modal]="true" [style]="{ width: '600px' }">
+  <div class="form-field">
+    <label>Context JSON (available to condition rules and {{'{'}}Field{{'}'}} placeholders)</label>
+    <textarea pInputTextarea rows="6" [(ngModel)]="runContextJson" placeholder="{}"></textarea>
+  </div>
+  <div class="run-result" *ngIf="running || liveSteps.length">
+    <div class="muted" *ngIf="running">Running live…</div>
+    <div class="live-step" *ngFor="let step of liveSteps">
+      <span class="step-type">{{ step.type }}</span>
+      <span class="step-node">{{ step.node }}</span>
+      <span *ngIf="step.matchedBranchName"> → {{ step.matchedBranchName }}</span>
+      <span *ngIf="step.result"> — {{ step.result }}</span>
+    </div>
+  </div>
+  <div class="run-result" *ngIf="!running && lastRunResult">
+    <p-tag [value]="lastRunResult.status" [severity]="executionSeverity(lastRunResult.status)"></p-tag>
+    <div *ngIf="lastRunResult.errorMessage" class="error-text">{{ lastRunResult.errorMessage }}</div>
+    <pre>{{ prettyPath(lastRunResult.pathJson) }}</pre>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showRunDialog = false"></button>
+    <button pButton type="button" label="Run" icon="pi pi-play" [loading]="running" (click)="runNow()"></button>
+  </ng-template>
+</p-dialog>

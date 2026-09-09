@@ -1,0 +1,72 @@
+<div class="doctors-page">
+  <div class="page-header">
+    <div class="eyebrow">Book a visit</div>
+    <h1>Find a Doctor</h1>
+    <p>Search by name or speciality, then request an appointment at a location near you.</p>
+    <input class="search-box" type="text" placeholder="Search doctors or specialities…" [(ngModel)]="searchTerm" />
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading doctors…</div>
+  } @else {
+    <div class="doctor-grid">
+      @for (doc of filteredDoctors; track doc.id) {
+        <div class="doctor-card">
+          <div class="avatar">{{ doc.name.charAt(0) }}</div>
+          <h3>{{ doc.name }}</h3>
+          <div class="specialty">{{ doc.specialty || 'General Medicine' }}</div>
+          @if (doc.hospitalName) { <div class="hospital">{{ doc.hospitalName }}</div> }
+          <button class="btn-primary" (click)="openBooking(doc)">Book Appointment</button>
+        </div>
+      }
+      @empty {
+        <div class="empty">No doctors match your search.</div>
+      }
+    </div>
+  }
+
+  @if (bookingFor(); as doc) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h2>Book with {{ doc.name }}</h2>
+        <p class="sub">{{ doc.specialty || 'General Medicine' }}</p>
+
+        <label class="field">
+          <span>Location</span>
+          <select [(ngModel)]="form.branchId">
+            @for (b of branches(); track b.id) { <option [ngValue]="b.id">{{ b.name }}</option> }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Preferred Date</span>
+          <input type="date" [(ngModel)]="form.preferredDate" />
+        </label>
+
+        <label class="field">
+          <span>Preferred Time</span>
+          <select [(ngModel)]="form.timeSlot">
+            <option value="Morning">Morning</option>
+            <option value="Afternoon">Afternoon</option>
+            <option value="Evening">Evening</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Notes (optional)</span>
+          <textarea rows="3" [(ngModel)]="form.notes" placeholder="Reason for visit…"></textarea>
+        </label>
+
+        @if (formError()) { <div class="error-msg">{{ formError() }}</div> }
+        @if (successMessage()) { <div class="success-msg">{{ successMessage() }}</div> }
+
+        <div class="dialog-actions">
+          <button class="btn-secondary" (click)="closeBooking()">Cancel</button>
+          <button class="btn-primary" [disabled]="submitting()" (click)="submitBooking()">
+            {{ submitting() ? 'Requesting…' : 'Request Appointment' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

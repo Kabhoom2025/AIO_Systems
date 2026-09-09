@@ -1,0 +1,90 @@
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.search-wrapper {
+  position: relative;
+  .pi-search {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    z-index: 1;
+  }
+}
+
+.search-input {
+  padding-left: 2.25rem !important;
+  width: 20rem;
+}
+
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+  gap: 1rem;
+  .loading-text { color: #64748b; font-size: 0.9rem; }
+}
+
+.text-sm   { font-size: 0.8rem; }
+.text-muted { color: #64748b; }
+.font-semibold { font-weight: 600; }
+.text-nowrap { white-space: nowrap; }
+.mono { font-family: 'Courier New', monospace; }
+
+.path-cell {
+  display: block;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: #334155;
+  font-family: monospace;
+  cursor: default;
+}
+
+.action-cell {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.duration-cell {
+  &.slow { color: #ef4444; font-weight: 600; }
+}
+
+:host ::ng-deep {
+  .method-tag {
+    .p-tag { font-family: monospace; font-size: 0.75rem; min-width: 4rem; text-align: center; }
+  }
+
+  .p-datatable-sm .p-datatable-tbody > tr > td {
+    padding: 0.55rem 0.75rem;
+  }
+}
+
+.empty-cell { padding: 3rem 1rem !important; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+
+  .empty-icon { font-size: 2.5rem; color: #cbd5e1; }
+  p { margin: 0; font-size: 0.95rem; }
+  .text-sm { font-size: 0.8rem; }
+}
+
+.paginator-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  .total-text { padding-left: 0.25rem; }
+}

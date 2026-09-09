@@ -1,0 +1,208 @@
+<div class="settings-page">
+  <div class="settings-shell">
+    <header class="settings-header">
+      <div class="settings-header-text">
+        <h1>Settings</h1>
+        <p>Customize appearance, voice, and your AI provider.</p>
+      </div>
+      <button mat-icon-button (click)="close()" matTooltip="Back to chat" aria-label="Close settings">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <mat-tab-group class="settings-tabs" animationDuration="150ms" mat-stretch-tabs="false">
+      <mat-tab label="Appearance">
+        <div class="tab-content">
+          <div class="setting-row">
+            <div class="setting-row-text">
+              <span class="setting-row-title">Theme</span>
+              <span class="setting-row-desc">Match your system, or force light/dark.</span>
+            </div>
+            <mat-form-field appearance="outline" class="setting-row-control">
+              <mat-select [ngModel]="draft().theme" (ngModelChange)="updateField('theme', $event)">
+                <mat-option value="system">System</mat-option>
+                <mat-option value="light">Light</mat-option>
+                <mat-option value="dark">Dark</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-row-text">
+              <span class="setting-row-title">Language</span>
+              <span class="setting-row-desc">Used for voice recognition and speech output.</span>
+            </div>
+            <mat-form-field appearance="outline" class="setting-row-control">
+              <mat-select [ngModel]="draft().language" (ngModelChange)="onLanguageChange($event)">
+                @for (lang of languages; track lang.code) {
+                  <mat-option [value]="lang.code">{{ lang.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Voice &amp; Speech">
+        <div class="tab-content">
+          @if (!isTtsSupported) {
+            <p class="inline-note warn">
+              <mat-icon>info</mat-icon>
+              Text-to-speech is not supported in this browser.
+            </p>
+          }
+
+          @if (hasNoVoiceForLanguage()) {
+            <p class="inline-note warn">
+              <mat-icon>info</mat-icon>
+              No text-to-speech voice for this language is installed on this device — responses
+              may be read in the wrong language/accent, or not read aloud at all. Check your
+              operating system's speech/language settings to install one (e.g. on Windows:
+              Settings → Time &amp; Language → Speech → Manage voices).
+            </p>
+          }
+
+          <div class="setting-row">
+            <div class="setting-row-text">
+              <span class="setting-row-title">AI voice</span>
+              <span class="setting-row-desc">Only voices installed for the selected language are shown.</span>
+            </div>
+            <mat-form-field appearance="outline" class="setting-row-control">
+              <mat-select [ngModel]="draft().voice" (ngModelChange)="updateField('voice', $event)">
+                <mat-option value="default">Browser default</mat-option>
+                @for (voice of voicesForLanguage(); track voice.name) {
+                  <mat-option [value]="voice.name">{{ voice.name }} ({{ voice.lang }})</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="slider-grid">
+            <div class="slider-tile">
+              <div class="slider-tile-label">
+                <span>Speech rate</span>
+                <span class="value-chip">{{ draft().speechRate }}x</span>
+              </div>
+              <mat-slider min="0.5" max="2" step="0.1" discrete>
+                <input matSliderThumb [ngModel]="draft().speechRate" (ngModelChange)="updateField('speechRate', $event)" />
+              </mat-slider>
+            </div>
+
+            <div class="slider-tile">
+              <div class="slider-tile-label">
+                <span>Pitch</span>
+                <span class="value-chip">{{ draft().pitch }}</span>
+              </div>
+              <mat-slider min="0" max="2" step="0.1" discrete>
+                <input matSliderThumb [ngModel]="draft().pitch" (ngModelChange)="updateField('pitch', $event)" />
+              </mat-slider>
+            </div>
+
+            <div class="slider-tile">
+              <div class="slider-tile-label">
+                <span>Volume</span>
+                <span class="value-chip">{{ draft().volume }}</span>
+              </div>
+              <mat-slider min="0" max="1" step="0.05" discrete>
+                <input matSliderThumb [ngModel]="draft().volume" (ngModelChange)="updateField('volume', $event)" />
+              </mat-slider>
+            </div>
+          </div>
+
+          <button mat-stroked-button class="preview-btn" [disabled]="!isTtsSupported" (click)="previewVoice()">
+            <mat-icon>play_arrow</mat-icon>
+            Preview voice
+          </button>
+
+          <div class="setting-row toggle">
+            <div class="setting-row-text">
+              <span class="setting-row-title">Automatically read AI responses aloud</span>
+              <span class="setting-row-desc">Speak every reply without pressing the speaker icon.</span>
+            </div>
+            <mat-slide-toggle [ngModel]="draft().autoSpeak" (ngModelChange)="updateField('autoSpeak', $event)" />
+          </div>
+
+          <div class="setting-row toggle">
+            <div class="setting-row-text">
+              <span class="setting-row-title">Prefer full voice conversation mode</span>
+              <span class="setting-row-desc">Default to the hands-free listen/speak loop.</span>
+            </div>
+            <mat-slide-toggle [ngModel]="draft().voiceMode" (ngModelChange)="updateField('voiceMode', $event)" />
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="AI Provider">
+        <div class="tab-content">
+          <p class="inline-note">
+            <mat-icon>info</mat-icon>
+            By default the chatbot uses the server's configured AI provider. Bring your own key
+            to use a different provider (or your own account/quota) for your conversations only.
+          </p>
+
+          <div class="setting-row">
+            <div class="setting-row-text">
+              <span class="setting-row-title">Provider</span>
+              <span class="setting-row-desc">Which AI service handles your messages.</span>
+            </div>
+            <mat-form-field appearance="outline" class="setting-row-control">
+              <mat-select [ngModel]="draft().aiProvider ?? ''" (ngModelChange)="onAiProviderChange($event)">
+                @for (provider of aiProviders; track provider.value) {
+                  <mat-option [value]="provider.value">{{ provider.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          @if (draft().aiProvider) {
+            <div class="provider-details">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ draft().aiProvider }} API key</mat-label>
+                <input
+                  matInput
+                  type="password"
+                  autocomplete="off"
+                  [placeholder]="draft().hasCustomAiApiKey ? 'Key already saved — leave blank to keep it' : 'Enter API key'"
+                  [ngModel]="aiApiKeyDraft() ?? ''"
+                  (ngModelChange)="aiApiKeyDraft.set($event)" />
+                @if (draft().hasCustomAiApiKey) {
+                  <button mat-icon-button matSuffix (click)="clearApiKey()" matTooltip="Remove saved key" aria-label="Remove saved key">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                }
+                <mat-hint>Stored encrypted server-side and never shown again after saving.</mat-hint>
+              </mat-form-field>
+
+              @if (aiApiKeyDraft() === '') {
+                <p class="inline-note warn">
+                  <mat-icon>info</mat-icon>
+                  The saved key will be removed when you save.
+                </p>
+              }
+
+              <mat-form-field appearance="outline">
+                <mat-label>Model (optional)</mat-label>
+                <input
+                  matInput
+                  [placeholder]="modelPlaceholder()"
+                  [ngModel]="draft().aiModel ?? ''"
+                  (ngModelChange)="updateField('aiModel', $event === '' ? null : $event)" />
+                <mat-hint>Leave blank to use a built-in default for this provider.</mat-hint>
+              </mat-form-field>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
+    <footer class="settings-footer">
+      <button mat-flat-button color="primary" class="save-btn" [disabled]="isSaving()" (click)="save()">
+        @if (isSaving()) {
+          Saving...
+        } @else {
+          Save changes
+        }
+      </button>
+    </footer>
+  </div>
+</div>

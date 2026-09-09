@@ -1,0 +1,47 @@
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+.store-page { padding: 40px 32px; max-width: 1100px; margin: 0 auto; }
+
+.page-header { margin-bottom: 28px; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #C96F1B; margin-bottom: 8px; }
+.page-header h1 { font-family: Georgia, serif; font-size: 1.9rem; margin: 0 0 8px; color: #12231F; }
+.page-header p { color: #4B5D58; margin: 0 0 18px; }
+
+.header-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+.search-box {
+  flex: 1; min-width: 220px; max-width: 420px; box-sizing: border-box;
+  border: 1px solid #DCE6E1; border-radius: 999px; padding: 11px 18px; font-size: 0.92rem;
+}
+
+.cart-pill {
+  background: #0E4D42; color: #fff; border: none; border-radius: 999px;
+  padding: 10px 20px; font-weight: 700; font-size: 0.86rem; cursor: pointer;
+}
+.cart-pill:hover { background: #123E36; }
+
+.medicine-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.medicine-card {
+  background: #fff; border-radius: 14px; padding: 20px;
+  box-shadow: 0 10px 26px -18px rgba(18,35,31,0.25);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.medicine-card h3 { font-family: Georgia, serif; margin: 0; color: #12231F; font-size: 1.05rem; }
+.generic { color: #4B5D58; font-size: 0.8rem; }
+.meta { color: #4B5D58; font-size: 0.78rem; margin-bottom: 6px; }
+
+.price-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.price { font-weight: 700; color: #0E4D42; font-size: 1.05rem; }
+.stock { font-size: 0.76rem; color: #4B5D58; }
+
+.add-row { display: flex; gap: 8px; }
+.add-row input {
+  width: 64px; border: 1px solid #DCE6E1; border-radius: 8px; padding: 8px; text-align: center; font-size: 0.9rem;
+}
+.btn-primary {
+  flex: 1; background: #E98A2E; color: #21140A; border: none;
+  font-weight: 700; font-size: 0.84rem; padding: 8px; border-radius: 999px; cursor: pointer;
+}
+.btn-primary:hover { background: #C96F1B; }
+
+.loading, .empty { text-align: center; padding: 40px; color: #4B5D58; }

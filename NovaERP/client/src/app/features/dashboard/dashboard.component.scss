@@ -1,0 +1,246 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  h1 { margin: 0; }
+}
+
+.dashboard-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.org-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.org-chip-code {
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+}
+
+.org-chip-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.customize-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+
+  &:hover { background: #dbeafe; }
+}
+
+.widgets-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+
+  h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #1e293b; }
+}
+
+.widgets-source {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.widgets-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+
+  p { margin: 0; color: #64748b; font-size: 0.88rem; }
+}
+
+.widgets-empty-icon {
+  font-size: 1.8rem;
+  color: #cbd5e1;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.stat-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+
+.stat-tile-hero {
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #fffbeb, #fff);
+}
+
+.stat-icon {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.stat-value-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-left: 0.35rem;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: 1px solid #e2e8f0;
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i { color: #2563eb; font-size: 0.9rem; }
+  }
+}
+
+.org-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem 1.5rem;
+
+  div { display: flex; flex-direction: column; gap: 0.25rem; }
+  .label { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; }
+  .value { font-size: 0.88rem; color: #1e293b; font-weight: 500; }
+}
+
+.chart-panel {
+  min-height: 14rem;
+}
+
+.chart-wrap { width: 100%; }
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.proportion-bar {
+  display: flex;
+  width: 100%;
+  height: 0.9rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f1f5f9;
+  gap: 2px;
+}
+
+.proportion-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.proportion-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.proportion-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+}
+
+.legend-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.legend-label { color: #1e293b; font-weight: 600; }
+.legend-count { color: #64748b; font-variant-numeric: tabular-nums; }

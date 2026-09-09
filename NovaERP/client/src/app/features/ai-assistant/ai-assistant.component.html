@@ -1,0 +1,58 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>AI Assistant</h1>
+  <button pButton type="button" icon="pi pi-plus" label="New Conversation" (click)="newConversation()"></button>
+</div>
+
+<div class="assistant-layout">
+  <div class="card conversation-list">
+    @if (loading) {
+      <div class="empty-cell"><i class="pi pi-spin pi-spinner"></i></div>
+    } @else if (!conversations.length) {
+      <div class="empty-cell">No conversations yet.</div>
+    } @else {
+      @for (c of conversations; track c.id) {
+        <div class="conversation-row" [class.active]="current?.id === c.id" (click)="selectConversation(c.id)">
+          <span class="conversation-title">{{ c.title }}</span>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                  (click)="$event.stopPropagation(); deleteConversation(c)"></button>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="card chat-panel">
+    @if (!current) {
+      <div class="empty-state">
+        <i class="pi pi-comments"></i>
+        <p>Select a conversation or start a new one.</p>
+      </div>
+    } @else {
+      <div class="messages">
+        @for (m of current.messages; track trackByMessage($index, m)) {
+          <div class="message-bubble" [class.user]="m.role === 'user'" [class.assistant]="m.role === 'assistant'">
+            {{ m.content }}
+          </div>
+          @if (m.pendingActionStatus === 'Pending') {
+            <div class="action-card">
+              <button pButton type="button" label="Confirm" icon="pi pi-check" class="p-button-sm"
+                      [loading]="resolvingActionMessageId === m.id" (click)="confirmAction(m)"></button>
+              <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-sm p-button-text"
+                      [disabled]="resolvingActionMessageId === m.id" (click)="cancelAction(m)"></button>
+            </div>
+          }
+        }
+        @if (sending) {
+          <div class="message-bubble assistant"><i class="pi pi-spin pi-spinner"></i></div>
+        }
+      </div>
+      <div class="composer">
+        <input pInputText [(ngModel)]="draft" placeholder="Ask about sales, tickets, POS sales, or project tasks…"
+               (keydown.enter)="send()" [disabled]="sending" />
+        <button pButton type="button" icon="pi pi-send" label="Send" (click)="send()" [disabled]="sending || !draft.trim()"></button>
+      </div>
+    }
+  </div>
+</div>

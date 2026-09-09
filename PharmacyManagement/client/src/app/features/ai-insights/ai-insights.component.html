@@ -1,0 +1,59 @@
+<div class="ai-page">
+  <div class="page-header">
+    <h2>AI Insights</h2>
+  </div>
+  <p class="subtitle">Rule-based recommendations from your sales and stock data — not generative AI.</p>
+
+  <div class="report-card">
+    <h3>Smart Reorder Suggestions</h3>
+    @if (loading()) {
+      <div class="loading">Loading...</div>
+    } @else {
+      <table class="insights-table">
+        <thead>
+          <tr><th>Medicine</th><th>Current Stock</th><th>Avg Daily Sales</th><th>Days of Stock Left</th><th>Suggested Reorder Qty</th></tr>
+        </thead>
+        <tbody>
+          @for (s of reorderSuggestions(); track s.medicineId) {
+            <tr>
+              <td>{{ s.medicineName }}</td>
+              <td>{{ s.currentStock }}</td>
+              <td>{{ s.avgDailySales }}</td>
+              <td>{{ s.daysOfStockLeft ?? 'N/A' }}</td>
+              <td><b>{{ s.suggestedReorderQty }}</b></td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="5" class="empty">No urgent reorder suggestions right now.</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="report-card">
+    <h3>Expiry Risk</h3>
+    @if (!loading()) {
+      <table class="insights-table">
+        <thead>
+          <tr><th>Medicine</th><th>Batch</th><th>Qty</th><th>Days to Expiry</th><th>Projected Sell-Out (days)</th><th>Risk</th></tr>
+        </thead>
+        <tbody>
+          @for (r of expiryRisks(); track r.batchId) {
+            <tr>
+              <td>{{ r.medicineName }}</td>
+              <td>{{ r.batchNumber }}</td>
+              <td>{{ r.quantity }}</td>
+              <td>{{ r.daysToExpiry }}</td>
+              <td>{{ r.projectedDaysToSellOut ?? 'N/A' }}</td>
+              <td><span class="risk-badge" [style.background]="riskColor(r.riskLevel)">{{ r.riskLevel }}</span></td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="6" class="empty">No batches expiring within 90 days.</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="orders-page">
+  <div class="page-header">
+    <h2>Online Orders</h2>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="orders-table">
+      <thead><tr><th>Invoice #</th><th>Date</th><th>Patient</th><th>Payment</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (o of orders(); track o.id) {
+          <tr>
+            <td><a (click)="viewDetail(o)">{{ o.invoiceNumber }}</a></td>
+            <td>{{ o.saleDate | date:'medium' }}</td>
+            <td>{{ o.patientName || o.patientPhone || '-' }}</td>
+            <td>{{ o.paymentMethod }}</td>
+            <td>₹{{ o.totalAmount }}</td>
+            <td><span class="status-badge" [style.background]="statusColor(o.status)">{{ o.status }}</span></td>
+            <td>
+              @if (o.status === 'Pending') {
+                <button *appHasPermission="'sales.edit'" [disabled]="fulfillingId() === o.id" (click)="fulfill(o)">
+                  {{ fulfillingId() === o.id ? 'Marking…' : 'Mark Picked Up' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="7" class="empty">No online orders yet.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (detail(); as d) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ d.invoiceNumber }}</h3>
+        <div class="info-row"><span>Date</span><b>{{ d.saleDate | date:'medium' }}</b></div>
+        <div class="info-row"><span>Branch</span><b>{{ d.branchName }}</b></div>
+        <div class="info-row"><span>Patient</span><b>{{ d.patientName || d.patientPhone || '-' }}</b></div>
+        <div class="info-row"><span>Payment</span><b>{{ d.paymentMethod }}</b></div>
+        <div class="info-row"><span>Status</span><b>{{ d.status }}</b></div>
+        <table class="items-table">
+          <thead><tr><th>Medicine</th><th>Batch</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+          <tbody>
+            @for (i of d.items; track i.id) {
+              <tr>
+                <td>{{ i.medicineName }}</td>
+                <td>{{ i.batchNumber }}</td>
+                <td>{{ i.quantity }}</td>
+                <td>₹{{ i.unitPrice }}</td>
+                <td>₹{{ i.lineTotal }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="info-row total"><span>Total</span><b>₹{{ d.totalAmount }}</b></div>
+        <div class="dialog-actions">
+          <button (click)="closeDetail()">Close</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

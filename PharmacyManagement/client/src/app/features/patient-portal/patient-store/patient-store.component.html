@@ -1,0 +1,42 @@
+<div class="store-page">
+  <div class="page-header">
+    <div class="eyebrow">Pharmacy store</div>
+    <h1>Buy Medicines</h1>
+    <p>Browse available medicines and have your order ready for pickup at a location near you.</p>
+    <div class="header-row">
+      <input class="search-box" type="text" placeholder="Search medicines…" [(ngModel)]="searchTerm" />
+      @if (cart.count() > 0) {
+        <button class="cart-pill" (click)="goToCart()">
+          Cart &middot; {{ cart.count() }} item{{ cart.count() === 1 ? '' : 's' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading medicines…</div>
+  } @else {
+    <div class="medicine-grid">
+      @for (m of filteredMedicines; track m.id) {
+        <div class="medicine-card">
+          <h3>{{ m.name }}</h3>
+          @if (m.genericName) { <div class="generic">{{ m.genericName }}</div> }
+          <div class="meta">{{ m.category }} &middot; {{ m.packSize }} {{ m.unit }}</div>
+          <div class="price-row">
+            <span class="price">₹{{ m.mrp | number:'1.2-2' }}</span>
+            <span class="stock">{{ m.totalStock }} in stock</span>
+          </div>
+          <div class="add-row">
+            <input type="number" min="1" [max]="m.totalStock" [(ngModel)]="quantities[m.id]" />
+            <button class="btn-primary" (click)="addToCart(m)">
+              {{ addedId() === m.id ? 'Added ✓' : 'Add to Cart' }}
+            </button>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">No medicines match your search.</div>
+      }
+    </div>
+  }
+</div>

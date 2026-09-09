@@ -1,0 +1,89 @@
+<h1>Platform Modules</h1>
+
+<mat-tab-group (selectedTabChange)="$event.index === 1 && loadMatrix()">
+  <mat-tab label="Module Catalog">
+    <div class="tab-content">
+      <div class="page-header">
+        <span></span>
+        <button mat-flat-button color="primary" (click)="openCreateDialog()">
+          <mat-icon>add</mat-icon>
+          New Module
+        </button>
+      </div>
+
+      @if (loading()) {
+        <mat-spinner diameter="36" />
+      } @else {
+        <table mat-table [dataSource]="modules()" class="mat-elevation-z1 full-width">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let m">
+              <mat-icon [style.color]="m.color">{{ m.icon || 'extension' }}</mat-icon>
+              {{ m.name }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="key">
+            <th mat-header-cell *matHeaderCellDef>Key</th>
+            <td mat-cell *matCellDef="let m">{{ m.key }}</td>
+          </ng-container>
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let m">{{ m.description }}</td>
+          </ng-container>
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let m">
+              <mat-chip [class.active-chip]="m.isActive" [class.inactive-chip]="!m.isActive">
+                {{ m.isActive ? 'Active' : 'Inactive' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="sortOrder">
+            <th mat-header-cell *matHeaderCellDef>Order</th>
+            <td mat-cell *matCellDef="let m">{{ m.sortOrder }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let m">
+              <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(m)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Delete" (click)="deleteModule(m)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </div>
+  </mat-tab>
+
+  <mat-tab label="Tenant Assignment Matrix">
+    <div class="tab-content">
+      @if (!matrixLoaded()) {
+        <mat-spinner diameter="36" />
+      } @else {
+        @for (org of matrix(); track org.organizationId) {
+          <div class="org-row">
+            <span class="org-name">{{ org.organizationName }}</span>
+            <div class="module-chips">
+              @for (m of org.modules; track m.moduleId) {
+                <label class="module-toggle">
+                  <mat-slide-toggle
+                    [checked]="m.isEnabled"
+                    (change)="toggleAssignment(org, m.moduleId, $event.checked)"
+                  />
+                  {{ m.moduleName }}
+                </label>
+              }
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-hint">No organizations to display.</p>
+        }
+      }
+    </div>
+  </mat-tab>
+</mat-tab-group>

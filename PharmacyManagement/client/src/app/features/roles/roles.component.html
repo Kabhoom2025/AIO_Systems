@@ -1,0 +1,70 @@
+<div class="roles-page">
+  <div class="page-header">
+    <h2>Roles &amp; Permissions</h2>
+    <button *appHasPermission="'roles.create'" class="btn-primary" (click)="openAdd()">+ Add Role</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="roles-table">
+      <thead><tr><th>Role</th><th>Type</th><th>Permissions</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (r of roles(); track r.id) {
+          <tr>
+            <td>{{ r.name }}</td>
+            <td><span class="badge" [class.system]="r.isSystemRole">{{ r.isSystemRole ? 'System' : 'Custom' }}</span></td>
+            <td>{{ r.permissionKeys.length }} granted</td>
+            <td class="row-actions">
+              @if (!r.isSystemRole) {
+                <button *appHasPermission="'roles.edit'" (click)="openEdit(r)">Edit</button>
+                <button *appHasPermission="'roles.delete'" class="danger" (click)="delete(r)">Delete</button>
+              } @else {
+                <span class="locked">Locked</span>
+              }
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="4" class="empty">No roles found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Role</h3>
+        <label class="role-name">Role Name <input [(ngModel)]="name" /></label>
+
+        <div class="permission-tree">
+          @for (group of moduleGroups(); track group.module) {
+            <div class="module-group">
+              <label class="module-row">
+                <input type="checkbox"
+                       [checked]="isModuleFullySelected(group)"
+                       [indeterminate]="isModulePartiallySelected(group)"
+                       (change)="toggleModule(group)" />
+                <b>{{ group.module }}</b>
+              </label>
+              <div class="permission-row-list">
+                @for (p of group.permissions; track p.key) {
+                  <label class="permission-row">
+                    <input type="checkbox" [checked]="selectedKeys.has(p.key)" (change)="togglePermission(p.key)" />
+                    {{ p.description || p.key }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

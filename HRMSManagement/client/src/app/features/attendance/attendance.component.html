@@ -1,0 +1,265 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Attendance</h1>
+</div>
+
+<p-tabView>
+  <!-- ===================== MY ATTENDANCE ===================== -->
+  <p-tabPanel header="My Attendance">
+    <div class="card checkin-card">
+      <div class="checkin-status">
+        <div class="status-item">
+          <span class="label">Status</span>
+          <p-tag *ngIf="todayRecord" [severity]="statusSeverity(todayRecord.status)" [value]="todayRecord.status"></p-tag>
+          <span *ngIf="!todayRecord && !todayLoading">Not checked in yet</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Check-In</span>
+          <b>{{ todayRecord?.checkInAt ? (todayRecord?.checkInAt | date:'shortTime') : '--' }}</b>
+        </div>
+        <div class="status-item">
+          <span class="label">Check-Out</span>
+          <b>{{ todayRecord?.checkOutAt ? (todayRecord?.checkOutAt | date:'shortTime') : '--' }}</b>
+        </div>
+        <div class="status-item">
+          <span class="label">Worked</span>
+          <b>{{ todayRecord?.workedMinutes ?? 0 }} min</b>
+        </div>
+      </div>
+
+      <div class="checkin-actions">
+        <p-button
+          label="Check In"
+          icon="pi pi-sign-in"
+          [loading]="checkingIn"
+          [disabled]="!!todayRecord?.checkInAt"
+          (onClick)="checkIn()">
+        </p-button>
+        <p-button
+          label="Check Out"
+          icon="pi pi-sign-out"
+          severity="secondary"
+          [loading]="checkingOut"
+          [disabled]="!todayRecord?.checkInAt || !!todayRecord?.checkOutAt"
+          (onClick)="checkOut()">
+        </p-button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filters-row">
+        <label>
+          Year
+          <p-dropdown [options]="years" [(ngModel)]="selectedYear" (onChange)="onPeriodChange()"></p-dropdown>
+        </label>
+        <label>
+          Month
+          <p-dropdown [options]="months" optionLabel="label" optionValue="value" [(ngModel)]="selectedMonth" (onChange)="onPeriodChange()"></p-dropdown>
+        </label>
+      </div>
+
+      <p-table [value]="myRecords" [loading]="myRecordsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Status</th>
+            <th>Worked (min)</th>
+            <th>Late (min)</th>
+            <th>Overtime (min)</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rec>
+          <tr>
+            <td>{{ rec.date | date:'mediumDate' }}</td>
+            <td>{{ rec.checkInAt ? (rec.checkInAt | date:'shortTime') : '-' }}</td>
+            <td>{{ rec.checkOutAt ? (rec.checkOutAt | date:'shortTime') : '-' }}</td>
+            <td><p-tag [severity]="statusSeverity(rec.status)" [value]="rec.status"></p-tag></td>
+            <td>{{ rec.workedMinutes }}</td>
+            <td>{{ rec.lateMinutes }}</td>
+            <td>{{ rec.overtimeMinutes }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7">No attendance records for this period.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== DAILY VIEW ===================== -->
+  <p-tabPanel header="Daily View" *appHasPermission="'attendance.view'">
+    <div class="card">
+      <div class="filters-row">
+        <label>
+          Date
+          <p-calendar [(ngModel)]="dailyDate" dateFormat="dd-M-yy" (onSelect)="onDailyDateChange()"></p-calendar>
+        </label>
+      </div>
+
+      <div class="summary-strip" *ngIf="summary">
+        <div class="summary-tile present">
+          <span class="value">{{ summary.present }}</span>
+          <span class="label">Present</span>
+        </div>
+        <div class="summary-tile absent">
+          <span class="value">{{ summary.absent }}</span>
+          <span class="label">Absent</span>
+        </div>
+        <div class="summary-tile onleave">
+          <span class="value">{{ summary.onLeave }}</span>
+          <span class="label">On Leave</span>
+        </div>
+        <div class="summary-tile late">
+          <span class="value">{{ summary.late }}</span>
+          <span class="label">Late</span>
+        </div>
+        <div class="summary-tile total">
+          <span class="value">{{ summary.totalEmployees }}</span>
+          <span class="label">Total</span>
+        </div>
+      </div>
+
+      <p-table [value]="dailyRecords" [loading]="dailyLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Status</th>
+            <th>Late (min)</th>
+            <th>Overtime (min)</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rec>
+          <tr>
+            <td>{{ rec.employeeCode }}</td>
+            <td>{{ rec.employeeName }}</td>
+            <td>{{ rec.departmentName }}</td>
+            <td>{{ rec.checkInAt ? (rec.checkInAt | date:'shortTime') : '-' }}</td>
+            <td>{{ rec.checkOutAt ? (rec.checkOutAt | date:'shortTime') : '-' }}</td>
+            <td><p-tag [severity]="statusSeverity(rec.status)" [value]="rec.status"></p-tag></td>
+            <td>{{ rec.lateMinutes }}</td>
+            <td>{{ rec.overtimeMinutes }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8">No attendance data for this date.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== REGULARIZATIONS ===================== -->
+  <p-tabPanel header="Regularizations">
+    <div class="card">
+      <div class="page-header">
+        <h3>My Requests</h3>
+        <p-button label="New Request" icon="pi pi-plus" (onClick)="openNewRequest()"></p-button>
+      </div>
+
+      <p-table [value]="myRegularizations" [loading]="myRegularizationsLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Requested Check-In</th>
+            <th>Requested Check-Out</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Review Notes</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>{{ r.date | date:'mediumDate' }}</td>
+            <td>{{ r.requestedCheckIn ? (r.requestedCheckIn | date:'shortTime') : '-' }}</td>
+            <td>{{ r.requestedCheckOut ? (r.requestedCheckOut | date:'shortTime') : '-' }}</td>
+            <td>{{ r.reason }}</td>
+            <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+            <td>{{ r.reviewNotes || '-' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6">No regularization requests yet.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <div class="card" *appHasPermission="'attendance.approve'">
+      <h3>Approve Queue</h3>
+      <p-table [value]="approveQueue" [loading]="approveQueueLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Requested Check-In</th>
+            <th>Requested Check-Out</th>
+            <th>Reason</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>{{ r.employeeName }}</td>
+            <td>{{ r.date | date:'mediumDate' }}</td>
+            <td>{{ r.requestedCheckIn ? (r.requestedCheckIn | date:'shortTime') : '-' }}</td>
+            <td>{{ r.requestedCheckOut ? (r.requestedCheckOut | date:'shortTime') : '-' }}</td>
+            <td>{{ r.reason }}</td>
+            <td>
+              <p-button label="Approve" size="small" severity="success" (onClick)="openReview(r, 'approve')"></p-button>
+              <p-button label="Reject" size="small" severity="danger" (onClick)="openReview(r, 'reject')"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6">No pending regularization requests.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+</p-tabView>
+
+<!-- New Regularization Request Dialog -->
+<p-dialog header="New Regularization Request" [(visible)]="showNewRequestDialog" [modal]="true" [style]="{ width: '420px' }">
+  <div class="form-grid">
+    <label>
+      Date
+      <p-calendar [(ngModel)]="newRequest.date" dateFormat="dd-M-yy"></p-calendar>
+    </label>
+    <label>
+      Requested Check-In
+      <p-calendar [(ngModel)]="newRequest.requestedCheckIn" [timeOnly]="true" hourFormat="12"></p-calendar>
+    </label>
+    <label>
+      Requested Check-Out
+      <p-calendar [(ngModel)]="newRequest.requestedCheckOut" [timeOnly]="true" hourFormat="12"></p-calendar>
+    </label>
+    <label>
+      Reason
+      <textarea pInputTextarea rows="3" [(ngModel)]="newRequest.reason"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="showNewRequestDialog = false"></p-button>
+    <p-button label="Submit" [loading]="savingRequest" (onClick)="submitNewRequest()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Review (Approve/Reject) Dialog -->
+<p-dialog [header]="reviewAction === 'approve' ? 'Approve Request' : 'Reject Request'" [(visible)]="showReviewDialog" [modal]="true" [style]="{ width: '380px' }">
+  <div class="form-grid">
+    <label>
+      Notes
+      <textarea pInputTextarea rows="3" [(ngModel)]="reviewNotes" placeholder="Optional notes"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="showReviewDialog = false"></p-button>
+    <p-button [label]="reviewAction === 'approve' ? 'Approve' : 'Reject'" [loading]="reviewSaving" (onClick)="submitReview()"></p-button>
+  </ng-template>
+</p-dialog>

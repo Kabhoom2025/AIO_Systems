@@ -1,0 +1,94 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>My Pending Approvals</h1>
+</div>
+
+<div class="card">
+  <p-table [value]="instances" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Workflow</th>
+        <th>Entity</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Step</th>
+        <th>Submitted</th>
+        <th style="width: 14rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-i>
+      <tr>
+        <td class="font-semibold">{{ i.workflowDefinitionName }}</td>
+        <td><code class="code-badge">{{ i.entityType }}#{{ i.entityId }}</code></td>
+        <td>{{ i.amount != null ? (i.amount | number: '1.2-2') : '—' }}</td>
+        <td><p-tag [value]="i.status" [severity]="statusSeverity(i.status)"></p-tag></td>
+        <td>{{ i.currentStepOrder }}</td>
+        <td>{{ i.submittedDate | date: 'medium' }}</td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-eye" class="p-button-text p-button-sm" (click)="viewDetail(i)"></button>
+          <button *appHasPermission="'workflows.edit'" pButton type="button" icon="pi pi-check" label="Approve"
+                  class="p-button-text p-button-sm p-button-success" (click)="openAction(i, 'approve')"></button>
+          <button *appHasPermission="'workflows.edit'" pButton type="button" icon="pi pi-times" label="Reject"
+                  class="p-button-text p-button-sm p-button-danger" (click)="openAction(i, 'reject')"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No approvals pending for you.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="Workflow Instance Detail" [(visible)]="showDetail" [modal]="true" [style]="{ width: '38rem' }">
+  @if (selected) {
+    <div class="detail-grid">
+      <div><strong>Workflow:</strong> {{ selected.workflowDefinitionName }}</div>
+      <div><strong>Entity:</strong> {{ selected.entityType }}#{{ selected.entityId }}</div>
+      <div><strong>Amount:</strong> {{ selected.amount != null ? (selected.amount | number: '1.2-2') : '—' }}</div>
+      <div><strong>Status:</strong> <p-tag [value]="selected.status" [severity]="statusSeverity(selected.status)"></p-tag></div>
+    </div>
+    <h3>Step History</h3>
+    <p-table [value]="selected.steps" dataKey="id">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Order</th>
+          <th>Approver Role</th>
+          <th>Approver</th>
+          <th>Status</th>
+          <th>Actioned</th>
+          <th>Comments</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-s>
+        <tr>
+          <td>{{ s.stepOrder }}</td>
+          <td>{{ s.approverRoleName ?? '—' }}</td>
+          <td>{{ s.approverUserName ?? '—' }}</td>
+          <td><p-tag [value]="s.status" [severity]="statusSeverity(s.status)"></p-tag></td>
+          <td>{{ s.actionedDate ? (s.actionedDate | date: 'medium') : '—' }}</td>
+          <td>{{ s.comments ?? '—' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <div class="detail-actions" *appHasPermission="'workflows.edit'">
+      <button pButton type="button" label="Approve" icon="pi pi-check" class="p-button-success"
+              (click)="openAction(selected, 'approve')"></button>
+      <button pButton type="button" label="Reject" icon="pi pi-times" class="p-button-danger"
+              (click)="openAction(selected, 'reject')"></button>
+    </div>
+  }
+</p-dialog>
+
+<p-dialog header="{{ actionMode === 'approve' ? 'Approve' : 'Reject' }} Workflow Instance"
+          [(visible)]="showActionDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <label class="comments-label">
+    <span>Comments (optional)</span>
+    <textarea pInputTextarea rows="4" [(ngModel)]="actionComments" style="width: 100%"></textarea>
+  </label>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showActionDialog = false"></button>
+    <button pButton type="button" [label]="actionMode === 'approve' ? 'Approve' : 'Reject'" [loading]="actioning"
+            (click)="confirmAction()"></button>
+  </ng-template>
+</p-dialog>

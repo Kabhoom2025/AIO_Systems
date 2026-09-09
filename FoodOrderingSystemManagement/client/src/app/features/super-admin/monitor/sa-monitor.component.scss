@@ -1,0 +1,358 @@
+.monitor-page {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+}
+
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .last-update {
+    font-size: 0.8rem;
+    color: #999;
+  }
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a237e;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+
+  &:disabled { opacity: 0.5; cursor: default; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  gap: 1rem;
+  color: #666;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #999;
+  margin: 1.5rem 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-count {
+  background: #e8eaf6;
+  color: #3949ab;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Health Strip ─────────────────────────────────── */
+.health-strip {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.health-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 180px;
+  flex: 1;
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .api-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .api-name { font-size: 0.85rem; font-weight: 600; color: #333; }
+  .api-latency { font-size: 0.75rem; color: #888; font-variant-numeric: tabular-nums; }
+
+  .status-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  &.health-up {
+    border-color: #a5d6a7;
+    .status-dot { background: #43a047; box-shadow: 0 0 0 3px #c8e6c9; }
+    .status-label { background: #e8f5e9; color: #2e7d32; }
+  }
+
+  &.health-down {
+    border-color: #ef9a9a;
+    .status-dot { background: #e53935; }
+    .status-label { background: #ffebee; color: #b71c1c; }
+  }
+
+  &.health-checking {
+    .status-dot { background: #ffa726; animation: pulse 1.2s ease-in-out infinite; }
+    .status-label { background: #fff3e0; color: #e65100; }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ─── KPI Grid ─────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.kpi-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+
+  &.alert-card {
+    border-color: #ffcc80;
+    background: linear-gradient(135deg, #fffde7 0%, #fff8e1 100%);
+  }
+
+  .kpi-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+
+  .kpi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .kpi-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+  }
+
+  .kpi-sub {
+    font-size: 0.72rem;
+    color: #aaa;
+  }
+}
+
+.org-icon   { background: #e8eaf6; color: #3949ab; }
+.user-icon  { background: #e0f7fa; color: #00838f; }
+.order-icon { background: #fff8e1; color: #f57f17; }
+.revenue-icon { background: #e8f5e9; color: #2e7d32; }
+.expiry-icon  { background: #fff3e0; color: #e65100; }
+.rx-icon    { background: #fce4ec; color: #c62828; }
+
+/* ─── Org Cards ────────────────────────────────────── */
+.orgs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.org-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  &.inactive { opacity: 0.55; }
+}
+
+.org-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f5f5f5;
+
+  .org-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .org-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1a1a2e;
+  }
+
+  .org-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #ffebee;
+    color: #b71c1c;
+
+    &.active { background: #e8f5e9; color: #2e7d32; }
+  }
+
+  .org-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .module-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: capitalize;
+
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
+
+  .no-modules { font-size: 0.75rem; color: #bbb; }
+}
+
+.org-stats {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-group {
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fafafa;
+
+  &.pharmacy-group { background: #f0f4ff; }
+
+  .stat-group-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+.stat-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &.alert-stat .stat-val { color: #e65100; }
+
+  .stat-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-lbl {
+    font-size: 0.7rem;
+    color: #999;
+  }
+}
+
+.no-stats {
+  font-size: 0.8rem;
+  color: #bbb;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.org-footer {
+  padding: 8px 1.25rem;
+  border-top: 1px solid #f5f5f5;
+  background: #fafafa;
+
+  .user-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: #888;
+
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+.empty-orgs {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #bbb;
+  font-size: 0.9rem;
+}

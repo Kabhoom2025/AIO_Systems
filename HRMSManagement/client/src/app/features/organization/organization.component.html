@@ -1,0 +1,600 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Organization Settings</h1>
+</div>
+
+<div class="card organization-card">
+  <p-tabView>
+    
+    <!-- ===================== Company Profile ===================== -->
+    <p-tabPanel header="Company Profile">
+      @if (profileLoading) {
+        <div class="empty-cell">Loading company profile...</div>
+      } @else if (profile) {
+        <div class="profile-container">
+          <div class="profile-header-info">
+            <div class="logo-placeholder">
+              @if (profile.logoUrl) {
+                <img [src]="profile.logoUrl" alt="Company Logo" class="logo-image" />
+              } @else {
+                <i class="pi pi-building company-icon"></i>
+              }
+            </div>
+            <div>
+              <h2>{{ profile.name }}</h2>
+              <p class="text-muted">{{ profile.legalName || 'No legal name set' }}</p>
+            </div>
+          </div>
+
+          <div class="form-grid mt-4">
+            <label>
+              <span>Organization Name</span>
+              <input pInputText [(ngModel)]="profileForm.name" />
+            </label>
+            <label>
+              <span>Legal Name</span>
+              <input pInputText [(ngModel)]="profileForm.legalName" />
+            </label>
+            <label>
+              <span>Email Address</span>
+              <input pInputText type="email" [(ngModel)]="profileForm.email" />
+            </label>
+            <label>
+              <span>Phone Number</span>
+              <input pInputText [(ngModel)]="profileForm.phone" />
+            </label>
+            <label>
+              <span>Website URL</span>
+              <input pInputText [(ngModel)]="profileForm.website" />
+            </label>
+            <label>
+              <span>Tax / Registration Number</span>
+              <input pInputText [(ngModel)]="profileForm.taxNumber" />
+            </label>
+            <label>
+              <span>Currency</span>
+              <input pInputText [(ngModel)]="profileForm.currency" />
+            </label>
+            <label>
+              <span>Timezone</span>
+              <input pInputText [(ngModel)]="profileForm.timezone" />
+            </label>
+            <label class="col-span-2">
+              <span>Address</span>
+              <textarea pInputTextarea [(ngModel)]="profileForm.address" rows="3"></textarea>
+            </label>
+            <label class="col-span-2">
+              <span>Logo URL</span>
+              <input pInputText [(ngModel)]="profileForm.logoUrl" />
+            </label>
+          </div>
+
+          <div class="form-actions mt-4">
+            <button *appHasPermission="'organization.edit'" pButton type="button" label="Save Changes" icon="pi pi-save"
+                    [loading]="profileSaving" (click)="saveProfile()"></button>
+          </div>
+        </div>
+      }
+    </p-tabPanel>
+
+    <!-- ===================== Branches ===================== -->
+    <p-tabPanel header="Branches">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-plus" label="Add Branch"
+                (click)="openNewBranch()"></button>
+      </div>
+
+      <p-table [value]="branches" [loading]="branchesLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>City</th>
+            <th>Country</th>
+            <th>Phone</th>
+            <th>Head Office</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-b>
+          <tr>
+            <td class="font-semibold">{{ b.name }}</td>
+            <td><code class="code-badge">{{ b.code }}</code></td>
+            <td>{{ b.city || '-' }}</td>
+            <td>{{ b.country || '-' }}</td>
+            <td>{{ b.phone || '-' }}</td>
+            <td>
+              <i class="pi" [ngClass]="b.isHeadOffice ? 'pi-check-circle text-success' : 'pi-minus text-muted'"></i>
+            </td>
+            <td>
+              <p-tag [value]="b.isActive ? 'Active' : 'Inactive'" [severity]="b.isActive ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditBranch(b)"></button>
+              <button *appHasPermission="'organization.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteBranch(b)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No branches configured.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Departments ===================== -->
+    <p-tabPanel header="Departments">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-plus" label="Add Department"
+                (click)="openNewDepartment()"></button>
+      </div>
+
+      <p-table [value]="departments" [loading]="departmentsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Cost Center</th>
+            <th>Branch</th>
+            <th>Parent Department</th>
+            <th>Head of Department</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-d>
+          <tr>
+            <td class="font-semibold">{{ d.name }}</td>
+            <td><code class="code-badge">{{ d.code }}</code></td>
+            <td>{{ d.costCenter || '-' }}</td>
+            <td>{{ d.branchName || '-' }}</td>
+            <td>{{ d.parentName || '-' }}</td>
+            <td>{{ d.headEmployeeName || '-' }}</td>
+            <td>
+              <p-tag [value]="d.isActive ? 'Active' : 'Inactive'" [severity]="d.isActive ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditDepartment(d)"></button>
+              <button *appHasPermission="'organization.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteDepartment(d)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No departments configured.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Designations ===================== -->
+    <p-tabPanel header="Designations">
+      <div class="tab-toolbar">
+        <button pButton type="button" icon="pi pi-sliders-h" class="p-button-outlined" label="Manage Job Grades"
+                (click)="openJobGradesManager()"></button>
+        <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-plus" label="Add Designation"
+                (click)="openNewDesignation()"></button>
+      </div>
+
+      <p-table [value]="designations" [loading]="designationsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Title</th>
+            <th>Code</th>
+            <th>Job Grade</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-des>
+          <tr>
+            <td class="font-semibold">{{ des.title }}</td>
+            <td><code class="code-badge">{{ des.code }}</code></td>
+            <td>{{ des.jobGradeName || '-' }}</td>
+            <td>{{ des.description || '-' }}</td>
+            <td>
+              <p-tag [value]="des.isActive ? 'Active' : 'Inactive'" [severity]="des.isActive ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditDesignation(des)"></button>
+              <button *appHasPermission="'organization.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteDesignation(des)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="empty-cell">No designations configured.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Shifts ===================== -->
+    <p-tabPanel header="Shifts">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-plus" label="Add Shift"
+                (click)="openNewShift()"></button>
+      </div>
+
+      <p-table [value]="shifts" [loading]="shiftsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Timings</th>
+            <th>Break Duration</th>
+            <th>Grace Period</th>
+            <th>Night Shift</th>
+            <th>Weekly Offs</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-s>
+          <tr>
+            <td class="font-semibold">{{ s.name }}</td>
+            <td><code class="code-badge">{{ s.code }}</code></td>
+            <td>{{ s.startTime | slice:0:5 }} - {{ s.endTime | slice:0:5 }}</td>
+            <td>{{ s.breakMinutes }} mins</td>
+            <td>{{ s.graceMinutes }} mins</td>
+            <td>
+              <i class="pi" [ngClass]="s.isNightShift ? 'pi-moon text-indigo-600' : 'pi-sun text-yellow-600'"></i>
+            </td>
+            <td><span class="comma-span">{{ s.weeklyOffDays }}</span></td>
+            <td>
+              <p-tag [value]="s.isActive ? 'Active' : 'Inactive'" [severity]="s.isActive ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditShift(s)"></button>
+              <button *appHasPermission="'organization.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteShift(s)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="9" class="empty-cell">No shifts configured.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Holidays ===================== -->
+    <p-tabPanel header="Holidays">
+      <div class="tab-toolbar">
+        <div class="filter-group">
+          <span class="label mr-2">Year:</span>
+          <p-dropdown [options]="holidayYears" [(ngModel)]="selectedHolidayYear" (onChange)="onHolidayYearChange()" styleClass="w-32"></p-dropdown>
+        </div>
+        <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-plus" label="Add Holiday"
+                (click)="openNewHoliday()"></button>
+      </div>
+
+      <p-table [value]="holidays" [loading]="holidaysLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Applicable Branch</th>
+            <th>Description</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-h>
+          <tr>
+            <td class="font-semibold">{{ h.date | date: 'dd MMM yyyy' }}</td>
+            <td>{{ h.name }}</td>
+            <td>
+              <p-tag [value]="h.type" [severity]="h.type === 'National' ? 'danger' : h.type === 'Regional' ? 'info' : 'warning'"></p-tag>
+            </td>
+            <td>{{ h.branchName || 'All Branches' }}</td>
+            <td>{{ h.description || '-' }}</td>
+            <td class="actions-cell">
+              <button *appHasPermission="'organization.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditHoliday(h)"></button>
+              <button *appHasPermission="'organization.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteHoliday(h)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="empty-cell">No holidays found for this year.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- ===================== Add/Edit Branch Dialog ===================== -->
+<p-dialog header="{{ editingBranch ? 'Edit' : 'Add' }} Branch" [(visible)]="showBranchDialog" [modal]="true" [style]="{ width: '34rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Branch Name</span>
+      <input pInputText [(ngModel)]="branchForm.name" />
+    </label>
+    <label>
+      <span>Branch Code</span>
+      <input pInputText [(ngModel)]="branchForm.code" />
+    </label>
+    <label>
+      <span>Phone Number</span>
+      <input pInputText [(ngModel)]="branchForm.phone" />
+    </label>
+    <label>
+      <span>Email Address</span>
+      <input pInputText type="email" [(ngModel)]="branchForm.email" />
+    </label>
+    <label>
+      <span>Timezone</span>
+      <input pInputText [(ngModel)]="branchForm.timezone" />
+    </label>
+    <label class="checkbox-row mt-4">
+      <input type="checkbox" [(ngModel)]="branchForm.isHeadOffice" />
+      <span>Is Head Office</span>
+    </label>
+    <label class="col-span-2">
+      <span>Street Address</span>
+      <input pInputText [(ngModel)]="branchForm.address" />
+    </label>
+    <label>
+      <span>City</span>
+      <input pInputText [(ngModel)]="branchForm.city" />
+    </label>
+    <label>
+      <span>State</span>
+      <input pInputText [(ngModel)]="branchForm.state" />
+    </label>
+    <label>
+      <span>Country</span>
+      <input pInputText [(ngModel)]="branchForm.country" />
+    </label>
+    @if (editingBranch) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="branchForm.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showBranchDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="branchSaving" (click)="saveBranch()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Add/Edit Department Dialog ===================== -->
+<p-dialog header="{{ editingDepartment ? 'Edit' : 'Add' }} Department" [(visible)]="showDepartmentDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Department Name</span>
+      <input pInputText [(ngModel)]="departmentForm.name" />
+    </label>
+    <label>
+      <span>Department Code</span>
+      <input pInputText [(ngModel)]="departmentForm.code" />
+    </label>
+    <label>
+      <span>Cost Center</span>
+      <input pInputText [(ngModel)]="departmentForm.costCenter" />
+    </label>
+    <label>
+      <span>Branch</span>
+      <p-dropdown [options]="branches" [(ngModel)]="departmentForm.branchId" optionLabel="name" optionValue="id" placeholder="Select Branch" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Parent Department</span>
+      <p-dropdown [options]="parentDepartmentOptions" [(ngModel)]="departmentForm.parentId" optionLabel="name" optionValue="id" placeholder="Select Parent" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Head of Department Employee ID (optional)</span>
+      <p-inputNumber [(ngModel)]="departmentForm.headEmployeeId" [useGrouping]="false" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="departmentForm.description" rows="3"></textarea>
+    </label>
+    @if (editingDepartment) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="departmentForm.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDepartmentDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="departmentSaving" (click)="saveDepartment()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Add/Edit Designation Dialog ===================== -->
+<p-dialog header="{{ editingDesignation ? 'Edit' : 'Add' }} Designation" [(visible)]="showDesignationDialog" [modal]="true" [style]="{ width: '30rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Title</span>
+      <input pInputText [(ngModel)]="designationForm.title" />
+    </label>
+    <label>
+      <span>Designation Code</span>
+      <input pInputText [(ngModel)]="designationForm.code" />
+    </label>
+    <label>
+      <span>Job Grade</span>
+      <p-dropdown [options]="jobGrades" [(ngModel)]="designationForm.jobGradeId" optionLabel="name" optionValue="id" placeholder="Select Grade" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="designationForm.description" rows="3"></textarea>
+    </label>
+    @if (editingDesignation) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="designationForm.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDesignationDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="designationSaving" (click)="saveDesignation()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Job Grades Manager Dialog ===================== -->
+<p-dialog header="Job Grades" [(visible)]="showJobGradesDialog" [modal]="true" [style]="{ width: '40rem' }">
+  <div class="tab-toolbar">
+    <span></span>
+    <button pButton type="button" icon="pi pi-plus" label="Add Job Grade" class="p-button-sm"
+            (click)="openNewJobGrade()"></button>
+  </div>
+
+  <p-table [value]="jobGrades" [loading]="jobGradesLoading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Grade Name</th>
+        <th>Level</th>
+        <th>Min Annual Salary</th>
+        <th>Max Annual Salary</th>
+        <th>Status</th>
+        <th style="width: 8rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-jg>
+      <tr>
+        <td class="font-semibold">{{ jg.name }}</td>
+        <td>{{ jg.level }}</td>
+        <td>{{ jg.minAnnualSalary | number }}</td>
+        <td>{{ jg.maxAnnualSalary | number }}</td>
+        <td>
+          <p-tag [value]="jg.isActive ? 'Active' : 'Inactive'" [severity]="jg.isActive ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                  (click)="openEditJobGrade(jg)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                  (click)="deleteJobGrade(jg)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="empty-cell">No job grades set up.</td></tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- ===================== Edit Job Grade Form Dialog ===================== -->
+<p-dialog header="{{ editingJobGrade ? 'Edit' : 'Add' }} Job Grade" [(visible)]="showJobGradeEditDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Grade Name (e.g. Grade A, L1)</span>
+      <input pInputText [(ngModel)]="jobGradeForm.name" />
+    </label>
+    <label>
+      <span>Level Score</span>
+      <p-inputNumber [(ngModel)]="jobGradeForm.level" [min]="1" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label></label>
+    <label>
+      <span>Min Annual Salary</span>
+      <p-inputNumber [(ngModel)]="jobGradeForm.minAnnualSalary" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Max Annual Salary</span>
+      <p-inputNumber [(ngModel)]="jobGradeForm.maxAnnualSalary" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    @if (editingJobGrade) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="jobGradeForm.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showJobGradeEditDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="jobGradeSaving" (click)="saveJobGrade()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Add/Edit Shift Dialog ===================== -->
+<p-dialog header="{{ editingShift ? 'Edit' : 'Add' }} Shift" [(visible)]="showShiftDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Shift Name</span>
+      <input pInputText [(ngModel)]="shiftForm.name" />
+    </label>
+    <label>
+      <span>Shift Code</span>
+      <input pInputText [(ngModel)]="shiftForm.code" />
+    </label>
+    <label>
+      <span>Start Time</span>
+      <input type="time" class="time-input" [(ngModel)]="shiftForm.startTime" />
+    </label>
+    <label>
+      <span>End Time</span>
+      <input type="time" class="time-input" [(ngModel)]="shiftForm.endTime" />
+    </label>
+    <label>
+      <span>Break Duration (mins)</span>
+      <p-inputNumber [(ngModel)]="shiftForm.breakMinutes" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Grace Period (mins)</span>
+      <p-inputNumber [(ngModel)]="shiftForm.graceMinutes" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label class="checkbox-row col-span-2 mt-2">
+      <input type="checkbox" [(ngModel)]="shiftForm.isNightShift" />
+      <span>Is Night Shift</span>
+    </label>
+    <label class="col-span-2">
+      <span>Weekly Off Days (comma-separated, e.g. Saturday,Sunday)</span>
+      <input pInputText [(ngModel)]="shiftForm.weeklyOffDays" />
+    </label>
+    @if (editingShift) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="shiftForm.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showShiftDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="shiftSaving" (click)="saveShift()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Add/Edit Holiday Dialog ===================== -->
+<p-dialog header="{{ editingHoliday ? 'Edit' : 'Add' }} Holiday" [(visible)]="showHolidayDialog" [modal]="true" [style]="{ width: '30rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Holiday Name</span>
+      <input pInputText [(ngModel)]="holidayForm.name" />
+    </label>
+    <label>
+      <span>Date</span>
+      <p-calendar [(ngModel)]="holidayForm.date" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Holiday Type</span>
+      <p-dropdown [options]="holidayTypes" [(ngModel)]="holidayForm.type" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Applicable Branch (optional - empty means all)</span>
+      <p-dropdown [options]="branches" [(ngModel)]="holidayForm.branchId" optionLabel="name" optionValue="id" placeholder="All Branches" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="holidayForm.description" rows="3"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showHolidayDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="holidaySaving" (click)="saveHoliday()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,153 @@
+<div class="health-page">
+
+  <!-- ── Header ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>monitor_heart</mat-icon></div>
+      <div>
+        <h1>System Health</h1>
+        <p>
+          Live server metrics &amp; event log
+          @if (lastRefresh()) {
+            <span class="last-refresh">· refreshed {{ lastRefresh() | date:'HH:mm:ss' }}</span>
+          }
+        </p>
+      </div>
+    </div>
+    <button mat-stroked-button (click)="load()" [disabled]="loading() || refreshing()">
+      @if (refreshing() || loading()) { <mat-spinner diameter="16"></mat-spinner> }
+      @if (!(refreshing() || loading())) { <mat-icon>refresh</mat-icon> }
+      {{ (refreshing() || loading()) ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <!-- ── Loading ───────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="center-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  <!-- ── Error ─────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+    <div class="error-banner">
+      <mat-icon>cloud_off</mat-icon>
+      <span>Could not reach the API: {{ error() }}</span>
+      <button mat-stroked-button (click)="load()">Retry</button>
+    </div>
+  }
+
+  <!-- ── Content ───────────────────────────────────────────────────────── -->
+  @else {
+  @if (health(); as h) {
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+
+      <!-- API -->
+      <div class="stat-card green">
+        <div class="stat-top">
+          <mat-icon>cloud_done</mat-icon>
+          <span class="dot green"></span>
+        </div>
+        <div class="stat-value">{{ h.apiStatus }}</div>
+        <div class="stat-label">API Status</div>
+      </div>
+
+      <!-- Database -->
+      <div class="stat-card" [ngClass]="dbColor()">
+        <div class="stat-top">
+          <mat-icon>storage</mat-icon>
+          <span class="dot" [ngClass]="dbColor()"></span>
+        </div>
+        <div class="stat-value">{{ h.dbStatus }}</div>
+        <div class="stat-label">
+          Database
+          @if (h.dbStatus === 'Connected') {
+            <span class="latency-badge" [ngClass]="dbLatencyColor()">{{ h.dbLatencyMs }} ms</span>
+          }
+        </div>
+      </div>
+
+      <!-- Memory -->
+      <div class="stat-card" [ngClass]="memColor()">
+        <div class="stat-top">
+          <mat-icon>memory</mat-icon>
+          <span class="dot" [ngClass]="memColor()"></span>
+        </div>
+        <div class="stat-value">{{ h.memoryUsedMb | number:'1.0-0' }} MB</div>
+        <div class="stat-label">Process Memory (Working Set)</div>
+        <div class="mem-bar-track">
+          <div class="mem-bar-fill" [ngClass]="memColor()" [style.width.%]="memBar(h.memoryUsedMb)"></div>
+        </div>
+        <div class="mem-sub">GC Heap: {{ h.gcHeapMb | number:'1.0-0' }} MB</div>
+      </div>
+
+      <!-- Uptime -->
+      <div class="stat-card green">
+        <div class="stat-top">
+          <mat-icon>schedule</mat-icon>
+          <span class="dot green"></span>
+        </div>
+        <div class="stat-value">{{ h.uptime }}</div>
+        <div class="stat-label">Process Uptime</div>
+      </div>
+
+    </div>
+
+    <!-- Process info row -->
+    <div class="info-row">
+      <div class="info-chip">
+        <mat-icon>computer</mat-icon>
+        <span>{{ h.machineName }}</span>
+      </div>
+      <div class="info-chip">
+        <mat-icon>developer_mode</mat-icon>
+        <span>{{ h.dotNetVersion }}</span>
+      </div>
+      <div class="info-chip">
+        <mat-icon>dns</mat-icon>
+        <span>{{ h.osDescription }}</span>
+      </div>
+      <div class="info-chip">
+        <mat-icon>tag</mat-icon>
+        <span>PID {{ h.processId }}</span>
+      </div>
+      <div class="info-chip">
+        <mat-icon>settings_ethernet</mat-icon>
+        <span>{{ h.threadCount }} threads</span>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2><mat-icon>history</mat-icon> Event Log</h2>
+        <span class="event-count">{{ h.recentEvents.length }} entries</span>
+      </div>
+
+      @if (h.recentEvents.length === 0) {
+        <div class="empty-events">
+          <mat-icon>check_circle</mat-icon>
+          <span>No events recorded yet. Events are captured at runtime.</span>
+        </div>
+      } @else {
+        <div class="event-list">
+          @for (ev of h.recentEvents; track trackEvent($index, ev)) {
+            <div class="event-row" [ngClass]="levelClass(ev.level)">
+              <mat-icon class="ev-icon" [ngClass]="levelClass(ev.level)">{{ levelIcon(ev.level) }}</mat-icon>
+              <span class="ev-badge" [ngClass]="levelClass(ev.level)">{{ ev.level }}</span>
+              <span class="ev-category">{{ ev.category }}</span>
+              <span class="ev-message">{{ ev.message }}</span>
+              <span class="ev-time"
+                    [matTooltip]="ev.timestamp | date:'yyyy-MM-dd HH:mm:ss':'UTC'">
+                {{ ev.timestamp | date:'HH:mm:ss':'UTC' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  }
+  }
+
+</div>

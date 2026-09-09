@@ -1,0 +1,136 @@
+<p-toast></p-toast>
+
+<div class="topbar">
+  <div>
+    <h1>{{ user?.name ?? 'User' }}</h1>
+    <button type="button" class="breadcrumb" (click)="back()">Go back to the list of users &rsaquo;</button>
+  </div>
+</div>
+
+@if (user) {
+  <div class="board">
+
+    <!-- Photo card -->
+    <div class="card employee">
+      @if (user.photoUrl) {
+        <img class="photo-img" [src]="user.photoUrl" alt="" />
+      } @else {
+        <span class="initial-fill">{{ initials(user.name) }}</span>
+      }
+      <div class="tag">
+        <div class="ename">{{ user.name }}</div>
+        <div class="erole">{{ user.roleName || 'No role assigned' }}</div>
+      </div>
+    </div>
+
+    <!-- Orders by status donut -->
+    <div class="card format">
+      <div class="card-title-row"><h2>Orders by Status</h2></div>
+
+      @if (summary && summary.totalOrders > 0) {
+        <div class="donut-wrap">
+          <svg width="150" height="150" viewBox="0 0 160 160">
+            <g transform="rotate(-90 80 80)">
+              <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e0db" stroke-width="14" />
+              @for (seg of donutSegments(); track seg.color) {
+                <circle cx="80" cy="80" r="70" fill="none" [attr.stroke]="seg.color" stroke-width="14"
+                        [attr.stroke-dasharray]="seg.dasharray" [attr.stroke-dashoffset]="seg.dashoffset" stroke-linecap="round" />
+              }
+            </g>
+            <text x="80" y="76" text-anchor="middle" class="donut-num">{{ summary.totalOrders }}</text>
+            <text x="80" y="93" text-anchor="middle" class="donut-unit">ORDERS</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <div class="item"><span class="pct"><span class="dot" style="background:#8d897f"></span>{{ pct(summary.draftOrders) }}%</span>Draft</div>
+          <div class="item"><span class="pct"><span class="dot" style="background:#5f8a4c"></span>{{ pct(summary.confirmedOrders) }}%</span>Confirmed</div>
+          <div class="item"><span class="pct"><span class="dot" style="background:#c0574f"></span>{{ pct(summary.cancelledOrders) }}%</span>Cancelled</div>
+        </div>
+      } @else if (salesUnavailable) {
+        <div class="empty-hint">You don't have permission to view sales data.</div>
+      } @else {
+        <div class="empty-hint">No sales orders yet for this user.</div>
+      }
+    </div>
+
+    <!-- Recent orders -->
+    <div class="card recent-orders">
+      <div class="card-title-row">
+        <h2>Recent Orders</h2>
+        @if (summary) { <span class="count-badge">{{ summary.totalOrders }}</span> }
+      </div>
+
+      @if (summary?.recentOrders?.length) {
+        <div class="order-list">
+          @for (o of summary!.recentOrders; track o.id) {
+            <a class="order-row" [routerLink]="['/sales-orders']">
+              <span class="status-dot" [style.background]="statusColor(o.status)"></span>
+              <div class="meta">
+                <div class="oname">{{ o.orderNumber }} <span class="oaccount">— {{ o.accountName }}</span></div>
+                <div class="owhen">{{ o.orderDate | date: 'mediumDate' }}</div>
+              </div>
+              <div class="oamount">{{ o.grandTotal | number: '1.2-2' }}</div>
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="empty-hint">No orders to show.</div>
+      }
+    </div>
+
+    <!-- Account details -->
+    <div class="card account-details">
+      <div class="card-title-row"><h2>Account Details</h2></div>
+      <div class="detail-grid">
+        <div class="detail">
+          <span class="dlabel">Email</span>
+          <span class="dvalue">{{ user.email }}</span>
+        </div>
+        <div class="detail">
+          <span class="dlabel">Branch</span>
+          <span class="dvalue">{{ user.branchName || '—' }}</span>
+        </div>
+        <div class="detail">
+          <span class="dlabel">Status</span>
+          <span class="dvalue"><p-tag [value]="user.isActive ? 'Active' : 'Inactive'" [severity]="user.isActive ? 'success' : 'danger'"></p-tag></span>
+        </div>
+        <div class="detail">
+          <span class="dlabel">Member Since</span>
+          <span class="dvalue">{{ user.createdDate | date: 'mediumDate' }}</span>
+        </div>
+        <div class="detail">
+          <span class="dlabel">Last Login</span>
+          <span class="dvalue">{{ user.lastLoginAt ? (user.lastLoginAt | date: 'medium') : 'Never' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat row -->
+    @if (summary) {
+      <div class="stats">
+        <div class="stat white">
+          <div class="big">{{ summary.totalOrders }}</div>
+          <div class="cap">Total Orders</div>
+        </div>
+        <div class="stat tan">
+          <div class="big">{{ summary.confirmedOrders }}</div>
+          <div class="cap">Confirmed Orders</div>
+          <div class="stat-spacer"></div>
+          <button pButton type="button" label="View All" class="p-button-sm" routerLink="/sales-orders"></button>
+        </div>
+        <div class="stat gray">
+          <div class="big">{{ summary.draftOrders }}</div>
+          <div class="cap">Draft Orders</div>
+          <div class="stat-spacer"></div>
+          <button pButton type="button" label="View All" class="p-button-sm" routerLink="/sales-orders"></button>
+        </div>
+        <div class="stat grad">
+          <div class="big">{{ summary.totalSalesValue | number: '1.2-2' }}</div>
+          <div class="cap">Total Sales Value</div>
+        </div>
+      </div>
+    }
+  </div>
+} @else if (loading) {
+  <div class="empty-hint">Loading…</div>
+}

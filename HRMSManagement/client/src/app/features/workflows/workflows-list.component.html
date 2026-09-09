@@ -1,0 +1,94 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Workflows</h1>
+  <button
+    pButton
+    type="button"
+    icon="pi pi-plus"
+    label="Create Workflow"
+    *appHasPermission="'workflows.create'"
+    (click)="openCreateDialog()"
+  ></button>
+</div>
+
+<div class="card">
+  <p-table [value]="workflows" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Trigger</th>
+        <th>Status</th>
+        <th>Active</th>
+        <th>Updated</th>
+        <th style="width: 160px">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-wf>
+      <tr>
+        <td>
+          <a class="wf-link" (click)="openBuilder(wf)">{{ wf.name }}</a>
+          <div class="wf-desc" *ngIf="wf.description">{{ wf.description }}</div>
+        </td>
+        <td>{{ wf.triggerLabel }}</td>
+        <td>
+          <p-tag [value]="publishStatus(wf).label" [severity]="publishStatus(wf).severity"></p-tag>
+          <div class="version-line">
+            <span *ngIf="wf.publishedVersionNumber">Published v{{ wf.publishedVersionNumber }}</span>
+            <span *ngIf="wf.publishedVersionNumber && wf.draftVersionNumber !== wf.publishedVersionNumber">
+              &nbsp;&middot;&nbsp;</span
+            >
+            <span *ngIf="wf.draftVersionNumber !== wf.publishedVersionNumber">Draft v{{ wf.draftVersionNumber }}</span>
+          </div>
+        </td>
+        <td>
+          <p-tag [value]="wf.isActive ? 'Active' : 'Inactive'" [severity]="wf.isActive ? 'success' : 'secondary'"></p-tag>
+        </td>
+        <td>{{ wf.updatedDate | date: 'medium' }}</td>
+        <td>
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="openBuilder(wf)"></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-sm p-button-danger"
+            *appHasPermission="'workflows.delete'"
+            (click)="confirmDelete(wf)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty-cell">No workflows yet. Create one to get started.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="Create Workflow" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '450px' }">
+  <div class="form-field">
+    <label>Name</label>
+    <input pInputText type="text" [(ngModel)]="createForm.name" placeholder="e.g. Leave Auto-Approval" />
+  </div>
+  <div class="form-field">
+    <label>Description</label>
+    <textarea pInputTextarea rows="3" [(ngModel)]="createForm.description" placeholder="Optional description"></textarea>
+  </div>
+  <div class="form-field">
+    <label>Trigger</label>
+    <p-dropdown
+      [options]="triggerTypes"
+      optionLabel="label"
+      optionValue="key"
+      [(ngModel)]="createForm.triggerType"
+      placeholder="Select a trigger"
+      [style]="{ width: '100%' }"
+    ></p-dropdown>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showCreateDialog = false"></button>
+    <button pButton type="button" label="Create" [loading]="saving" (click)="saveWorkflow()"></button>
+  </ng-template>
+</p-dialog>

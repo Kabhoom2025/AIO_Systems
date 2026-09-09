@@ -1,0 +1,29 @@
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+.appts-page { padding: 40px 32px; max-width: 800px; margin: 0 auto; }
+
+.page-header { margin-bottom: 28px; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #C96F1B; margin-bottom: 8px; }
+.page-header h1 { font-family: Georgia, serif; font-size: 1.9rem; margin: 0; color: #12231F; }
+
+.appt-list { display: flex; flex-direction: column; gap: 14px; }
+.appt-card {
+  background: #fff; border-radius: 14px; padding: 20px 22px;
+  box-shadow: 0 10px 26px -18px rgba(18,35,31,0.25);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+}
+.appt-main h3 { font-family: Georgia, serif; margin: 0 0 2px; color: #12231F; font-size: 1.05rem; }
+.specialty { color: #0E4D42; font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; }
+.meta { color: #4B5D58; font-size: 0.84rem; }
+.notes { color: #4B5D58; font-size: 0.82rem; font-style: italic; margin-top: 6px; }
+
+.appt-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.status-badge { padding: 4px 12px; border-radius: 999px; color: #fff; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+.btn-cancel {
+  background: none; border: 1px solid #DCE6E1; border-radius: 999px; padding: 6px 16px;
+  font-size: 0.8rem; font-weight: 600; color: #B23A3A; cursor: pointer;
+}
+.btn-cancel:hover { background: #FCEBEB; border-color: #B23A3A; }
+.btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.loading, .empty { text-align: center; padding: 40px; color: #4B5D58; }

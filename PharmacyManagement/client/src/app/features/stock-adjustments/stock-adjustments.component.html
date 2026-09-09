@@ -1,0 +1,71 @@
+<div class="sa-page">
+  <div class="page-header">
+    <h2>Stock Adjustments</h2>
+    <button class="btn-primary" (click)="openAdd()">+ New Adjustment</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="sa-table">
+      <thead><tr><th>Medicine</th><th>Batch</th><th>Type</th><th>Qty</th><th>Reason</th><th>Notes</th><th>Date</th></tr></thead>
+      <tbody>
+        @for (a of adjustments(); track a.id) {
+          <tr>
+            <td>{{ a.medicineName }}</td>
+            <td>{{ a.batchNumber }}</td>
+            <td><span class="type-badge" [class.decrease]="a.adjustmentType === 'Decrease'">{{ a.adjustmentType }}</span></td>
+            <td>{{ a.quantity }}</td>
+            <td>{{ a.reason }}</td>
+            <td>{{ a.notes || '-' }}</td>
+            <td>{{ a.adjustedDate | date:'mediumDate' }}</td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="7" class="empty">No stock adjustments found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>New Stock Adjustment</h3>
+        <div class="form-grid">
+          <label>Medicine
+            <select [(ngModel)]="form.medicineId" (ngModelChange)="onMedicineChange()">
+              <option [ngValue]="null">Select medicine…</option>
+              @for (m of medicines(); track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+            </select>
+          </label>
+          <label>Batch
+            <select [(ngModel)]="form.medicineBatchId">
+              <option [ngValue]="null">Select batch…</option>
+              @for (b of selectedMedicineBatches; track b.id) {
+                <option [ngValue]="b.id">{{ b.batchNumber }} (Qty: {{ b.currentQuantity }})</option>
+              }
+            </select>
+          </label>
+          <label>Adjustment Type
+            <select [(ngModel)]="form.adjustmentType">
+              <option value="Increase">Increase</option>
+              <option value="Decrease">Decrease</option>
+            </select>
+          </label>
+          <label>Quantity <input type="number" min="1" [(ngModel)]="form.quantity" /></label>
+          <label>Reason
+            <select [(ngModel)]="form.reason">
+              @for (r of reasonOptions; track r) { <option [value]="r">{{ r }}</option> }
+            </select>
+          </label>
+          <label class="full-width">Notes <input [(ngModel)]="form.notes" /></label>
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" [disabled]="!form.medicineId || !form.medicineBatchId" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

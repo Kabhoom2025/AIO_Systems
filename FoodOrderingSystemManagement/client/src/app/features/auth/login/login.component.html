@@ -1,0 +1,153 @@
+<!-- Dark mode toggle (top-right corner) -->
+<button class="dark-fab"
+        (click)="theme.toggleDarkMode()"
+        [matTooltip]="theme.darkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+        matTooltipPosition="left">
+  <mat-icon>{{ theme.darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+</button>
+
+<div class="login-wrapper">
+
+  <!-- Left brand panel -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <div class="brand-logo">
+        <mat-icon>restaurant</mat-icon>
+      </div>
+      <h1 class="brand-name">FoodOrder POS</h1>
+      <p class="brand-tagline">Professional Restaurant Point of Sale</p>
+      <div class="brand-features">
+        <div class="feature-item">
+          <mat-icon>speed</mat-icon>
+          <span>Fast Order Processing</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Instant Receipt Generation</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>bar_chart</mat-icon>
+          <span>Real-time Analytics</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>devices</mat-icon>
+          <span>Multi-device Support</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right login panel -->
+  <div class="login-panel">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <div class="card-header-content">
+          <div class="login-icon">
+            <mat-icon>lock_person</mat-icon>
+          </div>
+          <mat-card-title>Welcome Back</mat-card-title>
+          <mat-card-subtitle>Sign in to your POS account</mat-card-subtitle>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+
+        <!-- SSO Buttons -->
+        <div class="sso-grid">
+          @for (p of ssoProviders; track p.id) {
+            <button class="sso-btn"
+              [class.sso-loading]="ssoLoading() === p.id"
+              [disabled]="ssoLoading() !== null || loading()"
+              (click)="signInWith(p.id)"
+              [attr.aria-label]="'Sign in with ' + p.label"
+              [title]="'Sign in with ' + p.label">
+              @if (ssoLoading() === p.id) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <svg class="sso-icon" viewBox="0 0 24 24" fill="currentColor"
+                     [style.color]="p.color">
+                  <path [attr.d]="p.icon" />
+                </svg>
+              }
+              <span>{{ p.label }}</span>
+            </button>
+          }
+        </div>
+
+        <!-- Divider -->
+        <div class="or-divider">
+          <span class="or-line"></span>
+          <span class="or-text">or sign in with email</span>
+          <span class="or-line"></span>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+          <!-- Email -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <input matInput type="email" formControlName="email"
+              placeholder="admin@foodorder.com" autocomplete="email" />
+            <mat-icon matPrefix>email</mat-icon>
+            @if (email.hasError('required') && email.touched) {
+              <mat-error>Email is required</mat-error>
+            } @else if (email.hasError('email') && email.touched) {
+              <mat-error>Enter a valid email address</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Password -->
+          <mat-form-field appearance="outline" class="full-width mt-8">
+            <mat-label>Password</mat-label>
+            <input matInput [type]="hidePassword() ? 'password' : 'text'"
+              formControlName="password" autocomplete="current-password" />
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button"
+              (click)="hidePassword.set(!hidePassword())"
+              [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'">
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (password.hasError('required') && password.touched) {
+              <mat-error>Password is required</mat-error>
+            } @else if (password.hasError('minlength') && password.touched) {
+              <mat-error>Minimum 6 characters required</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Remember Me + Forgot Password -->
+          <div class="form-options">
+            <mat-checkbox formControlName="rememberMe" color="primary">
+              Remember me
+            </mat-checkbox>
+            <a class="forgot-link" routerLink="/auth/forgot-password">Forgot Password?</a>
+          </div>
+
+          <!-- Submit -->
+          <button mat-raised-button color="primary" type="submit"
+            class="full-width login-btn"
+            [disabled]="loading() || ssoLoading() !== null">
+            @if (loading()) {
+              <ng-container>
+                <mat-spinner diameter="20" />
+                <span>Signing in...</span>
+              </ng-container>
+            } @else {
+              <ng-container>
+                <mat-icon>login</mat-icon>
+                <span>Sign In</span>
+              </ng-container>
+            }
+          </button>
+
+        </form>
+      </mat-card-content>
+
+      <mat-card-footer>
+        <p class="footer-text">
+          &copy; {{ currentYear }} FoodOrder POS &mdash; All rights reserved
+        </p>
+      </mat-card-footer>
+    </mat-card>
+  </div>
+
+</div>

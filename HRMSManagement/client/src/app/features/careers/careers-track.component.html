@@ -1,0 +1,64 @@
+<div class="careers-page">
+  @if (loading) {
+    <div class="loading">Loading your application status…</div>
+  } @else if (notFound) {
+    <div class="empty-state">
+      <h2>We couldn't find this application</h2>
+      <p>The tracking link may be invalid or expired.</p>
+      <a routerLink="/careers" class="back-link">← Back to careers</a>
+    </div>
+  } @else if (status) {
+    <div class="track-card">
+      <header>
+        <h1>{{ status.jobTitle }}</h1>
+        <p class="company">{{ status.companyName }}</p>
+        <p class="candidate">Applicant: <strong>{{ status.candidateName }}</strong> · Applied {{ status.appliedDate | date: 'mediumDate' }}</p>
+      </header>
+
+      @if (status.isRejected) {
+        <div class="status-banner rejected">
+          Unfortunately, your application did not move forward this time. Thank you for your interest — we encourage you to apply for future openings.
+        </div>
+      } @else if (status.isHired) {
+        <div class="status-banner hired">🎉 Congratulations! You've been selected for this role. Our HR team will reach out with next steps.</div>
+      }
+
+      <!-- Progress stepper -->
+      <div class="stepper" [class.rejected]="status.isRejected">
+        <div class="stepper-track">
+          <div class="stepper-fill" [style.width.%]="status.progressPercent"></div>
+        </div>
+        <div class="stepper-points">
+          @for (s of status.stages; track s.stage) {
+            <div class="stepper-point" [class.done]="s.isDone" [class.current]="s.isCurrent && !status.isRejected">
+              <div class="dot">
+                @if (s.isDone && !(s.isCurrent && status.isRejected)) { <span>✓</span> }
+              </div>
+              <span class="label">{{ stageLabel(s.stage) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="progress-percent">{{ status.progressPercent }}% complete</div>
+
+      <!-- Timeline of HR updates -->
+      <div class="timeline">
+        <h3>Application History</h3>
+        @for (t of status.timeline; track t.changedAt) {
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <div class="timeline-top">
+                <strong>{{ stageLabel(t.stage) }}</strong>
+                <span class="timeline-date">{{ t.changedAt | date: 'MMM d, y, h:mm a' }}</span>
+              </div>
+              @if (t.notes) { <p class="timeline-notes">{{ t.notes }}</p> }
+              <span class="timeline-by">Updated by {{ t.changedByName }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

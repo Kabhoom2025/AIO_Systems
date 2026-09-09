@@ -1,0 +1,60 @@
+.scan-submit {
+  max-width: 640px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+
+  h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+    color: var(--ls-text-primary);
+  }
+
+  &__subtitle {
+    margin: 0 0 1.5rem;
+    color: var(--ls-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  form {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  input {
+    flex: 1;
+    background: var(--ls-surface);
+    border: 1px solid var(--ls-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--ls-text-primary);
+    font-size: 1rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--ls-accent);
+    }
+  }
+
+  button {
+    background: var(--ls-accent);
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__error {
+    margin: 0.75rem 0 0;
+    color: var(--ls-status-critical);
+    font-size: 0.85rem;
+  }
+}

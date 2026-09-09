@@ -1,0 +1,40 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav
+    class="shell-sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="sidenavOpened()"
+    (closedStart)="sidenavOpened.set(false)">
+    <app-conversation-list (conversationSelected)="closeOnMobile()" />
+
+    <div class="sidenav-footer">
+      <button mat-button class="footer-btn" (click)="openSettings()">
+        <mat-icon>settings</mat-icon>
+        Settings
+      </button>
+      <button mat-button class="footer-btn" [matMenuTriggerFor]="profileMenu">
+        <mat-icon>account_circle</mat-icon>
+        {{ authService.currentUser()?.firstName }} {{ authService.currentUser()?.lastName }}
+      </button>
+      <mat-menu #profileMenu="matMenu">
+        <div class="profile-email">{{ authService.currentUser()?.email }}</div>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <mat-toolbar class="shell-toolbar">
+      <button mat-icon-button (click)="toggleSidenav()" aria-label="Toggle conversation list">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-title">AI Assistant</span>
+    </mat-toolbar>
+
+    <div class="shell-body">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

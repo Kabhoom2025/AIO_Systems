@@ -1,0 +1,41 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Workflow Definitions</h1>
+  <button *appHasPermission="'workflows.create'" pButton type="button" icon="pi pi-plus" label="Add Definition"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="definitions" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Entity Type</th>
+        <th>Steps</th>
+        <th>Active</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-d>
+      <tr>
+        <td class="font-semibold">{{ d.name }}</td>
+        <td><code class="code-badge">{{ d.entityType }}</code></td>
+        <td>{{ d.steps.length }}</td>
+        <td>
+          <p-tag [severity]="d.isActive ? 'success' : 'danger'" [value]="d.isActive ? 'Active' : 'Inactive'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button *appHasPermission="'workflows.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(d)"></button>
+          <button *appHasPermission="'workflows.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(d)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No workflow definitions configured.</td></tr>
+    </ng-template>
+  </p-table>
+</div>

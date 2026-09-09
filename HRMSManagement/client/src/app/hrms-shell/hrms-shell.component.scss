@@ -1,0 +1,53 @@
+.shell-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 250px;
+  background: #1e293b;
+  color: #e2e8f0;
+
+  ::ng-deep .mat-mdc-list-item {
+    color: #cbd5e1;
+  }
+
+  .active-link {
+    background: rgba(79, 70, 229, 0.25);
+    color: #fff;
+  }
+}
+
+.brand {
+  padding: 1.25rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.org-name {
+  margin-right: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.user-menu-header {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+
+  .role { font-weight: 600; color: #4f46e5; }
+}
+
+.content {
+  padding: 1.5rem;
+  background: #f4f6f9;
+  min-height: calc(100vh - 64px);
+}

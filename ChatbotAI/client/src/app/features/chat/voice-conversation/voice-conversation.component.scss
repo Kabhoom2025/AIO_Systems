@@ -1,0 +1,122 @@
+.voice-conversation {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  background: radial-gradient(circle at top, var(--app-surface) 0%, var(--app-bg) 70%);
+  color: var(--app-text);
+  position: relative;
+  text-align: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.orb-wrapper {
+  margin: 24px 0;
+}
+
+.orb {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--app-primary), #a78bfa);
+  color: #fff;
+  transition: transform 0.2s ease;
+
+  mat-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+  }
+
+  &.listening {
+    animation: pulse-ring 1.6s infinite;
+  }
+
+  &.speaking {
+    animation: orb-bounce 0.8s infinite ease-in-out;
+  }
+
+  &.processing {
+    opacity: 0.75;
+    animation: orb-spin 1.4s linear infinite;
+  }
+}
+
+@keyframes orb-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes orb-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.status-label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.transcript {
+  max-width: 480px;
+  color: var(--app-text-muted);
+  min-height: 24px;
+  margin: 0;
+}
+
+.transcript.muted {
+  font-style: italic;
+}
+
+.unsupported {
+  color: var(--app-danger);
+  max-width: 400px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.mic-btn {
+  width: 72px;
+  height: 72px;
+
+  &.listening {
+    animation: pulse-ring 1.6s infinite;
+  }
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.end-btn {
+  margin-top: 24px;
+  border-color: var(--app-danger);
+  color: var(--app-danger);
+}

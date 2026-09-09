@@ -1,0 +1,264 @@
+/* ── Host: make the custom element a proper block that fills shell-body ── */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* ── Sidebar wrapper ──────────────────────────────────────────────────── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 220px;
+  min-width: 220px;
+  background: var(--sidebar-bg);
+  padding: 12px 0;
+  transition: width .25s ease, min-width .25s ease;
+  overflow: hidden;
+  position: relative;
+
+  &.collapsed {
+    width: 60px;
+    min-width: 60px;
+  }
+}
+
+/* ── Toggle button (absolutely positioned, never affects layout) ───────── */
+.toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.6);
+  transition: background var(--transition), color var(--transition);
+  z-index: 10;
+
+  &:hover {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+  }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+/* ── Nav: flex:1 + min-height:0 is the key — without min-height:0 a flex
+   child refuses to shrink below its content size and never scrolls ───── */
+.sidebar-nav {
+  flex: 1 1 0;
+  min-height: 0;           /* ← CRITICAL for scroll to work inside flex */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 48px 8px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* subtle scrollbar that blends with the dark sidebar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.22) transparent;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.22);
+    border-radius: 4px;
+    &:hover { background: rgba(255,255,255,.4); }
+  }
+}
+
+/* ── Nav item staggered entrance on load ──────────────────────────────── */
+.sidebar-nav > * {
+  opacity: 0;
+  animation: fadeInUp .3s ease both;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) { animation-delay: #{40 + ($i - 1) * 38}ms; }
+  }
+}
+
+/* ── Nav items ────────────────────────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--sidebar-text);
+  font-size: .9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;   /* stop items from shrinking when nav is constrained */
+
+  &:hover {
+    background: rgba(255,255,255,.08);
+    color: #fff;
+  }
+
+  &.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(191,54,12,.4);
+    .nav-icon { color: #fff; }
+  }
+}
+
+.nav-icon {
+  font-size: 21px;
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  color: rgba(255,255,255,.65);
+  transition: color var(--transition);
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Groups / submenus ────────────────────────────────────────────────── */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.nav-group-header {
+  cursor: pointer;
+  user-select: none;
+
+  &.group-active {
+    color: var(--primary);
+    .nav-icon { color: var(--primary); }
+  }
+}
+
+.expand-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  color: rgba(255,255,255,.45);
+  transition: transform .2s ease;
+  flex-shrink: 0;
+
+  &.rotated { transform: rotate(180deg); }
+}
+
+.nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  animation: slideDown .15s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav-sub-item {
+  padding-left: 36px;
+
+  .nav-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: rgba(255,255,255,.5);
+  }
+
+  &.active .nav-icon { color: #fff; }
+}
+
+/* ── Footer (pinned at bottom, never shrinks) ─────────────────────────── */
+.sidebar-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  color: rgba(255,255,255,.3);
+  font-size: .75rem;
+}
+
+.version-icon { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; }
+.version-text { flex: 1; }
+
+.dark-toggle-btn {
+  width: 28px;
+  height: 28px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.6);
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+  margin-left: auto;
+
+  &:hover {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+  }
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+/* When collapsed, center the toggle in the footer */
+.sidebar.collapsed .sidebar-footer {
+  justify-content: center;
+  padding: 10px 8px;
+}
+.sidebar.collapsed .dark-toggle-btn { margin-left: 0; }
+
+/* ── Grab cursor when drag is enabled ───────────────────────────────────── */
+.nav-item[cdkDrag]:not([cdkDragDisabled="true"]),
+.nav-group[cdkDrag]:not([cdkDragDisabled="true"]) > .nav-item {
+  cursor: grab;
+}
+.cdk-drop-list-dragging .nav-item,
+.cdk-drop-list-dragging .nav-group > .nav-item {
+  cursor: grabbing;
+}
+
+/* ── Ghost: the slot left behind while dragging ─────────────────────────── */
+/* CDK keeps the original element in-place and adds .cdk-drag-placeholder   */
+.cdk-drag-placeholder {
+  opacity: 0;                          /* hide the element content… */
+  background: rgba(255,255,255,.06) !important;
+  border: 1.5px dashed rgba(255,255,255,.18) !important;
+  border-radius: 10px !important;
+  /* …but keep its exact height so the list doesn't collapse              */
+  &.nav-item, &.nav-group {
+    visibility: hidden;
+  }
+}
+
+/* ── Items slide smoothly when something is dragged past them ───────────── */
+.cdk-drop-list-dragging :not(.cdk-drag-placeholder) {
+  transition: transform 220ms cubic-bezier(.2, 0, 0, 1);
+}
+
+/* ── Item snaps back to final position after release ────────────────────── */
+.cdk-drag-animating {
+  transition: transform 240ms cubic-bezier(.2, 0, 0, 1) !important;
+}

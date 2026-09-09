@@ -1,0 +1,95 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h2>Dashboard</h2>
+    <div class="header-actions">
+      @if (editMode()) {
+        <button (click)="resetLayout()">Reset Layout</button>
+      }
+      <button class="btn-primary" (click)="toggleEditMode()">{{ editMode() ? 'Done' : 'Customize' }}</button>
+    </div>
+  </div>
+
+  <div class="widget-grid" cdkDropList [cdkDropListDisabled]="!editMode()" (cdkDropListDropped)="drop($event)">
+    @for (id of visibleWidgetIds; track id) {
+      <div class="widget-card" cdkDrag [cdkDragDisabled]="!editMode()">
+        <div class="widget-header">
+          @if (editMode()) {
+            <span class="drag-handle" cdkDragHandle>⠿</span>
+          }
+          <h3>{{ widgetTitle(id) }}</h3>
+          @if (editMode()) {
+            <button class="hide-btn" (click)="hideWidget(id)" title="Hide widget">✕</button>
+          }
+        </div>
+
+        <div class="widget-body">
+          @switch (id) {
+            @case ('sales-today') {
+              @if (salesToday(); as s) {
+                <div class="big-stat">₹{{ s.totalSales.toFixed(2) }}</div>
+                <div class="sub-stat">{{ s.transactionCount }} transaction(s) &middot; avg ₹{{ s.averageTicket.toFixed(2) }}</div>
+              }
+              <a routerLink="/sales-history" class="widget-link">View Sales History →</a>
+            }
+            @case ('inventory-valuation') {
+              @if (inventoryValuation(); as inv) {
+                <div class="big-stat">₹{{ inv.grandTotal.toFixed(2) }}</div>
+                <div class="sub-stat">{{ inv.items.length }} medicine(s) in stock</div>
+              }
+              <a routerLink="/reports" class="widget-link">View Reports →</a>
+            }
+            @case ('notifications') {
+              <div class="big-stat">{{ unreadCount() }}</div>
+              <div class="sub-stat">unread notification(s)</div>
+            }
+            @case ('top-medicines') {
+              <table class="widget-table">
+                <tbody>
+                  @for (m of topMedicines(); track m.medicineId) {
+                    <tr><td>{{ m.medicineName }}</td><td>{{ m.quantitySold }} sold</td></tr>
+                  }
+                  @empty { <tr><td class="empty">No sales this month.</td></tr> }
+                </tbody>
+              </table>
+              <a routerLink="/reports" class="widget-link">View Reports →</a>
+            }
+            @case ('reorder-suggestions') {
+              <table class="widget-table">
+                <tbody>
+                  @for (r of reorderSuggestions(); track r.medicineId) {
+                    <tr><td>{{ r.medicineName }}</td><td>reorder {{ r.suggestedReorderQty }}</td></tr>
+                  }
+                  @empty { <tr><td class="empty">No urgent reorders.</td></tr> }
+                </tbody>
+              </table>
+              <a routerLink="/ai-insights" class="widget-link">View AI Insights →</a>
+            }
+            @case ('expiry-risk') {
+              <table class="widget-table">
+                <tbody>
+                  @for (r of expiryRisks(); track r.medicineName + r.batchNumber) {
+                    <tr>
+                      <td>{{ r.medicineName }}</td>
+                      <td><span class="risk-badge" [style.background]="riskColor(r.riskLevel)">{{ r.riskLevel }}</span></td>
+                    </tr>
+                  }
+                  @empty { <tr><td class="empty">No expiring batches.</td></tr> }
+                </tbody>
+              </table>
+              <a routerLink="/ai-insights" class="widget-link">View AI Insights →</a>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (editMode() && hiddenWidgetDefs.length > 0) {
+    <div class="hidden-strip">
+      <span>Hidden — click to restore:</span>
+      @for (w of hiddenWidgetDefs; track w.id) {
+        <button class="hidden-chip" (click)="restoreWidget(w.id)">{{ w.title }}</button>
+      }
+    </div>
+  }
+</div>

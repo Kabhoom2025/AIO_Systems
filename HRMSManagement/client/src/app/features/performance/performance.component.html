@@ -1,0 +1,345 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Performance Management</h1>
+</div>
+
+<div class="card">
+  <p-tabView>
+
+    <!-- ======== My Goals ======== -->
+    <p-tabPanel header="My Goals">
+      <div class="tab-toolbar">
+        <span></span>
+        <button pButton type="button" icon="pi pi-plus" label="Set New Goal" (click)="openCreateGoal()"></button>
+      </div>
+
+      <p-table [value]="myGoals" [loading]="myGoalsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Goal / Objective</th><th>Metric</th><th>Weight</th>
+            <th style="width:14rem">Progress</th><th>Due Date</th><th>Status</th>
+            <th style="width:10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-g>
+          <tr>
+            <td>
+              <span class="font-semibold">{{ g.title }}</span>
+              @if (g.description) { <div class="text-muted text-sm mt-1">{{ g.description }}</div> }
+            </td>
+            <td>{{ g.metric || '—' }}</td>
+            <td>{{ g.weight }}%</td>
+            <td>
+              <div class="progress-wrapper">
+                <p-progressBar [value]="g.progressPercent" [showValue]="true" styleClass="h-2"></p-progressBar>
+              </div>
+            </td>
+            <td>{{ g.dueDate | date:'dd MMM yyyy' }}</td>
+            <td><p-tag [value]="g.status" [severity]="goalStatusSeverity(g.status)"></p-tag></td>
+            <td class="actions-cell">
+              <button pButton type="button" icon="pi pi-chart-line" class="p-button-text p-button-sm"
+                      (click)="openProgress(g)" title="Update Progress"></button>
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                      (click)="openEditGoal(g)" title="Edit"></button>
+              <button *appHasPermission="'performance.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger"
+                      (click)="deleteGoal(g)" title="Delete"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7" class="empty-cell">No goals assigned yet.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ======== All Goals (Admin/Manager) ======== -->
+    <p-tabPanel *appHasPermission="'performance.view'" header="All Goals">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'performance.create'" pButton type="button" icon="pi pi-plus"
+                label="Create Goal" (click)="openCreateGoal()"></button>
+      </div>
+
+      <p-table [value]="goals" [loading]="goalsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th><th>Goal / Objective</th><th>Weight</th>
+            <th style="width:13rem">Progress</th><th>Due Date</th><th>Status</th>
+            <th style="width:10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-g>
+          <tr>
+            <td class="font-semibold">{{ g.employeeName }}</td>
+            <td>
+              <span class="font-semibold">{{ g.title }}</span>
+              @if (g.description) { <div class="text-muted text-sm">{{ g.description }}</div> }
+            </td>
+            <td>{{ g.weight }}%</td>
+            <td>
+              <div class="progress-wrapper">
+                <p-progressBar [value]="g.progressPercent" [showValue]="true" styleClass="h-2"></p-progressBar>
+              </div>
+            </td>
+            <td>{{ g.dueDate | date:'dd MMM yyyy' }}</td>
+            <td><p-tag [value]="g.status" [severity]="goalStatusSeverity(g.status)"></p-tag></td>
+            <td class="actions-cell">
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                      (click)="openEditGoal(g)"></button>
+              <button *appHasPermission="'performance.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteGoal(g)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7" class="empty-cell">No goals found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ======== My Appraisals ======== -->
+    <p-tabPanel header="My Appraisals">
+      <p-table [value]="myReviews" [loading]="myReviewsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Period</th><th>Reviewer</th><th>Self Rating</th>
+            <th>Manager Rating</th><th>Recommendation</th><th>Status</th>
+            <th style="width:8rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td class="font-semibold">{{ r.period }}</td>
+            <td>{{ r.reviewerName || '—' }}</td>
+            <td>
+              @if (r.selfRating) {
+                <p-rating [ngModel]="r.selfRating" [readonly]="true" [stars]="5"></p-rating>
+              } @else { — }
+            </td>
+            <td>
+              @if (r.managerRating) {
+                <p-rating [ngModel]="r.managerRating" [readonly]="true" [stars]="5"></p-rating>
+              } @else { — }
+            </td>
+            <td>{{ r.recommendation || '—' }}</td>
+            <td><p-tag [value]="r.status" [severity]="reviewStatusSeverity(r.status)"></p-tag></td>
+            <td>
+              <button pButton type="button" label="Self Review" class="p-button-text p-button-sm"
+                      (click)="openSelfReview(r)"
+                      [disabled]="r.status === 'Completed'"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7" class="empty-cell">No appraisal cycles assigned to you.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ======== All Reviews (HR/Manager) ======== -->
+    <p-tabPanel *appHasPermission="'performance.view'" header="All Reviews">
+      <div class="tab-toolbar">
+        <div class="filter-group">
+          <span class="mr-2 text-muted text-sm">Period:</span>
+          <input pInputText [(ngModel)]="reviewPeriodFilter" placeholder="e.g. 2025-Q1" class="w-36"
+                 (input)="loadReviews()" />
+        </div>
+        <button *appHasPermission="'performance.create'" pButton type="button" icon="pi pi-plus"
+                label="Create Review Cycle" (click)="openCreateReview()"></button>
+      </div>
+
+      <p-table [value]="reviews" [loading]="reviewsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th><th>Period</th><th>Self Rating</th>
+            <th>Manager Rating</th><th>Final Rating</th><th>Recommendation</th>
+            <th>Status</th><th style="width:10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td class="font-semibold">{{ r.employeeName }}</td>
+            <td>{{ r.period }}</td>
+            <td>
+              @if (r.selfRating) {
+                <p-rating [ngModel]="r.selfRating" [readonly]="true" [stars]="5"></p-rating>
+              } @else { — }
+            </td>
+            <td>
+              @if (r.managerRating) {
+                <p-rating [ngModel]="r.managerRating" [readonly]="true" [stars]="5"></p-rating>
+              } @else { — }
+            </td>
+            <td>
+              @if (r.finalRating) {
+                <strong>{{ r.finalRating | number:'1.1-1' }}</strong>
+              } @else { — }
+            </td>
+            <td>{{ r.recommendation || '—' }}</td>
+            <td><p-tag [value]="r.status" [severity]="reviewStatusSeverity(r.status)"></p-tag></td>
+            <td class="actions-cell">
+              <button *appHasPermission="'performance.review'" pButton type="button" label="Review"
+                      class="p-button-text p-button-sm" (click)="openManagerReview(r)"
+                      [disabled]="r.status !== 'SelfDone'"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No performance reviews found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- ======== Goal Dialog ======== -->
+<p-dialog header="{{ editingGoalId ? 'Edit' : 'Create' }} Goal" [(visible)]="showGoalDialog" [modal]="true" [style]="{width:'34rem'}">
+  <div class="form-grid">
+    @if (!editingGoalId) {
+      <label class="col-span-2">
+        <span>Employee</span>
+        <p-dropdown [options]="employees" [(ngModel)]="goalForm.employeeId" optionLabel="fullName" optionValue="id"
+                    placeholder="Select Employee" [filter]="true" filterBy="fullName" [style]="{width:'100%'}"></p-dropdown>
+      </label>
+    }
+    <label class="col-span-2">
+      <span>Goal Title</span>
+      <input pInputText [(ngModel)]="goalForm.title" />
+    </label>
+    <label>
+      <span>Start Date</span>
+      <input type="date" class="date-input" [(ngModel)]="goalForm.startDate" />
+    </label>
+    <label>
+      <span>Due Date</span>
+      <input type="date" class="date-input" [(ngModel)]="goalForm.dueDate" />
+    </label>
+    <label>
+      <span>Weight (%)</span>
+      <p-inputNumber [(ngModel)]="goalForm.weight" [min]="1" [max]="100" [style]="{width:'100%'}"></p-inputNumber>
+    </label>
+    <label>
+      <span>Status</span>
+      <p-dropdown [options]="goalStatusOptions" [(ngModel)]="goalForm.status" optionLabel="label" optionValue="value" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Success Metric / KPI</span>
+      <input pInputText [(ngModel)]="goalForm.metric" placeholder="e.g. Increase NPS by 10 points" />
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="goalForm.description" rows="3"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showGoalDialog=false"></button>
+    <button pButton label="Save" [loading]="savingGoal" (click)="saveGoal()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Progress Update Dialog ======== -->
+<p-dialog header="Update Goal Progress" [(visible)]="showProgressDialog" [modal]="true" [style]="{width:'28rem'}">
+  @if (progressTarget) {
+    <div class="progress-form">
+      <p class="goal-title-ref">{{ progressTarget.title }}</p>
+      <div class="form-grid">
+        <label class="col-span-2">
+          <span>Progress ({{ progressForm.progressPercent }}%)</span>
+          <p-progressBar [value]="progressForm.progressPercent" styleClass="h-2 mb-2"></p-progressBar>
+          <p-inputNumber [(ngModel)]="progressForm.progressPercent" [min]="0" [max]="100" [style]="{width:'100%'}"></p-inputNumber>
+        </label>
+        <label class="col-span-2">
+          <span>Status</span>
+          <p-dropdown [options]="goalStatusOptions" [(ngModel)]="progressForm.status" optionLabel="label" optionValue="value" [style]="{width:'100%'}"></p-dropdown>
+        </label>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showProgressDialog=false"></button>
+    <button pButton label="Update" [loading]="savingProgress" (click)="saveProgress()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Create Review Cycle Dialog ======== -->
+<p-dialog header="Create Appraisal Cycle" [(visible)]="showReviewDialog" [modal]="true" [style]="{width:'30rem'}">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Employee</span>
+      <p-dropdown [options]="employees" [(ngModel)]="reviewForm.employeeId" optionLabel="fullName" optionValue="id"
+                  placeholder="Select Employee" [filter]="true" filterBy="fullName" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Review Period (e.g. 2025-Q2, 2025-H1, FY2025)</span>
+      <input pInputText [(ngModel)]="reviewForm.period" />
+    </label>
+    <label class="col-span-2">
+      <span>Reviewer User ID (optional)</span>
+      <p-inputNumber [(ngModel)]="reviewForm.reviewerUserId" [useGrouping]="false" [style]="{width:'100%'}"></p-inputNumber>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showReviewDialog=false"></button>
+    <button pButton label="Create" [loading]="savingReview" (click)="saveReview()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Self Review Dialog ======== -->
+<p-dialog header="Submit Self Review" [(visible)]="showSelfReviewDialog" [modal]="true" [style]="{width:'32rem'}">
+  @if (selfReviewTarget) {
+    <p class="review-period-ref">Period: <strong>{{ selfReviewTarget.period }}</strong></p>
+  }
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Self Rating (1–5)</span>
+      <p-rating [(ngModel)]="selfReviewForm.selfRating" [stars]="5" styleClass="mt-1"></p-rating>
+    </label>
+    <label class="col-span-2">
+      <span>Self Assessment Comments</span>
+      <textarea pInputTextarea [(ngModel)]="selfReviewForm.selfComments" rows="5"
+                placeholder="Describe your achievements, challenges, and areas for improvement..."></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showSelfReviewDialog=false"></button>
+    <button pButton label="Submit Self Review" [loading]="savingSelf" (click)="saveSelfReview()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ======== Manager Review Dialog ======== -->
+<p-dialog header="Submit Manager Review" [(visible)]="showManagerReviewDialog" [modal]="true" [style]="{width:'34rem'}">
+  @if (managerReviewTarget) {
+    <div class="review-context-card">
+      <span class="emp-name">{{ managerReviewTarget.employeeName }}</span>
+      <span class="period-badge">{{ managerReviewTarget.period }}</span>
+    </div>
+    @if (managerReviewTarget.selfComments) {
+      <div class="self-review-preview">
+        <h5>Employee Self-Assessment</h5>
+        <p>{{ managerReviewTarget.selfComments }}</p>
+      </div>
+    }
+  }
+  <div class="form-grid mt-3">
+    <label class="col-span-2">
+      <span>Manager Rating (1–5)</span>
+      <p-rating [(ngModel)]="managerReviewForm.managerRating" [stars]="5" styleClass="mt-1"></p-rating>
+    </label>
+    <label class="col-span-2">
+      <span>Manager Comments & Feedback</span>
+      <textarea pInputTextarea [(ngModel)]="managerReviewForm.managerComments" rows="4"></textarea>
+    </label>
+    <label class="col-span-2">
+      <span>Recommendation</span>
+      <p-dropdown [options]="recommendationOptions" [(ngModel)]="managerReviewForm.recommendation"
+                  optionLabel="label" optionValue="value" [style]="{width:'100%'}"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-text" (click)="showManagerReviewDialog=false"></button>
+    <button pButton label="Submit Review" [loading]="savingManager" (click)="saveManagerReview()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,21 @@
+using System.Security.Claims;
+using Chatbot.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Http;
+
+namespace Chatbot.Infrastructure.Authentication;
+
+public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
+{
+    public Guid? UserId
+    {
+        get
+        {
+            var value = httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(value, out var id) ? id : null;
+        }
+    }
+
+    public string? Email => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
+
+    public bool IsAuthenticated => httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+}

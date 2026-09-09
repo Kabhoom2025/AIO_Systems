@@ -1,0 +1,101 @@
+<div class="tp-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>share</mat-icon>
+      <div><h1>Third-Party Integrations</h1><p>Connect external delivery providers</p></div>
+    </div>
+    <a class="btn-secondary" routerLink="/delivery"><mat-icon>arrow_back</mat-icon> Back</a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="36"></mat-spinner></div>
+  } @else {
+    <div class="provider-grid">
+      @for (p of providers; track p.name) {
+        <div class="provider-card">
+          <div class="card-top">
+            <div class="provider-icon">
+              <mat-icon>{{ p.icon }}</mat-icon>
+            </div>
+            <div class="provider-info">
+              <h3>{{ p.name }}</h3>
+              <p>{{ p.description }}</p>
+            </div>
+            @if (isConfigured(p.name); as cfg) {
+              <span class="status-chip" [class.enabled]="cfg.isEnabled">
+                {{ cfg.isEnabled ? 'Active' : 'Disabled' }}
+              </span>
+            }
+          </div>
+
+          @if (isConfigured(p.name); as cfg) {
+            <div class="cfg-preview">
+              <div class="cfg-row">
+                <span class="cfg-label">API Key</span>
+                <span class="cfg-val masked">
+                  {{ showKey()[cfg.id] ? cfg.apiKey : cfg.apiKey.substring(0,6) + '••••••••' }}
+                  <button class="eye-btn" (click)="toggleShowKey(cfg.id)">
+                    <mat-icon>{{ showKey()[cfg.id] ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                </span>
+              </div>
+              @if (cfg.webhookUrl) {
+                <div class="cfg-row">
+                  <span class="cfg-label">Webhook</span>
+                  <span class="cfg-val">{{ cfg.webhookUrl }}</span>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="card-footer">
+            <button class="btn-configure" (click)="openConfig(p)">
+              <mat-icon>{{ isConfigured(p.name) ? 'edit' : 'add' }}</mat-icon>
+              {{ isConfigured(p.name) ? 'Edit Config' : 'Configure' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Config Form Panel -->
+  @if (showForm()) {
+    <div class="overlay" (click)="showForm.set(false)"></div>
+    <div class="form-panel">
+      <div class="panel-head">
+        <h3>Configure {{ form.provider }}</h3>
+        <button class="close-btn" (click)="showForm.set(false)"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="form-body">
+        <div class="field">
+          <label>API Key *</label>
+          <input [(ngModel)]="form.apiKey" placeholder="Enter API key" />
+        </div>
+        <div class="field">
+          <label>API Secret</label>
+          <input type="password" [(ngModel)]="form.apiSecret" placeholder="Optional secret" />
+        </div>
+        <div class="field">
+          <label>Webhook URL</label>
+          <input [(ngModel)]="form.webhookUrl" placeholder="https://your-server.com/webhook" />
+        </div>
+        <div class="toggle-row">
+          <span>Enable Integration</span>
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="form.isEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn-cancel" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn-confirm" [disabled]="!form.apiKey || saving()" (click)="save()">
+          @if (saving()) { Saving… } @else { Save Config }
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

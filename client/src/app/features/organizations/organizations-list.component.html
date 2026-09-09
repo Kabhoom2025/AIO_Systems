@@ -1,0 +1,71 @@
+<div class="page-header">
+  <h1>Organizations</h1>
+  <button mat-flat-button color="primary" (click)="openCreateDialog()">
+    <mat-icon>add</mat-icon>
+    New Organization
+  </button>
+</div>
+
+@if (loading()) {
+  <mat-spinner diameter="36" />
+} @else {
+  <table mat-table [dataSource]="organizations()" class="mat-elevation-z1 full-width">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let org">
+        <a class="org-link" (click)="viewDetail(org)">{{ org.name }}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="tenantKey">
+      <th mat-header-cell *matHeaderCellDef>Tenant Key</th>
+      <td mat-cell *matCellDef="let org">{{ org.tenantKey }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let org">{{ org.email || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="userCount">
+      <th mat-header-cell *matHeaderCellDef>Users</th>
+      <td mat-cell *matCellDef="let org">{{ org.userCount }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="isActive">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let org">
+        <mat-chip [class.active-chip]="org.isActive" [class.inactive-chip]="!org.isActive">
+          {{ org.isActive ? 'Active' : 'Inactive' }}
+        </mat-chip>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdDate">
+      <th mat-header-cell *matHeaderCellDef>Created</th>
+      <td mat-cell *matCellDef="let org">{{ org.createdDate | date: 'mediumDate' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let org">
+        <button mat-icon-button matTooltip="View details" (click)="viewDetail(org)">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(org)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Delete" (click)="deleteOrg(org)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  @if (organizations().length === 0) {
+    <p class="empty-hint">No organizations yet — create one to get started.</p>
+  }
+}

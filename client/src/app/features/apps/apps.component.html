@@ -1,0 +1,159 @@
+<div class="apps-page-header">
+  <div>
+    <h1>Apps</h1>
+    <p class="subtitle">Click "Open" to launch a product — it starts automatically if it isn't running yet. Click an app row to expand and see full URLs.</p>
+  </div>
+  @if (!loading() && apps().length > 0) {
+    <div class="fleet-summary">
+      <span class="fleet-count">{{ runningCount() }}</span>
+      <span class="fleet-of">/ {{ apps().length }} running</span>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <div class="apps-table-card loading-state">
+    <mat-spinner diameter="32" />
+    <p>Loading apps…</p>
+  </div>
+} @else if (apps().length === 0) {
+  <div class="apps-table-card empty-state">
+    <mat-icon>apps</mat-icon>
+    <p>No apps registered yet.</p>
+    <p class="empty-hint">Register a service from the Registered Services page to see it here.</p>
+  </div>
+} @else {
+  <div class="apps-table-card">
+    @for (app of apps(); track app.id) {
+      <div class="app-row-container">
+        <div class="app-row" [class.fully-up]="isFullyUp(app)" [class.expanded]="isExpanded(app.id)" [style.--accent]="app.color" (click)="toggleExpanded(app.id)">
+          <div class="expand-chevron">
+            <mat-icon [class.rotated]="isExpanded(app.id)">expand_more</mat-icon>
+          </div>
+          <div class="app-header-cell">
+            <div class="app-icon" [style.background]="app.color">
+              <mat-icon>{{ app.icon }}</mat-icon>
+            </div>
+            <div class="app-title">
+              <div class="app-name">{{ app.name }}</div>
+              <div class="app-desc">{{ app.description }}</div>
+            </div>
+          </div>
+          <div class="backend-cell">
+            <span class="live-dot" [class.online]="app.backendRunning"></span>
+            <span class="component-port">{{ app.baseUrl }}</span>
+          </div>
+          <div class="frontend-cell">
+            @if (app.frontendCommand) {
+              <span class="live-dot" [class.online]="app.frontendRunning"></span>
+              <span class="component-port">{{ app.frontendUrl }}</span>
+            } @else {
+              <span class="no-frontend">—</span>
+            }
+          </div>
+          <div class="status-cell">
+            <span
+              class="overall-badge"
+              [class.up]="isFullyUp(app)"
+              [class.partial]="!isFullyUp(app) && !isFullyDown(app)"
+              [class.down]="isFullyDown(app)"
+            >
+              <span class="dot"></span>
+              {{ isFullyUp(app) ? 'Running' : isFullyDown(app) ? 'Stopped' : 'Partial' }}
+            </span>
+          </div>
+          <div class="runvia-cell">
+            <mat-button-toggle-group
+              [value]="runMode(app.id)"
+              (change)="setRunMode(app.id, $event.value)"
+              [disabled]="actionState(app.id) !== 'idle'"
+              (click)="$event.stopPropagation()"
+            >
+              <mat-button-toggle value="Native" [disabled]="!canUseNative(app)" matTooltip="Run as a local dotnet/npm process">
+                Native
+              </mat-button-toggle>
+              <mat-button-toggle value="Docker" [disabled]="!canUseDocker(app)" matTooltip="Run as a Docker container via docker compose">
+                Docker
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+          <div class="actions-cell" (click)="$event.stopPropagation()">
+            @if (pendingOpenId() === app.id) {
+              <button mat-flat-button color="primary" disabled>
+                <mat-spinner diameter="16" />
+                Opening…
+              </button>
+            } @else {
+              <button mat-flat-button color="primary" (click)="open(app)">
+                <mat-icon>open_in_new</mat-icon>
+                Open
+              </button>
+            }
+
+            @switch (actionState(app.id)) {
+              @case ('starting') {
+                <button mat-stroked-button disabled>
+                  <mat-spinner diameter="16" />
+                  Starting…
+                </button>
+              }
+              @case ('stopping') {
+                <button mat-stroked-button disabled>
+                  <mat-spinner diameter="16" />
+                  Stopping…
+                </button>
+              }
+              @default {
+                @if (isFullyUp(app)) {
+                  <button mat-stroked-button color="warn" (click)="stop(app)">
+                    <mat-icon>stop</mat-icon>
+                    Stop
+                  </button>
+                } @else {
+                  <button mat-stroked-button color="primary" (click)="run(app)">
+                    <mat-icon>play_arrow</mat-icon>
+                    Run
+                  </button>
+                }
+              }
+            }
+          </div>
+        </div>
+        @if (isExpanded(app.id)) {
+          <div class="details-row" [style.--accent]="app.color">
+            <div class="details-content">
+              <div class="detail-group">
+                <label>Backend URL</label>
+                <code class="url-code">{{ app.baseUrl }}</code>
+                <span class="status-indicator" [class.online]="app.backendRunning">
+                  {{ app.backendRunning ? '● Running' : '● Stopped' }}
+                </span>
+              </div>
+              @if (app.frontendCommand) {
+                <div class="detail-group">
+                  <label>Frontend URL</label>
+                  <code class="url-code">{{ app.frontendUrl }}</code>
+                  <span class="status-indicator" [class.online]="app.frontendRunning">
+                    {{ app.frontendRunning ? '● Running' : '● Stopped' }}
+                  </span>
+                </div>
+              }
+              @if (app.backendWorkingDirectory) {
+                <div class="detail-group">
+                  <label>Backend Working Directory</label>
+                  <code class="path-code">{{ app.backendWorkingDirectory }}</code>
+                </div>
+              }
+              @if (app.frontendWorkingDirectory) {
+                <div class="detail-group">
+                  <label>Frontend Working Directory</label>
+                  <code class="path-code">{{ app.frontendWorkingDirectory }}</code>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

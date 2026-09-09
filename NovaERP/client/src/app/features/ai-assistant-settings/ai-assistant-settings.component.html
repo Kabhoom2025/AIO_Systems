@@ -1,0 +1,41 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>AI Assistant Settings</h1>
+  <p-tag [severity]="isConfigured ? 'success' : 'warn'" [value]="isConfigured ? 'Configured' : 'Not configured'"></p-tag>
+</div>
+
+<div class="card">
+  <label class="provider-label">
+    <span>Provider</span>
+    <p-selectButton [options]="providerOptions" [(ngModel)]="form.provider" optionLabel="label" optionValue="value"></p-selectButton>
+  </label>
+
+  @if (form.provider === 'Anthropic') {
+    <div class="form-grid">
+      <label>
+        <span>Model</span>
+        <input pInputText [(ngModel)]="form.anthropicModel" />
+      </label>
+      <label>
+        <span>Anthropic API Key</span>
+        <p-password [(ngModel)]="form.anthropicApiKey" [toggleMask]="true" [feedback]="false" placeholder="Leave blank to keep unchanged" [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    </div>
+  } @else {
+    <div class="form-grid">
+      <label>
+        <span>Model</span>
+        <input pInputText [(ngModel)]="form.groqModel" />
+      </label>
+      <label>
+        <span>Groq API Key</span>
+        <p-password [(ngModel)]="form.groqApiKey" [toggleMask]="true" [feedback]="false" placeholder="Leave blank to keep unchanged" [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    </div>
+  }
+
+  <div class="form-actions" *appHasPermission="'settings.edit'">
+    <button pButton type="button" label="Save Settings" [loading]="saving" (click)="save()"></button>
+  </div>
+</div>

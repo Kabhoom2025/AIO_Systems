@@ -1,0 +1,84 @@
+<div class="patients-page">
+  <div class="page-header">
+    <h2>Patients</h2>
+    <button *appHasPermission="'patients.create'" class="btn-primary" (click)="openAdd()">+ Add Patient</button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="patients-table">
+      <thead><tr><th>Name</th><th>Phone</th><th>Gender</th><th>Blood Group</th><th>Allergies</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (p of patients(); track p.id) {
+          <tr [class.inactive]="!p.isActive">
+            <td>{{ p.name }}</td>
+            <td>{{ p.phone || '-' }}</td>
+            <td>{{ p.gender || '-' }}</td>
+            <td>{{ p.bloodGroup || '-' }}</td>
+            <td>{{ p.allergies || '-' }}</td>
+            <td class="row-actions">
+              <button *appHasPermission="'patients.edit'" (click)="openEdit(p)">Edit</button>
+              <button *appHasPermission="'patients.delete'" class="danger" (click)="delete(p.id)">Delete</button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="6" class="empty">No patients found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Patient</h3>
+
+        <h4>Personal</h4>
+        <div class="form-grid">
+          <label>Name <input [(ngModel)]="form.name" /></label>
+          <label>Phone <input [(ngModel)]="form.phone" /></label>
+          <label>Email <input [(ngModel)]="form.email" /></label>
+          <label>Date of Birth <input type="date" [(ngModel)]="form.dateOfBirth" /></label>
+          <label>Gender
+            <select [(ngModel)]="form.gender">
+              <option value="">Select…</option>
+              @for (g of genderOptions; track g) { <option [value]="g">{{ g }}</option> }
+            </select>
+          </label>
+          <label class="full-width">Address <input [(ngModel)]="form.address" /></label>
+        </div>
+
+        <h4>Medical</h4>
+        <div class="form-grid">
+          <label>Blood Group <input [(ngModel)]="form.bloodGroup" placeholder="O+, A-, ..." /></label>
+          <label class="full-width">Allergies <input [(ngModel)]="form.allergies" /></label>
+          <label class="full-width">Chronic Diseases <input [(ngModel)]="form.chronicDiseases" /></label>
+        </div>
+
+        <h4>Emergency Contact</h4>
+        <div class="form-grid">
+          <label>Contact Name <input [(ngModel)]="form.emergencyContactName" /></label>
+          <label>Contact Phone <input [(ngModel)]="form.emergencyContactPhone" /></label>
+        </div>
+
+        <h4>Insurance</h4>
+        <div class="form-grid">
+          <label>Provider <input [(ngModel)]="form.insuranceProvider" /></label>
+          <label>Policy Number <input [(ngModel)]="form.insurancePolicyNumber" /></label>
+          @if (editId()) {
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="form.isActive" /> Active
+            </label>
+          }
+        </div>
+
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,159 @@
+<div class="widget-shell">
+  <header class="widget-header">
+    <div class="widget-title">
+      <mat-icon>forum</mat-icon>
+      <span>AI Assistant</span>
+    </div>
+    <div class="widget-header-actions">
+      @if (isAuthenticated()) {
+        <button mat-icon-button (click)="startNewChat()" matTooltip="New chat" aria-label="Start a new chat">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="logout()" matTooltip="Sign out" aria-label="Sign out">
+          <mat-icon>logout</mat-icon>
+        </button>
+      }
+      <button mat-icon-button (click)="closeWidget()" matTooltip="Close" aria-label="Close chat widget">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  @if (!isAuthenticated()) {
+    <div class="widget-auth">
+      @if (authView() === 'login') {
+        <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="widget-auth-form">
+          <h2>Welcome back</h2>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="current-password" />
+          </mat-form-field>
+          @if (authError()) {
+            <p class="widget-auth-error">{{ authError() }}</p>
+          }
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSubmittingAuth()">
+            @if (isSubmittingAuth()) { <mat-spinner diameter="18" /> } @else { Sign in }
+          </button>
+          <p class="widget-auth-switch">
+            New here? <a (click)="switchAuthView('register')">Create an account</a>
+          </p>
+        </form>
+      } @else {
+        <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="widget-auth-form">
+          <h2>Create an account</h2>
+          <div class="widget-name-row">
+            <mat-form-field appearance="outline">
+              <mat-label>First name</mat-label>
+              <input matInput formControlName="firstName" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Last name</mat-label>
+              <input matInput formControlName="lastName" />
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" autocomplete="new-password" />
+          </mat-form-field>
+          @if (authError()) {
+            <p class="widget-auth-error">{{ authError() }}</p>
+          }
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSubmittingAuth()">
+            @if (isSubmittingAuth()) { <mat-spinner diameter="18" /> } @else { Create account }
+          </button>
+          <p class="widget-auth-switch">
+            Already have an account? <a (click)="switchAuthView('login')">Sign in</a>
+          </p>
+        </form>
+      }
+    </div>
+  } @else {
+    <div class="widget-messages" #scrollContainer>
+      @if (!hasMessages() && !isLoadingConversation()) {
+        <div class="widget-welcome">
+          <mat-icon>auto_awesome</mat-icon>
+          <p>Hi {{ currentUser()?.firstName }}! Ask me anything.</p>
+        </div>
+      }
+
+      @for (message of messages(); track message.id) {
+        <div class="widget-message-row" [class.user]="message.role === 'User'">
+          <div class="widget-bubble" appCodeCopy>
+            @if (message.role === 'User') {
+              <div class="widget-bubble-content">{{ message.content }}</div>
+            } @else {
+              <div class="widget-bubble-content markdown-content" [innerHTML]="message.content | markdown"></div>
+              @if (message.isStreaming && !message.content) {
+                <div class="widget-typing"><span></span><span></span><span></span></div>
+              }
+            }
+            <div class="widget-bubble-meta">
+              <span>{{ message.createdAt | date: 'shortTime' }}</span>
+              <div class="widget-bubble-actions">
+                <button mat-icon-button (click)="copyMessage(message)" aria-label="Copy message">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+                @if (message.role === 'Assistant' && isTtsSupported) {
+                  <button mat-icon-button (click)="speak(message.content)" aria-label="Read message aloud">
+                    <mat-icon>volume_up</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="widget-input-area">
+      @if (isSpeaking()) {
+        <div class="widget-status speaking" (click)="stopSpeaking()">
+          <mat-icon>volume_up</mat-icon> Speaking... (tap to stop)
+        </div>
+      }
+      @if (isListening()) {
+        <div class="widget-status listening">
+          <mat-icon>mic</mat-icon> Listening... {{ interimTranscript() }}
+        </div>
+      }
+
+      <div class="widget-input-box">
+        <textarea
+          rows="1"
+          placeholder="Ask anything..."
+          [ngModel]="inputText()"
+          (ngModelChange)="inputText.set($event)"
+          (keydown)="onInputKeydown($event)"
+          aria-label="Message input"></textarea>
+
+        @if (isVoiceSupported) {
+          <button
+            mat-icon-button
+            class="widget-mic-btn"
+            [class.active]="isListening()"
+            (click)="toggleMic()"
+            aria-label="Toggle voice input">
+            <mat-icon>{{ isListening() ? 'mic' : 'mic_none' }}</mat-icon>
+          </button>
+        }
+
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="sendMessage()"
+          [disabled]="!inputText().trim() || isGenerating()"
+          aria-label="Send message">
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>

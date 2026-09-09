@@ -1,0 +1,502 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Recruitment Management</h1>
+</div>
+
+<div class="card recruitment-card">
+  <p-tabView [(activeIndex)]="activeTabIndex">
+    
+    <!-- ===================== Job Openings ===================== -->
+    <p-tabPanel header="Job Openings">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'recruitment.create'" pButton type="button" icon="pi pi-plus" label="Create Opening"
+                (click)="openAddOpening()"></button>
+      </div>
+
+      <p-table [value]="openings" [loading]="openingsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>Vacancies</th>
+            <th>Status</th>
+            <th style="width: 18rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-o>
+          <tr>
+            <td class="font-semibold">{{ o.title }}</td>
+            <td>{{ o.departmentName }}</td>
+            <td>{{ o.designationTitle }}</td>
+            <td>{{ o.location }}</td>
+            <td>{{ o.employmentType }}</td>
+            <td>{{ o.vacancies }}</td>
+            <td>
+              <p-tag [value]="o.status" [severity]="openingStatusSeverity(o.status)"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button pButton type="button" label="Candidates" icon="pi pi-users"
+                      class="p-button-text p-button-sm" (click)="selectOpening(o)"></button>
+              <button pButton type="button" icon="pi pi-link" class="p-button-text p-button-sm"
+                      title="Copy public apply link — paste into LinkedIn/Naukri job posts"
+                      (click)="copyApplyLink(o)"></button>
+              <button *appHasPermission="'recruitment.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="editOpening(o)"></button>
+              <button *appHasPermission="'recruitment.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="confirmDeleteOpening(o)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No job openings found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Candidates ===================== -->
+    <p-tabPanel header="Candidates">
+      @if (!selectedOpening) {
+        <div class="empty-state">
+          <i class="pi pi-users symbol"></i>
+          <p>Please select a job opening from the <strong>Job Openings</strong> tab to view and manage candidates.</p>
+        </div>
+      } @else {
+        <div class="tab-toolbar">
+          <div class="opening-context">
+            <span class="label">Opening:</span>
+            <span class="value font-semibold">{{ selectedOpening.title }}</span>
+          </div>
+          <button *appHasPermission="'recruitment.create'" pButton type="button" icon="pi pi-plus" label="Add Candidate"
+                  (click)="openAddCandidate()"></button>
+        </div>
+
+        <p-table [value]="candidates" [loading]="candidatesLoading" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Experience</th>
+              <th>Expected Salary</th>
+              <th style="width: 11rem">Stage</th>
+              <th>Rating</th>
+              <th style="width: 12rem">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr>
+              <td class="font-semibold">{{ c.name }}</td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.phone || '-' }}</td>
+              <td>{{ c.totalExperienceYears != null ? c.totalExperienceYears + ' yrs' : '-' }}</td>
+              <td>{{ c.expectedSalary != null ? (c.expectedSalary | number) : '-' }}</td>
+              <td>
+                <p-dropdown [options]="stageOptions" [ngModel]="c.stage" (ngModelChange)="onStageSelect(c, $event)"
+                            optionLabel="label" optionValue="value" styleClass="p-inputtext-sm w-full"
+                            [disabled]="savingStage"></p-dropdown>
+              </td>
+              <td>
+                <p-rating [ngModel]="c.rating" [readonly]="true" [stars]="5"></p-rating>
+              </td>
+              <td class="actions-cell">
+                <button pButton type="button" icon="pi pi-eye" class="p-button-text p-button-sm"
+                        (click)="openCandidateDetail(c)" title="View Profile & Interviews"></button>
+                <button *appHasPermission="'recruitment.delete'" pButton type="button" icon="pi pi-trash"
+                        class="p-button-text p-button-sm p-button-danger" (click)="confirmDeleteCandidate(c)" title="Delete"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="8" class="empty-cell">No candidates applied for this opening.</td></tr>
+          </ng-template>
+        </p-table>
+      }
+    </p-tabPanel>
+
+    <!-- ===================== Upcoming Interviews ===================== -->
+    <p-tabPanel header="Upcoming Interviews">
+      <p-table [value]="upcomingInterviews" [loading]="upcomingInterviewsLoading" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Candidate</th>
+            <th>Job Opening</th>
+            <th>Round</th>
+            <th>Scheduled At</th>
+            <th>Mode</th>
+            <th>Interviewer</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-i>
+          <tr>
+            <td class="font-semibold">{{ i.candidateName }}</td>
+            <td>{{ i.jobOpeningTitle }}</td>
+            <td>Round {{ i.round }}</td>
+            <td>{{ i.scheduledAt | date: 'dd MMM yyyy, HH:mm' }}</td>
+            <td>{{ i.mode }}</td>
+            <td>{{ i.interviewerName || '-' }}</td>
+            <td>
+              <p-tag [value]="i.status" [severity]="interviewStatusSeverity(i.status)"></p-tag>
+            </td>
+            <td class="actions-cell">
+              <button pButton type="button" label="Feedback" icon="pi pi-comment"
+                      class="p-button-text p-button-sm" (click)="openFeedback(i)"
+                      [disabled]="i.status !== 'Scheduled'"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No upcoming interviews scheduled.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Hiring Pipeline ===================== -->
+    <p-tabPanel header="Hiring Pipeline">
+      @if (pipelineLoading) {
+        <div class="empty-cell">Loading pipeline statistics...</div>
+      } @else if (pipeline) {
+        <div class="pipeline-grid">
+          @for (stage of pipelineStages; track stage.label) {
+            <div class="pipeline-card">
+              <span class="stage-name">{{ stage.label }}</span>
+              <span class="stage-count font-semibold">{{ stage.value }}</span>
+            </div>
+          }
+        </div>
+      }
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- ===================== Add/Edit Job Opening Dialog ===================== -->
+<p-dialog header="{{ editingOpeningId ? 'Edit' : 'Create' }} Job Opening" [(visible)]="showOpeningDialog" [modal]="true" [style]="{ width: '38rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Title</span>
+      <input pInputText [(ngModel)]="openingForm.title" />
+    </label>
+    <label>
+      <span>Department</span>
+      <p-dropdown [options]="departments" [(ngModel)]="openingForm.departmentId" optionLabel="name" optionValue="id" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Designation</span>
+      <p-dropdown [options]="designations" [(ngModel)]="openingForm.designationId" optionLabel="name" optionValue="id" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Location</span>
+      <input pInputText [(ngModel)]="openingForm.location" />
+    </label>
+    <label>
+      <span>Employment Type</span>
+      <p-dropdown [options]="employmentTypeOptions" [(ngModel)]="openingForm.employmentType" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Vacancies</span>
+      <p-inputNumber [(ngModel)]="openingForm.vacancies" [min]="1" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Status</span>
+      <p-dropdown [options]="openingStatusOptions" [(ngModel)]="openingForm.status" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Min Experience (Years)</span>
+      <p-inputNumber [(ngModel)]="openingForm.minExperienceYears" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Max Experience (Years)</span>
+      <p-inputNumber [(ngModel)]="openingForm.maxExperienceYears" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Salary Range From</span>
+      <p-inputNumber [(ngModel)]="openingForm.salaryRangeFrom" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Salary Range To</span>
+      <p-inputNumber [(ngModel)]="openingForm.salaryRangeTo" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Posted Date</span>
+      <p-calendar [(ngModel)]="openingForm.postedDate" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Closing Date</span>
+      <p-calendar [(ngModel)]="openingForm.closingDate" dateFormat="yy-mm-dd" [showClear]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="openingForm.description" rows="4"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showOpeningDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="savingOpening" (click)="saveOpening()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Add Candidate Dialog ===================== -->
+<p-dialog header="Add Candidate" [(visible)]="showCandidateDialog" [modal]="true" [style]="{ width: '36rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="candidateForm.name" />
+    </label>
+    <label>
+      <span>Email</span>
+      <input pInputText type="email" [(ngModel)]="candidateForm.email" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input pInputText [(ngModel)]="candidateForm.phone" />
+    </label>
+    <label>
+      <span>Current Company</span>
+      <input pInputText [(ngModel)]="candidateForm.currentCompany" />
+    </label>
+    <label>
+      <span>Experience (Years)</span>
+      <p-inputNumber [(ngModel)]="candidateForm.totalExperienceYears" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Expected Salary</span>
+      <p-inputNumber [(ngModel)]="candidateForm.expectedSalary" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Source (e.g. Referral, LinkedIn)</span>
+      <input pInputText [(ngModel)]="candidateForm.source" />
+    </label>
+    <label>
+      <span>Resume URL</span>
+      <input pInputText [(ngModel)]="candidateForm.resumeUrl" />
+    </label>
+    <label class="col-span-2">
+      <span>Rating</span>
+      <p-rating [(ngModel)]="candidateForm.rating" [stars]="5" styleClass="mt-1"></p-rating>
+    </label>
+    <label class="col-span-2">
+      <span>Notes</span>
+      <textarea pInputTextarea [(ngModel)]="candidateForm.notes" rows="3"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showCandidateDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="savingCandidate" (click)="saveCandidate()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Stage Change (Offered Details) Dialog ===================== -->
+<p-dialog header="Submit Job Offer Details" [(visible)]="showStageDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Offered Salary</span>
+      <p-inputNumber [(ngModel)]="stageForm.offeredSalary" [min]="0" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Offer Date</span>
+      <p-calendar [(ngModel)]="stageForm.offerDate" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Expected Joining Date</span>
+      <p-calendar [(ngModel)]="stageForm.expectedJoiningDate" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Notes</span>
+      <textarea pInputTextarea [(ngModel)]="stageForm.notes" rows="3"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showStageDialog = false"></button>
+    <button pButton type="button" label="Submit Offer" [loading]="savingStage" (click)="submitStageChange()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Candidate Detail / Profile Dialog ===================== -->
+<p-dialog header="Candidate Details" [(visible)]="showCandidateDetailDialog" [modal]="true" [style]="{ width: '46rem' }">
+  @if (candidateDetailLoading) {
+    <div class="empty-cell">Loading details...</div>
+  } @else if (candidateDetail) {
+    <p-tabView>
+      <p-tabPanel header="Profile Details">
+        <div class="profile-info-grid">
+          <div><span class="label">Name:</span> <span class="value font-semibold">{{ candidateDetail.name }}</span></div>
+          <div><span class="label">Email:</span> <span class="value">{{ candidateDetail.email }}</span></div>
+          <div><span class="label">Phone:</span> <span class="value">{{ candidateDetail.phone || '-' }}</span></div>
+          <div><span class="label">Stage:</span> <span class="value"><p-tag [value]="candidateDetail.stage" [severity]="stageSeverity(candidateDetail.stage)"></p-tag></span></div>
+          <div><span class="label">Experience:</span> <span class="value">{{ candidateDetail.totalExperienceYears != null ? candidateDetail.totalExperienceYears + ' yrs' : '-' }}</span></div>
+          <div><span class="label">Expected Salary:</span> <span class="value">{{ candidateDetail.expectedSalary != null ? (candidateDetail.expectedSalary | number) : '-' }}</span></div>
+          <div><span class="label">Company:</span> <span class="value">{{ candidateDetail.currentCompany || '-' }}</span></div>
+          <div><span class="label">Source:</span> <span class="value">{{ candidateDetail.source || '-' }}</span></div>
+          <div><span class="label">Source:</span> <span class="value">{{ candidateDetail.source || '—' }}</span></div>
+          <div>
+            <span class="label">Resume:</span> 
+            <span class="value">
+              @if (candidateDetail.resumeUrl) {
+                <a [href]="candidateDetail.resumeUrl" target="_blank" class="text-blue-600 underline"><i class="pi pi-file-pdf"></i> View Resume</a>
+              } @else {
+                None
+              }
+            </span>
+          </div>
+          <div class="col-span-2">
+            <span class="label">Rating:</span> 
+            <p-rating [ngModel]="candidateDetail.rating" [readonly]="true" [stars]="5" styleClass="inline-block align-middle ml-1"></p-rating>
+          </div>
+          <div class="col-span-2">
+            <span class="label">Notes:</span>
+            <p class="notes-text">{{ candidateDetail.notes || 'No notes.' }}</p>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Progress">
+        <div class="stepper" [class.rejected]="candidateDetail.stage === 'Rejected'">
+          <div class="stepper-track">
+            <div class="stepper-fill" [style.width.%]="candidateDetail.progressPercent"></div>
+          </div>
+          <div class="stepper-points">
+            @for (s of candidateStagePoints; track s.stage) {
+              <div class="stepper-point" [class.done]="s.isDone" [class.current]="s.isCurrent && candidateDetail.stage !== 'Rejected'">
+                <div class="dot">
+                  @if (s.isDone && !(s.isCurrent && candidateDetail.stage === 'Rejected')) { <span>✓</span> }
+                </div>
+                <span class="point-label">{{ stageLabel(s.stage) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="progress-percent-label">{{ candidateDetail.progressPercent }}% through the pipeline</div>
+
+        <div class="timeline">
+          @for (h of candidateDetail.stageHistory; track h.changedAt) {
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-top">
+                  <strong>{{ stageLabel(h.stage) }}</strong>
+                  <span class="timeline-date">{{ h.changedAt | date: 'MMM d, y, h:mm a' }}</span>
+                </div>
+                @if (h.notes) { <p class="timeline-notes">{{ h.notes }}</p> }
+                <span class="timeline-by">By {{ h.changedByName }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Interviews History">
+        <div class="tab-toolbar">
+          <span></span>
+          <button pButton type="button" icon="pi pi-calendar-plus" label="Schedule Interview"
+                  (click)="openAddInterview()"></button>
+        </div>
+
+        <p-table [value]="candidateDetail.interviews" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Round</th>
+              <th>Title</th>
+              <th>Scheduled</th>
+              <th>Mode</th>
+              <th>Interviewer</th>
+              <th>Score</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-int>
+            <tr>
+              <td>Round {{ int.round }}</td>
+              <td>{{ int.title }}</td>
+              <td>{{ int.scheduledAt | date: 'dd MMM, HH:mm' }}</td>
+              <td>{{ int.mode }}</td>
+              <td>{{ int.interviewerName || '-' }}</td>
+              <td>
+                @if (int.score != null) {
+                  <p-rating [ngModel]="int.score" [readonly]="true" [stars]="5"></p-rating>
+                } @else {
+                  -
+                }
+              </td>
+              <td>
+                <p-tag [value]="int.status" [severity]="interviewStatusSeverity(int.status)"></p-tag>
+              </td>
+              <td>
+                <button pButton type="button" label="Evaluate" icon="pi pi-comment"
+                        class="p-button-text p-button-sm" (click)="openFeedback(int)"
+                        [disabled]="int.status !== 'Scheduled'"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="8" class="empty-cell">No interviews scheduled yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  }
+</p-dialog>
+
+<!-- ===================== Schedule Interview Dialog ===================== -->
+<p-dialog header="Schedule Interview" [(visible)]="showInterviewDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Round</span>
+      <p-inputNumber [(ngModel)]="interviewForm.round" [min]="1" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Title (e.g. Technical Round 1)</span>
+      <input pInputText [(ngModel)]="interviewForm.title" />
+    </label>
+    <label>
+      <span>Scheduled Time</span>
+      <p-calendar [(ngModel)]="interviewForm.scheduledAt" [showTime]="true" hourFormat="24" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Mode</span>
+      <p-dropdown [options]="interviewModeOptions" [(ngModel)]="interviewForm.mode" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Interviewer Name</span>
+      <input pInputText [(ngModel)]="interviewForm.interviewerName" />
+    </label>
+    <label>
+      <span>Interviewer User ID (optional)</span>
+      <p-inputNumber [(ngModel)]="interviewForm.interviewerUserId" [useGrouping]="false" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showInterviewDialog = false"></button>
+    <button pButton type="button" label="Schedule" [loading]="savingInterview" (click)="saveInterview()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Interview Feedback / Evaluation Dialog ===================== -->
+<p-dialog header="Interview Evaluation & Feedback" [(visible)]="showFeedbackDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Outcome Status</span>
+      <p-dropdown [options]="interviewOutcomeOptions" [(ngModel)]="feedbackForm.status" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Score (1-5)</span>
+      <p-rating [(ngModel)]="feedbackForm.score" [stars]="5" styleClass="mt-1"></p-rating>
+    </label>
+    <label class="col-span-2">
+      <span>Detailed Feedback / Remarks</span>
+      <textarea pInputTextarea [(ngModel)]="feedbackForm.feedback" rows="4"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showFeedbackDialog = false"></button>
+    <button pButton type="button" label="Submit" [loading]="savingFeedback" (click)="submitFeedback()"></button>
+  </ng-template>
+</p-dialog>

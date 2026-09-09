@@ -1,0 +1,357 @@
+<div class="waiter-page">
+
+<!-- Kitchen Ready Banner -->
+@if (notification()) {
+  <div class="kitchen-banner">
+    <div class="kb-left">
+      <div class="kb-pulse"></div>
+      <mat-icon class="kb-icon">dining</mat-icon>
+      <span class="kb-msg">{{ notification() }}</span>
+    </div>
+    <div class="kb-actions">
+      <button mat-flat-button color="primary" class="kb-pickup-btn"
+              [disabled]="notifPickingUp()" (click)="markPickedUp()">
+        <mat-icon>check_circle</mat-icon>
+        {{ notifPickingUp() ? 'Updating…' : 'Picked Up' }}
+      </button>
+      <button mat-icon-button class="kb-close" (click)="dismissNotification()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+}
+
+@if (loading()) {
+  <app-loading-spinner message="Loading menu..." />
+} @else {
+
+  <!-- Header -->
+  <div class="waiter-header">
+    <div class="header-brand">
+      <div class="brand-icon"><mat-icon>room_service</mat-icon></div>
+      <div>
+        <h1>Waiter Panel</h1>
+        <p>{{ selectedTable() ? 'Table ' + selectedTable()!.tableNumber + ' — taking order' : 'Select a table to begin' }}</p>
+      </div>
+    </div>
+
+    @if (selectedTable()) {
+      <div class="header-table-pill" [class.has-order]="activeTableOrder() !== null">
+        <mat-icon>table_restaurant</mat-icon>
+        <span class="htp-num">Table {{ selectedTable()!.tableNumber }}</span>
+        @if (activeTableOrder()) {
+          <span class="open-tag">Open Order</span>
+        }
+        <button mat-stroked-button class="change-table-btn" (click)="selectedTableId.set(null); cart.set([])">
+          <mat-icon>swap_horiz</mat-icon>
+          Change
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ══ Floor plan ══ -->
+  @if (!selectedTableId()) {
+    <div class="floor-plan">
+      <div class="fp-title-row">
+        <div class="fp-title">
+          <mat-icon>meeting_room</mat-icon>
+          <span>Restaurant Floor Plan</span>
+        </div>
+        <div class="fp-legend">
+          <span class="leg-dot dot-free"></span>Available
+          <span class="leg-dot dot-order"></span>Open Order
+          <span class="leg-dot dot-busy"></span>Occupied
+        </div>
+      </div>
+
+      @if (tables().length === 0) {
+        <div class="no-tables-msg">
+          <mat-icon>table_restaurant</mat-icon>
+          <p>No active tables configured.</p>
+        </div>
+      } @else {
+        @for (group of hallGroups(); track group.hall) {
+          <div class="floor-hall-section">
+            <div class="hall-label" [class.hall-ac]="group.hall === 'AC'" [class.hall-nonac]="group.hall !== 'AC'">
+              <mat-icon>{{ group.hall === 'AC' ? 'ac_unit' : 'wb_sunny' }}</mat-icon>
+              <span>{{ group.hall }} Hall</span>
+              <span class="hall-count">{{ group.tables.length }}</span>
+            </div>
+
+            <div class="table-grid">
+              @for (t of group.tables; track t.id) {
+                <button class="table-card"
+                  [class.state-order]="tableHasPendingOrder(t.id)"
+                  [class.state-busy]="t.isOccupied && !tableHasPendingOrder(t.id)"
+                  (click)="selectTable(t.id)">
+
+                  <div class="tc-status-ring">
+                    <div class="tc-surface">
+                      <span class="tc-number">T{{ t.tableNumber }}</span>
+                      <span class="tc-seats">{{ t.capacity }} seats</span>
+                    </div>
+                  </div>
+
+                  <div class="tc-badge">
+                    @if (tableHasPendingOrder(t.id)) {
+                      <mat-icon class="badge-icon order-badge">receipt_long</mat-icon>
+                    } @else if (t.isOccupied) {
+                      <mat-icon class="badge-icon busy-badge">person</mat-icon>
+                    } @else {
+                      <mat-icon class="badge-icon free-badge">check_circle</mat-icon>
+                    }
+                  </div>
+
+                  <div class="chairs-row">
+                    @for (s of getChairSlots(t.capacity, 'top'); track s) {
+                      <span class="chair"></span>
+                    }
+                  </div>
+
+                  <span class="tc-status-label"
+                    [class.lbl-free]="!tableHasPendingOrder(t.id) && !t.isOccupied"
+                    [class.lbl-order]="tableHasPendingOrder(t.id)"
+                    [class.lbl-busy]="t.isOccupied && !tableHasPendingOrder(t.id)">
+                    {{ tableHasPendingOrder(t.id) ? 'Open Order' : t.isOccupied ? 'Occupied' : 'Available' }}
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+  } @else {
+
+    <!-- ══ 3-column ordering grid ══ -->
+    <div class="main-grid">
+
+      <!-- Col 1: Categories -->
+      <div class="cat-col">
+        <p class="col-label">Menu</p>
+        <button class="cat-pill" [class.active]="selectedCategory() === 'All'"
+                (click)="selectedCategory.set('All')">
+          <span class="cat-dot dot-all"></span>
+          <mat-icon>apps</mat-icon>
+          <span>All Items</span>
+        </button>
+        @for (cat of categories(); track cat.id) {
+          <button class="cat-pill"
+                  [class.active]="selectedCategory() === cat.categoryName"
+                  (click)="selectedCategory.set(cat.categoryName)">
+            <span class="cat-dot"></span>
+            <mat-icon>restaurant_menu</mat-icon>
+            <span>{{ cat.categoryName }}</span>
+          </button>
+        }
+      </div>
+
+      <!-- Col 2: Items grid -->
+      <div class="items-col">
+        <div class="search-bar">
+          <mat-icon class="si-icon">search</mat-icon>
+          <input type="text" class="si-input"
+                 [value]="searchTerm()"
+                 (input)="onSearch($event)"
+                 placeholder="Search menu items…" />
+          @if (searchTerm()) {
+            <button mat-icon-button class="si-clear" (click)="searchTerm.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+
+        <div class="items-grid">
+          @for (item of filteredItems(); track item.id) {
+            <button class="item-tile"
+                    [class.unavailable]="isUnavailable(item)"
+                    [disabled]="isUnavailable(item)"
+                    (click)="addToCart(item)" matRipple>
+
+              @if (getCartQty(item.id) > 0 && !isUnavailable(item)) {
+                <span class="item-qty-badge">{{ getCartQty(item.id) }}</span>
+              }
+
+              <div class="item-top" [class.icon-unavail]="isUnavailable(item)">
+                <mat-icon class="item-icon">{{ isUnavailable(item) ? 'block' : 'fastfood' }}</mat-icon>
+              </div>
+              <span class="item-name">{{ item.itemName }}</span>
+
+              @if (isUnavailable(item)) {
+                <span class="item-unavail-tag">Unavailable</span>
+              } @else {
+                <span class="item-price">₹{{ item.price }}</span>
+              }
+            </button>
+          }
+          @empty {
+            <div class="items-empty">
+              <mat-icon>search_off</mat-icon>
+              <span>No items found</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Col 3: Order panel -->
+      <div class="order-col">
+
+        @if (activeTableOrder(); as order) {
+          <div class="order-card existing-card">
+            <div class="oc-header green-hdr">
+              <mat-icon>receipt_long</mat-icon>
+              <span>Open Order #{{ order.orderNumber }}</span>
+            </div>
+            <div class="oc-list">
+              @for (oi of order.items; track oi.foodItemId) {
+                <div class="oi-row">
+                  <span class="oi-name">{{ oi.itemName }}</span>
+                  @if (oi.addOnNotes) {
+                    <span class="oi-addon">{{ oi.addOnNotes }}</span>
+                  }
+                  <span class="oi-qty">×{{ oi.quantity }}</span>
+                  <span class="oi-price">₹{{ oi.lineTotal | number:'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+            <div class="oc-total">
+              <span>Order Total</span>
+              <span class="oc-total-val">₹{{ order.grandTotal | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        }
+
+        @if (cart().length > 0) {
+          <div class="order-card cart-card">
+            <div class="oc-header amber-hdr">
+              <mat-icon>add_shopping_cart</mat-icon>
+              <span>New Items</span>
+              <span class="oc-count-pill">{{ cart().length }}</span>
+            </div>
+            @for (ci of cart(); track ci.foodItemId) {
+              <div class="ci-row">
+                <div class="ci-info">
+                  <span class="ci-name">{{ ci.itemName }}</span>
+                  @if (ci.addOnNames) {
+                    <span class="ci-addon">+ {{ ci.addOnNames }}</span>
+                  }
+                </div>
+                <div class="qty-ctrl">
+                  <button class="qty-btn minus" (click)="updateQty(ci.foodItemId, -1)">−</button>
+                  <span class="qty-val">{{ ci.quantity }}</span>
+                  <button class="qty-btn plus" (click)="updateQty(ci.foodItemId, 1)">+</button>
+                </div>
+                <span class="ci-price">₹{{ (ci.price + ci.addOnTotal) * ci.quantity | number:'1.0-0' }}</span>
+              </div>
+            }
+            <div class="oc-total amber-total">
+              <span>New Items Total</span>
+              <span class="oc-total-val">₹{{ cartTotal() | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        } @else if (!activeTableOrder()) {
+          <div class="order-empty">
+            <div class="oe-icon-wrap"><mat-icon>add_shopping_cart</mat-icon></div>
+            <p>Tap items from the menu<br>to add them here</p>
+          </div>
+        }
+
+        <!-- Action buttons -->
+        <div class="order-actions">
+          <button mat-flat-button color="primary" class="action-btn send-btn"
+                  [disabled]="cart().length === 0 || sending()"
+                  (click)="sendToKitchen()">
+            @if (sending()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Sending…</span>
+            } @else {
+              <ng-container>
+                <mat-icon>kitchen</mat-icon>
+                <span>Send to Kitchen</span>
+              </ng-container>
+            }
+          </button>
+
+          @if (activeTableOrder()) {
+            <button mat-flat-button class="action-btn bill-btn"
+                    [disabled]="generatingBill() || cart().length > 0"
+                    (click)="generateBill()">
+              @if (generatingBill()) {
+                <mat-spinner diameter="18"></mat-spinner>
+                <span>Generating…</span>
+              } @else {
+                <ng-container>
+                  <mat-icon>receipt</mat-icon>
+                  <span>Print Bill</span>
+                </ng-container>
+              }
+            </button>
+
+            <button mat-stroked-button color="primary" class="action-btn split-btn"
+                    [disabled]="!activeTableOrder()" (click)="openSplitModal()">
+              <mat-icon>call_split</mat-icon>
+              Split Bill
+            </button>
+
+            @if (cart().length > 0) {
+              <div class="hint-bar">
+                <mat-icon>info</mat-icon>
+                Send all items to kitchen before printing the bill
+              </div>
+            }
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+}
+
+</div>
+
+<!-- Split Bill Modal -->
+@if (showSplitModal()) {
+  <div class="split-overlay" (click)="closeSplitModal()">
+    <div class="split-modal" (click)="$event.stopPropagation()">
+      <div class="split-header">
+        <div class="split-header-icon"><mat-icon>call_split</mat-icon></div>
+        <div>
+          <h2>Split Bill</h2>
+          <p>Divide the total among guests</p>
+        </div>
+        <button mat-icon-button (click)="closeSplitModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="split-body">
+        <div class="split-total-card">
+          <span class="stc-label">Total Bill</span>
+          <span class="stc-amount">₹{{ splitPendingOrder()?.grandTotal | number:'1.0-0' }}</span>
+        </div>
+        <div class="split-control">
+          <span class="sc-label">Split among</span>
+          <div class="sc-counter">
+            <button mat-icon-button (click)="splitCount.set(splitCount() > 1 ? splitCount() - 1 : 1)">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <span class="sc-num">{{ splitCount() }}</span>
+            <button mat-icon-button (click)="splitCount.set(splitCount() + 1)">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+          <span class="sc-label">people</span>
+        </div>
+        <div class="split-per-card">
+          <span>Each person pays</span>
+          <span class="spc-amount">₹{{ splitAmount() | number:'1.0-0' }}</span>
+        </div>
+        @if ((splitPendingOrder()?.grandTotal ?? 0) % splitCount() !== 0) {
+          <p class="split-note">* Rounded up to nearest rupee</p>
+        }
+      </div>
+      <div class="split-footer">
+        <button mat-flat-button color="primary" (click)="closeSplitModal()">Done</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,159 @@
+<div class="reports-page">
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>bar_chart</mat-icon>
+      <div>
+        <h1>Reports & Analytics</h1>
+        <p>Sales data and performance insights</p>
+      </div>
+    </div>
+
+    <div class="date-picker-wrap">
+      <label>Date</label>
+      <input type="date" class="date-input"
+        [value]="selectedDate()"
+        (change)="selectedDate.set($any($event.target).value); onDateChange()" />
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="report-tabs">
+    <button class="tab" [class.active]="activeTab()==='overview'" (click)="activeTab.set('overview')">
+      <mat-icon>dashboard</mat-icon> Overview
+    </button>
+    <button class="tab" [class.active]="activeTab()==='daily'" (click)="activeTab.set('daily')">
+      <mat-icon>today</mat-icon> Daily Sales
+    </button>
+    <button class="tab" [class.active]="activeTab()==='items'" (click)="activeTab.set('items')">
+      <mat-icon>fastfood</mat-icon> Top Items
+    </button>
+    <button class="tab" [class.active]="activeTab()==='peak'" (click)="activeTab.set('peak')">
+      <mat-icon>schedule</mat-icon> Peak Hours
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading reports…</p>
+    </div>
+  } @else {
+
+    <!-- OVERVIEW TAB -->
+    @if (activeTab() === 'overview' && summary()) {
+      <div class="tab-content">
+        <div class="stat-cards">
+          <div class="stat-card today">
+            <mat-icon>today</mat-icon>
+            <div class="stat-body">
+              <span class="stat-label">Today's Revenue</span>
+              <span class="stat-value">₹{{ summary()!.todayRevenue | number:'1.0-0' }}</span>
+              <span class="stat-sub">{{ summary()!.todayOrders }} orders</span>
+            </div>
+          </div>
+          <div class="stat-card week">
+            <mat-icon>date_range</mat-icon>
+            <div class="stat-body">
+              <span class="stat-label">This Week</span>
+              <span class="stat-value">₹{{ summary()!.weekRevenue | number:'1.0-0' }}</span>
+              <span class="stat-sub">{{ summary()!.weekOrders }} orders</span>
+            </div>
+          </div>
+          <div class="stat-card month">
+            <mat-icon>calendar_month</mat-icon>
+            <div class="stat-body">
+              <span class="stat-label">This Month</span>
+              <span class="stat-value">₹{{ summary()!.monthRevenue | number:'1.0-0' }}</span>
+              <span class="stat-sub">{{ summary()!.monthOrders }} orders</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- DAILY SALES TAB -->
+    @if (activeTab() === 'daily') {
+      <div class="tab-content">
+        @if (daily()) {
+          <div class="daily-summary-cards">
+            <div class="mini-card"><span class="mc-val">₹{{ daily()!.totalRevenue | number:'1.0-0' }}</span><span class="mc-label">Revenue</span></div>
+            <div class="mini-card"><span class="mc-val">{{ daily()!.completedOrders }}</span><span class="mc-label">Orders</span></div>
+            <div class="mini-card"><span class="mc-val">₹{{ daily()!.avgOrderValue | number:'1.0-0' }}</span><span class="mc-label">Avg Order</span></div>
+            <div class="mini-card cancelled"><span class="mc-val">{{ daily()!.cancelledOrders }}</span><span class="mc-label">Cancelled</span></div>
+          </div>
+
+          <div class="chart-section">
+            <h3 class="chart-title">Hourly Revenue</h3>
+            <div class="bar-chart">
+              @for (h of allHours(); track h.hour) {
+                @if (h.hour >= 7 && h.hour <= 23) {
+                  <div class="bar-col">
+                    <span class="bar-val">{{ h.revenue > 0 ? ('₹' + (h.revenue | number:'1.0-0')) : '' }}</span>
+                    <div class="bar-fill" [style.height.%]="barWidth(h.revenue, maxHourlyRevenue())"
+                         [class.has-orders]="h.orderCount > 0"></div>
+                    <span class="bar-label">{{ h.label }}</span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="no-data">No sales data for this date.</div>
+        }
+      </div>
+    }
+
+    <!-- TOP ITEMS TAB -->
+    @if (activeTab() === 'items') {
+      <div class="tab-content">
+        @if (topItems().length > 0) {
+          <div class="top-items-list">
+            @for (item of topItems(); track item.rank) {
+              <div class="top-item-row">
+                <span class="rank" [class.gold]="item.rank===1" [class.silver]="item.rank===2" [class.bronze]="item.rank===3">
+                  #{{ item.rank }}
+                </span>
+                <div class="item-info">
+                  <span class="item-name">{{ item.itemName }}</span>
+                  <span class="item-cat">{{ item.categoryName }}</span>
+                </div>
+                <div class="item-bar-wrap">
+                  <div class="item-bar" [style.width.%]="barWidth(item.quantitySold, maxTopQty())"></div>
+                </div>
+                <div class="item-stats">
+                  <span class="qty-sold">{{ item.quantitySold }} sold</span>
+                  <span class="item-revenue">₹{{ item.revenue | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-data">No sales data for the selected period.</div>
+        }
+      </div>
+    }
+
+    <!-- PEAK HOURS TAB -->
+    @if (activeTab() === 'peak') {
+      <div class="tab-content">
+        @if (peakHours().length > 0) {
+          <div class="chart-section">
+            <h3 class="chart-title">Orders by Hour</h3>
+            <div class="bar-chart">
+              @for (h of peakHours(); track h.hour) {
+                <div class="bar-col">
+                  <span class="bar-val">{{ h.orderCount }}</span>
+                  <div class="bar-fill peak" [style.height.%]="barWidth(h.orderCount, maxOrderCount())"></div>
+                  <span class="bar-label">{{ h.label }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="no-data">No data for this date.</div>
+        }
+      </div>
+    }
+
+  }
+</div>

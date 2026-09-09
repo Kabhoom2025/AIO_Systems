@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-topbar {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: #111827;
+  color: #fff;
+
+  .brand {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .user-name {
+      font-size: 0.85rem;
+      color: #d1d5db;
+    }
+
+    button {
+      color: #fff;
+    }
+  }
+}
+
+.shell-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1.25rem;
+}

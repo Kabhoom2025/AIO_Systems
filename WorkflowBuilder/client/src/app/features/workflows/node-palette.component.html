@@ -1,0 +1,31 @@
+<div class="palette-root">
+  <div class="palette-header">
+    <span>Nodes Library</span>
+  </div>
+  <div class="palette-hint">Drag a node onto the canvas, then draw a connection from its port.</div>
+
+  <div class="palette-card disabled">
+    <i class="pi {{ triggerCard.icon }} card-icon"></i>
+    <div class="card-text">
+      <div class="card-title">{{ triggerCard.title }}</div>
+      <div class="card-subtitle">{{ triggerCard.subtitle }}</div>
+    </div>
+  </div>
+
+  <div
+    class="palette-card"
+    *ngFor="let card of cards"
+    draggable="true"
+    (dragstart)="onDragStart($event, card.kind)"
+  >
+    <i class="pi {{ card.icon }} card-icon"></i>
+    <div class="card-text">
+      <div class="card-title">{{ card.title }}</div>
+      <div class="card-subtitle">{{ card.subtitle }}</div>
+    </div>
+  </div>
+
+  <div class="palette-footer">
+    <button pButton type="button" label="Templates" class="p-button-outlined p-button-sm templates-btn" disabled></button>
+  </div>
+</div>

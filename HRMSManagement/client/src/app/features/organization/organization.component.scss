@@ -1,0 +1,98 @@
+.organization-card { margin-top: 1rem; }
+
+.tab-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  min-height: 2.5rem;
+  .filter-group { display: flex; align-items: center; .label { color: #64748b; } }
+}
+
+.actions-cell { display: flex; gap: 0.25rem; }
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 0.5rem;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    span { color: #475569; }
+    input, textarea { width: 100%; }
+  }
+  .col-span-2 { grid-column: span 2; }
+}
+
+.form-actions { display: flex; justify-content: flex-end; }
+
+.profile-container {
+  max-width: 800px;
+  .profile-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, #f0f4ff, #f8fafc);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    h2 { margin: 0 0 0.25rem; font-size: 1.5rem; color: #0f172a; }
+    .text-muted { margin: 0; color: #64748b; }
+  }
+  .logo-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    .company-icon { font-size: 2rem; color: #94a3b8; }
+    .logo-image { width: 100%; height: 100%; object-fit: cover; }
+  }
+}
+
+.code-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+.checkbox-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+  input[type="checkbox"] { width: auto !important; }
+}
+
+.time-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #111827;
+  outline: none;
+  &:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+}
+
+.comma-span { font-size: 0.8rem; color: #64748b; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mr-2 { margin-right: 0.5rem; }

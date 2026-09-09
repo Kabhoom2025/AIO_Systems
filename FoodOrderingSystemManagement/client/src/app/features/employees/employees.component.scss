@@ -1,0 +1,281 @@
+.emp-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  .page-title {
+    display: flex; align-items: center; gap: 12px;
+    mat-icon { font-size: 32px; width: 32px; height: 32px; color: #1976d2; }
+    h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    p  { margin: 0; font-size: 13px; color: #888; }
+  }
+}
+
+.loading-center { display: flex; justify-content: center; padding: 60px; }
+
+.tab-content { padding: 20px 0; }
+.tab-loading, .tab-empty {
+  display: flex; flex-direction: column; align-items: center; padding: 48px; gap: 12px; color: #aaa;
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+  p { margin: 0; font-size: 14px; }
+}
+
+// ── Section header ──────────────────────────────────────────────────────────
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 16px 0 12px;
+  h3 {
+    margin: 0; font-size: 15px; font-weight: 600; color: #444;
+    display: flex; align-items: center; gap: 8px;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: #1976d2; }
+  }
+}
+
+// ── Employees tab ───────────────────────────────────────────────────────────
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+}
+
+.emp-card {
+  background: #fff; border-radius: 12px; border: 1px solid #e8eaf0;
+  padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06); transition: box-shadow .2s;
+  &:hover { box-shadow: 0 3px 10px rgba(0,0,0,.1); }
+  &.inactive { opacity: .6; }
+}
+
+.emp-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: white; flex-shrink: 0;
+  overflow: hidden;
+  &.avatar-admin            { background: #7b1fa2; }
+  &.avatar-cashier          { background: #1976d2; }
+  &.avatar-waiter           { background: #388e3c; }
+  &.avatar-inventorymanager { background: #f57c00; }
+  &:not([class*='avatar-']) { background: #546e7a; }
+}
+
+.emp-avatar-img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+}
+
+.emp-info { flex: 1; min-width: 0;
+  .emp-name  { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .emp-email { font-size: 12px; color: #888; }
+}
+
+.role-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px;
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  &.role-admin            { background: #f3e5f5; color: #7b1fa2; }
+  &.role-cashier          { background: #e3f2fd; color: #1565c0; }
+  &.role-waiter           { background: #e8f5e9; color: #1b5e20; }
+  &.role-inventorymanager { background: #fff3e0; color: #e65100; }
+}
+
+.status-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: #ccc;
+  &.active { background: #4caf50; }
+}
+
+.emp-actions { display: flex; gap: 4px; }
+
+// Inline edit form
+.edit-inline {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%; flex-wrap: wrap;
+}
+.edit-avatar { @extend .emp-avatar; margin-top: 12px; }
+.edit-fields { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.ef { flex: 1; min-width: 130px; }
+.edit-actions { display: flex; gap: 8px; align-self: center; margin-top: 4px; }
+
+// ── Attendance tab ──────────────────────────────────────────────────────────
+.attendance-toolbar {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+  .date-field { max-width: 180px; }
+}
+
+.attendance-table {
+  border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;
+}
+.att-header {
+  display: grid; grid-template-columns: 220px 1fr 100px 100px 1fr;
+  background: #f5f5f5; padding: 10px 16px; font-size: 12px; font-weight: 600;
+  color: #666; text-transform: uppercase; letter-spacing: .5px;
+}
+.att-row {
+  display: grid; grid-template-columns: 220px 1fr 100px 100px 1fr;
+  align-items: center; padding: 10px 16px; border-top: 1px solid #f0f0f0;
+  transition: background .15s;
+  &.att-absent  { background: #fff8f8; }
+  &.att-late    { background: #fffdf8; }
+  &.att-leave   { background: #f8f0ff; }
+  &:hover { background: #fafafa; }
+}
+.att-emp { display: flex; align-items: center; gap: 10px; }
+.att-avatar { @extend .emp-avatar; width: 32px; height: 32px; font-size: 13px; }
+.att-name { font-size: 14px; font-weight: 500; }
+.att-role { font-size: 11px; color: #999; }
+
+.att-status-sel { display: flex; flex-wrap: wrap; gap: 4px; }
+.status-pill {
+  padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;
+  border: 1.5px solid var(--s-color, #ccc); color: var(--s-color, #888);
+  cursor: pointer; background: transparent; transition: all .15s;
+  &.selected { background: var(--s-color); color: white; }
+}
+
+.time-input {
+  width: 88px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 13px; outline: none;
+  &:focus { border-color: #1976d2; }
+}
+.notes-input {
+  width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 13px; outline: none;
+  &:focus { border-color: #1976d2; }
+}
+
+// ── Salary tab ──────────────────────────────────────────────────────────────
+.salary-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 24px;
+}
+.salary-card {
+  background: #fff; border: 1px solid #e8eaf0; border-radius: 10px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  &.editing { border-color: #1976d2; }
+  .sc-name { font-size: 15px; font-weight: 600; }
+}
+.sc-values { display: flex; gap: 12px; }
+.sc-val, .sc-gross {
+  display: flex; flex-direction: column;
+  font-size: 16px; font-weight: 700; color: #333;
+  small { font-size: 10px; font-weight: 400; color: #888; text-transform: uppercase; margin-top: 1px; }
+}
+.sc-gross { color: #1976d2; }
+.sc-form { display: flex; flex-wrap: wrap; gap: 8px; }
+.sc-field { flex: 1; min-width: 120px; }
+.sc-actions { display: flex; gap: 8px; width: 100%; }
+
+.payment-form {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; background: #f9f9f9;
+  border-radius: 10px; margin-bottom: 16px;
+  mat-form-field { flex: 1; min-width: 140px; }
+  .full { flex: 100%; }
+}
+
+.payments-table {
+  border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;
+}
+.pt-header {
+  display: grid; grid-template-columns: 160px 100px 90px 100px 100px 80px 100px;
+  background: #f5f5f5; padding: 10px 16px; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase;
+}
+.pt-row {
+  display: grid; grid-template-columns: 160px 100px 90px 100px 100px 80px 100px;
+  align-items: center; padding: 10px 16px; border-top: 1px solid #f0f0f0; font-size: 13px;
+}
+.pt-net { font-weight: 700; color: #1976d2; }
+.pt-empty { display: flex; align-items: center; gap: 10px; padding: 24px 16px; color: #aaa; }
+.pay-status { font-size: 11px; font-weight: 600; color: #e65100;
+  &.paid { color: #2e7d32; } }
+.mark-paid-btn { font-size: 11px; height: 28px; }
+.paid-date { font-size: 11px; color: #888; }
+
+// ── Shifts tab ──────────────────────────────────────────────────────────────
+.shift-def-form {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; background: #f9f9f9;
+  border-radius: 10px; margin-bottom: 12px;
+  mat-form-field { flex: 1; min-width: 130px; }
+}
+.shift-defs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.shift-chip {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border-radius: 20px; border: 1.5px solid; font-size: 13px;
+  .sc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .sc-name { font-weight: 600; }
+  .sc-time { color: #666; font-size: 12px; }
+}
+.no-shifts { color: #aaa; font-size: 13px; padding: 8px 0; }
+
+.week-nav { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+
+.assign-row {
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  .assign-field { flex: 1; min-width: 160px; }
+}
+
+.week-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;
+}
+.day-col { display: flex; flex-direction: column; min-height: 120px; }
+.day-header {
+  background: #f5f5f5; padding: 8px; text-align: center; border-bottom: 1px solid #eee;
+  .day-name { display: block; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; }
+  .day-date { display: block; font-size: 18px; font-weight: 700; color: #333; }
+}
+.day-assignments { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.assignment-chip {
+  padding: 5px 7px; border-radius: 6px; border: 1.5px solid;
+  font-size: 11px; position: relative;
+  .ac-name  { display: block; font-weight: 600; }
+  .ac-shift { display: block; color: #555; }
+  .ac-time  { display: block; color: #888; font-size: 10px; }
+  .ac-remove {
+    position: absolute; top: 1px; right: 1px; width: 16px; height: 16px;
+    cursor: pointer; opacity: 0; transition: opacity .15s;
+    background: none; border: none; padding: 0; color: #c62828;
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+  &:hover .ac-remove { opacity: 1; }
+}
+.no-assignment { color: #ccc; font-size: 12px; text-align: center; padding: 8px 0; }
+
+// ── Performance tab ─────────────────────────────────────────────────────────
+.perf-toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+  .filter-field { max-width: 220px; }
+}
+
+.review-form {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; background: #f9f9f9;
+  border-radius: 10px; margin-bottom: 16px;
+  mat-form-field { flex: 1; min-width: 160px; }
+  .full { flex: 100%; }
+  .rating-row { display: flex; align-items: center; gap: 6px; width: 100%;
+    label { font-size: 13px; color: #555; margin-right: 4px; }
+  }
+}
+
+.star-btn {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  mat-icon { font-size: 22px; color: #ccc; transition: color .15s;
+    &.filled { color: #f9a825; }
+  }
+  &:hover mat-icon { color: #f9a825; }
+}
+
+.reviews-list { display: flex; flex-direction: column; gap: 10px; }
+.review-card {
+  background: #fff; border: 1px solid #e8eaf0; border-radius: 10px; padding: 14px 16px;
+}
+.rc-top {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  .rc-employee { font-size: 15px; font-weight: 600; flex: 1; }
+  .rc-category { background: #e3f2fd; color: #1565c0; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px; }
+  .rc-date { font-size: 12px; color: #888; }
+  .rc-stars { display: flex; }
+}
+.star { font-size: 18px; width: 18px; height: 18px; color: #ccc;
+  &.filled { color: #f9a825; } }
+.rc-comments { margin: 8px 0 4px; font-size: 13px; color: #444; }
+.rc-reviewer { font-size: 11px; color: #999; }

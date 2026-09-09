@@ -1,0 +1,140 @@
+<div class="reports-page">
+  <div class="page-header">
+    <h2>Reports</h2>
+    <div class="date-range">
+      <label>From <input type="date" [(ngModel)]="from" /></label>
+      <label>To <input type="date" [(ngModel)]="to" /></label>
+      <button class="btn-primary" (click)="runReports()">Run</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'financial'" (click)="selectTab('financial')">Financial</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'operational'" (click)="selectTab('operational')">Sales &amp; Inventory</button>
+  </div>
+
+  @if (activeTab() === 'financial') {
+    @if (profitLoss(); as pl) {
+      <div class="report-card">
+        <h3>Profit &amp; Loss</h3>
+        <div class="stat-grid">
+          <div class="stat"><span>Revenue</span><b>₹{{ pl.revenue.toFixed(2) }}</b></div>
+          <div class="stat"><span>Cost of Goods Sold</span><b>₹{{ pl.costOfGoodsSold.toFixed(2) }}</b></div>
+          <div class="stat"><span>Gross Profit</span><b>₹{{ pl.grossProfit.toFixed(2) }}</b></div>
+          <div class="stat"><span>Expenses</span><b>₹{{ pl.expenses.toFixed(2) }}</b></div>
+          <div class="stat highlight" [class.negative]="pl.netProfit < 0">
+            <span>Net Profit</span><b>₹{{ pl.netProfit.toFixed(2) }}</b>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (gstReport(); as gst) {
+      <div class="report-card">
+        <h3>GST Summary</h3>
+        <div class="stat-grid">
+          <div class="stat"><span>Output Tax (on Sales)</span><b>₹{{ gst.outputTax.toFixed(2) }}</b></div>
+          <div class="stat"><span>Input Tax (on Purchases)</span><b>₹{{ gst.inputTax.toFixed(2) }}</b></div>
+          <div class="stat highlight"><span>Net GST Payable</span><b>₹{{ gst.netGstPayable.toFixed(2) }}</b></div>
+        </div>
+      </div>
+    }
+
+    <div class="report-card">
+      <h3>Cash Book</h3>
+      @if (loading()) {
+        <div class="loading">Loading...</div>
+      } @else {
+        <table class="cashbook-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead>
+          <tbody>
+            @for (entry of cashBook(); track $index) {
+              <tr>
+                <td>{{ entry.date | date:'mediumDate' }}</td>
+                <td>{{ entry.description }}</td>
+                <td><span class="type-badge" [class.out]="entry.type === 'Out'">{{ entry.type }}</span></td>
+                <td>₹{{ entry.amount.toFixed(2) }}</td>
+                <td>₹{{ entry.runningBalance.toFixed(2) }}</td>
+              </tr>
+            }
+            @empty {
+              <tr><td colspan="5" class="empty">No cash transactions in this range.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'operational') {
+    @if (operationalLoading()) {
+      <div class="loading">Loading...</div>
+    }
+
+    @if (salesSummary(); as ss) {
+      <div class="report-card">
+        <h3>Sales Summary</h3>
+        <div class="stat-grid">
+          <div class="stat"><span>Total Sales</span><b>₹{{ ss.totalSales.toFixed(2) }}</b></div>
+          <div class="stat"><span>Transactions</span><b>{{ ss.transactionCount }}</b></div>
+          <div class="stat"><span>Average Ticket</span><b>₹{{ ss.averageTicket.toFixed(2) }}</b></div>
+        </div>
+        <div class="chart-wrap">
+          <canvas #salesChartCanvas></canvas>
+        </div>
+        @if (ss.byPaymentMethod.length > 0) {
+          <table class="cashbook-table payment-table">
+            <thead><tr><th>Payment Method</th><th>Amount</th></tr></thead>
+            <tbody>
+              @for (pm of ss.byPaymentMethod; track pm.method) {
+                <tr><td>{{ pm.method }}</td><td>₹{{ pm.amount.toFixed(2) }}</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+
+    <div class="report-card">
+      <h3>Top-Selling Medicines</h3>
+      <table class="cashbook-table">
+        <thead><tr><th>#</th><th>Medicine</th><th>Qty Sold</th><th>Revenue</th></tr></thead>
+        <tbody>
+          @for (m of topMedicines(); track m.medicineId; let i = $index) {
+            <tr>
+              <td>{{ i + 1 }}</td>
+              <td>{{ m.medicineName }}</td>
+              <td>{{ m.quantitySold }}</td>
+              <td>₹{{ m.revenue.toFixed(2) }}</td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="4" class="empty">No sales in this range.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (inventoryValuation(); as inv) {
+      <div class="report-card">
+        <h3>Inventory Valuation</h3>
+        <table class="cashbook-table">
+          <thead><tr><th>Medicine</th><th>Stock</th><th>Unit Cost</th><th>Value</th></tr></thead>
+          <tbody>
+            @for (item of inv.items; track item.medicineId) {
+              <tr>
+                <td>{{ item.medicineName }}</td>
+                <td>{{ item.totalStock }}</td>
+                <td>₹{{ item.purchasePrice.toFixed(2) }}</td>
+                <td>₹{{ item.stockValue.toFixed(2) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="total-row"><td colspan="3">Grand Total</td><td>₹{{ inv.grandTotal.toFixed(2) }}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    }
+  }
+</div>

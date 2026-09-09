@@ -1,0 +1,319 @@
+<div class="page-header">
+  <h1>Payroll</h1>
+</div>
+
+<p-confirmDialog></p-confirmDialog>
+
+<div class="card payroll-card">
+  <p-tabView>
+
+    <!-- ===================== Salary Components ===================== -->
+    <p-tabPanel header="Salary Components">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-plus" label="Add Component"
+                (click)="openAddComponent()"></button>
+      </div>
+
+      <p-table [value]="components()" [loading]="loadingComponents()" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Calc Type</th>
+            <th>Default Value</th>
+            <th>Taxable</th>
+            <th>Statutory</th>
+            <th>Order</th>
+            <th>Active</th>
+            <th style="width: 9rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.code }}</td>
+            <td><p-tag [value]="c.type" [severity]="c.type === 'Earning' ? 'success' : 'danger'"></p-tag></td>
+            <td>{{ c.calcType }}</td>
+            <td>{{ c.defaultValue | number: '1.2-2' }}</td>
+            <td><i class="pi" [ngClass]="c.isTaxable ? 'pi-check text-success' : 'pi-times text-muted'"></i></td>
+            <td><i class="pi" [ngClass]="c.isStatutory ? 'pi-check text-success' : 'pi-times text-muted'"></i></td>
+            <td>{{ c.displayOrder }}</td>
+            <td><p-tag [value]="c.isActive ? 'Active' : 'Inactive'" [severity]="c.isActive ? 'success' : 'secondary'"></p-tag></td>
+            <td>
+              <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-pencil"
+                      class="p-button-text p-button-sm" (click)="openEditComponent(c)"></button>
+              <button *appHasPermission="'payroll.edit'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" (click)="deleteComponent(c)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="10" class="empty-cell">No salary components defined.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== Payroll Runs ===================== -->
+    <p-tabPanel header="Payroll Runs">
+      <div class="tab-toolbar">
+        <span></span>
+        <button *appHasPermission="'payroll.process'" pButton type="button" icon="pi pi-plus" label="New Run"
+                (click)="openNewRunDialog()"></button>
+      </div>
+
+      <p-table [value]="runs()" [loading]="loadingRuns()" dataKey="id" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Period</th>
+            <th>Status</th>
+            <th>Payslips</th>
+            <th>Gross</th>
+            <th>Deductions</th>
+            <th>Net</th>
+            <th>Processed By</th>
+            <th style="width: 22rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-run>
+          <tr>
+            <td>{{ monthName(run.month) }} {{ run.year }}</td>
+            <td><p-tag [value]="run.status" [severity]="runStatusSeverity(run.status)"></p-tag></td>
+            <td>{{ run.payslipCount }}</td>
+            <td>{{ run.totalGross | number: '1.2-2' }}</td>
+            <td>{{ run.totalDeductions | number: '1.2-2' }}</td>
+            <td>{{ run.totalNet | number: '1.2-2' }}</td>
+            <td>{{ run.processedByName || '-' }}</td>
+            <td class="actions-cell">
+              <button *appHasPermission="'payroll.process'" pButton type="button" label="Process" icon="pi pi-cog"
+                      class="p-button-text p-button-sm" [disabled]="run.status !== 'Draft'"
+                      [loading]="runActionLoading() === run.id" (click)="processRun(run)"></button>
+              <button *appHasPermission="'payroll.lock'" pButton type="button" label="Lock" icon="pi pi-lock"
+                      class="p-button-text p-button-sm" [disabled]="run.status !== 'Completed'"
+                      [loading]="runActionLoading() === run.id" (click)="lockRun(run)"></button>
+              <button *appHasPermission="'payroll.lock'" pButton type="button" label="Mark Paid" icon="pi pi-check-circle"
+                      class="p-button-text p-button-sm" [disabled]="run.status !== 'Locked'"
+                      [loading]="runActionLoading() === run.id" (click)="markPaid(run)"></button>
+              <button *appHasPermission="'payroll.process'" pButton type="button" icon="pi pi-download"
+                      pTooltip="Download bank file" class="p-button-text p-button-sm"
+                      [disabled]="run.status === 'Draft'" (click)="downloadBankFile(run)"></button>
+              <button pButton type="button" icon="pi pi-list" pTooltip="View payslips"
+                      class="p-button-text p-button-sm" (click)="viewPayslips(run)"></button>
+              <button *appHasPermission="'payroll.delete'" pButton type="button" icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger" [disabled]="!canDeleteRun(run)"
+                      (click)="deleteRun(run)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-cell">No payroll runs found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- ===================== My Payslips ===================== -->
+    <p-tabPanel header="My Payslips">
+      @if (mySalary(); as salary) {
+        <div class="salary-summary-card">
+          <div class="summary-header">
+            <h3>Current Salary Structure</h3>
+            <span class="effective-from">Effective from {{ salary.effectiveFrom | date: 'mediumDate' }}</span>
+          </div>
+          <div class="summary-figures">
+            <div class="figure">
+              <span class="label">Annual CTC</span>
+              <span class="value">{{ salary.currency }} {{ salary.annualCtc | number: '1.2-2' }}</span>
+            </div>
+            <div class="figure">
+              <span class="label">Monthly Gross</span>
+              <span class="value">{{ salary.currency }} {{ salary.monthlyGross | number: '1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="summary-items">
+            @for (item of salary.items; track item.componentId) {
+              <span class="item-chip" [class.deduction]="item.type === 'Deduction'">
+                {{ item.componentName }}: {{ item.monthlyAmount | number: '1.2-2' }}
+              </span>
+            }
+          </div>
+        </div>
+      } @else if (!loadingMySalary()) {
+        <div class="empty-cell">No salary structure has been set up for you yet.</div>
+      }
+
+      <p-table [value]="myPayslips()" [loading]="loadingMyPayslips()" dataKey="id" responsiveLayout="scroll" styleClass="mt-3">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Period</th>
+            <th>Gross</th>
+            <th>Deductions</th>
+            <th>Net Pay</th>
+            <th>Status</th>
+            <th style="width: 8rem">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-p>
+          <tr>
+            <td>{{ monthName(p.month) }} {{ p.year }}</td>
+            <td>{{ p.grossEarnings | number: '1.2-2' }}</td>
+            <td>{{ p.totalDeductions | number: '1.2-2' }}</td>
+            <td>{{ p.netPay | number: '1.2-2' }}</td>
+            <td><p-tag [value]="p.status" severity="info"></p-tag></td>
+            <td>
+              <button pButton type="button" label="View Details" class="p-button-text p-button-sm"
+                      (click)="viewPayslipDetail(p)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="empty-cell">No payslips found.</td></tr>
+        </ng-template>
+      </p-table>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- ===================== Add/Edit Salary Component Dialog ===================== -->
+<p-dialog header="{{ editingComponentId() ? 'Edit' : 'Add' }} Salary Component" [visible]="componentDialogVisible()" (visibleChange)="componentDialogVisible.set($event)" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="componentForm.name" />
+    </label>
+    <label>
+      <span>Code</span>
+      <input pInputText [(ngModel)]="componentForm.code" />
+    </label>
+    <label>
+      <span>Type</span>
+      <p-dropdown [options]="typeOptions" [(ngModel)]="componentForm.type" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Calc Type</span>
+      <p-dropdown [options]="calcTypeOptions" [(ngModel)]="componentForm.calcType" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Default Value</span>
+      <p-inputNumber [(ngModel)]="componentForm.defaultValue" mode="decimal" [minFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Display Order</span>
+      <p-inputNumber [(ngModel)]="componentForm.displayOrder" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="componentForm.isTaxable" [binary]="true"></p-checkbox>
+      <span>Taxable</span>
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="componentForm.isStatutory" [binary]="true"></p-checkbox>
+      <span>Statutory</span>
+    </label>
+    @if (editingComponentId()) {
+      <label class="checkbox-row">
+        <p-checkbox [(ngModel)]="componentForm.isActive" [binary]="true"></p-checkbox>
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="componentDialogVisible.set(false)"></button>
+    <button pButton type="button" label="Save" (click)="saveComponent()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== New Payroll Run Dialog ===================== -->
+<p-dialog header="New Payroll Run" [visible]="newRunDialogVisible()" (visibleChange)="newRunDialogVisible.set($event)" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Year</span>
+      <p-inputNumber [(ngModel)]="runForm.year" [useGrouping]="false" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Month</span>
+      <p-dropdown [options]="monthOptions" [(ngModel)]="runForm.month" optionLabel="label" optionValue="value" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Notes</span>
+      <input pInputText [(ngModel)]="runForm.notes" />
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="newRunDialogVisible.set(false)"></button>
+    <button pButton type="button" label="Create" (click)="createRun()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ===================== Run Payslips Dialog ===================== -->
+<p-dialog header="Payslips — {{ payslipsForRun() ? monthName(payslipsForRun()!.month) + ' ' + payslipsForRun()!.year : '' }}"
+           [visible]="payslipsDialogVisible()" (visibleChange)="payslipsDialogVisible.set($event)" [modal]="true" [style]="{ width: '52rem' }">
+  <p-table [value]="runPayslips()" [loading]="loadingRunPayslips()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Employee</th>
+        <th>Department</th>
+        <th>Gross</th>
+        <th>Deductions</th>
+        <th>Net Pay</th>
+        <th>Status</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-p>
+      <tr>
+        <td>{{ p.employeeCode }} — {{ p.employeeName }}</td>
+        <td>{{ p.departmentName }}</td>
+        <td>{{ p.grossEarnings | number: '1.2-2' }}</td>
+        <td>{{ p.totalDeductions | number: '1.2-2' }}</td>
+        <td>{{ p.netPay | number: '1.2-2' }}</td>
+        <td><p-tag [value]="p.status" severity="info"></p-tag></td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="empty-cell">No payslips generated for this run yet.</td></tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- ===================== Payslip Detail Dialog ===================== -->
+<p-dialog header="Payslip Details" [visible]="payslipDetailVisible()" (visibleChange)="payslipDetailVisible.set($event)" [modal]="true" [style]="{ width: '34rem' }">
+  @if (loadingPayslipDetail()) {
+    <div class="empty-cell">Loading...</div>
+  } @else {
+    @if (selectedPayslip(); as p) {
+      <div class="payslip-detail">
+        <div class="detail-header">
+          <span>{{ monthName(p.month) }} {{ p.year }}</span>
+          <p-tag [value]="p.status" severity="info"></p-tag>
+        </div>
+        <div class="detail-figures">
+          <div class="figure"><span class="label">Gross Earnings</span><span class="value">{{ p.grossEarnings | number: '1.2-2' }}</span></div>
+          <div class="figure"><span class="label">Total Deductions</span><span class="value">{{ p.totalDeductions | number: '1.2-2' }}</span></div>
+          <div class="figure"><span class="label">Net Pay</span><span class="value">{{ p.netPay | number: '1.2-2' }}</span></div>
+        </div>
+        <div class="detail-attendance">
+          <span>Working Days: {{ p.workingDays }}</span>
+          <span>Present: {{ p.presentDays }}</span>
+          <span>Paid Leave: {{ p.paidLeaveDays }}</span>
+          <span>LOP: {{ p.lopDays }}</span>
+        </div>
+        <p-table [value]="p.items" dataKey="componentName">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Component</th>
+              <th>Type</th>
+              <th>Amount</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td>{{ item.componentName }}</td>
+              <td><p-tag [value]="item.type" [severity]="item.type === 'Earning' ? 'success' : 'danger'"></p-tag></td>
+              <td>{{ item.amount | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  }
+</p-dialog>

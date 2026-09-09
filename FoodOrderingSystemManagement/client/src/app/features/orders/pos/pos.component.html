@@ -1,0 +1,457 @@
+<div class="pos-screen">
+
+  <!-- ── CENTER: Food panel ───────────────────────────────────────────── -->
+  <section class="food-panel">
+
+    <!-- Category Tabs -->
+    <div class="cat-tabs">
+      <button class="cat-tab" [class.active]="selectedCategoryId() === null" (click)="selectCategory(null)">
+        <span class="cat-tab-emoji">🍽️</span>
+        All Items
+      </button>
+      @for (cat of categories(); track cat.id) {
+        <button class="cat-tab" [class.active]="selectedCategoryId() === cat.id" (click)="selectCategory(cat.id)">
+          <span class="cat-tab-emoji">{{ getCategoryIcon(cat.categoryName) }}</span>
+          {{ cat.categoryName }}
+        </button>
+      }
+    </div>
+
+    <!-- Search + Barcode bar -->
+    <div class="food-search">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Search items..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+        @if (searchTerm()) {
+          <button class="clear-search" (click)="searchTerm.set('')">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+      <span class="item-count">{{ filteredItems().length }} items</span>
+      <app-barcode-scanner (scanned)="onBarcodeScanned($event)" />
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="center-state">
+        <mat-spinner diameter="40" />
+        <p>Loading menu...</p>
+      </div>
+    }
+
+    <!-- Empty -->
+    @else if (filteredItems().length === 0) {
+      <div class="center-state">
+        <mat-icon class="empty-icon">no_food</mat-icon>
+        <p>No items found</p>
+      </div>
+    }
+
+    <!-- Food grid — horizontal cards -->
+    @else {
+      <div class="food-grid">
+        @for (item of filteredItems(); track item.id) {
+          <div class="food-card"
+               [class.in-cart]="cart.isInCart(item.id)"
+               [class.out-of-stock]="isOutOfStock(item)"
+               [class.at-max]="!isOutOfStock(item) && isAtMaxStock(item)">
+
+            <!-- Top: image + info -->
+            <div class="food-card-top">
+              <div class="food-card-img">
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.itemName" loading="lazy" />
+                } @else {
+                  <div class="food-card-img-placeholder">
+                    <mat-icon>fastfood</mat-icon>
+                  </div>
+                }
+              </div>
+              <div class="food-card-info">
+                <p class="food-name">{{ item.itemName }}</p>
+                @if (item.description) {
+                  <p class="food-desc">{{ item.description }}</p>
+                }
+                <span class="food-status"
+                      [class.available]="!isOutOfStock(item) && !isAtMaxStock(item)"
+                      [class.sold-out]="isOutOfStock(item)"
+                      [class.at-max-status]="!isOutOfStock(item) && isAtMaxStock(item)">
+                  {{ isOutOfStock(item) ? 'Sold Out' : isAtMaxStock(item) ? 'Max Qty Reached' : 'Available' }}
+                </span>
+                @if (item.availableQuantity > 0 && item.availableQuantity <= 5) {
+                  <span class="low-stock-hint">Only {{ item.availableQuantity }} left</span>
+                }
+              </div>
+            </div>
+
+            <!-- Footer: price | qty controls | add button -->
+            <div class="food-card-footer">
+              <span class="food-price">₹{{ item.price | number:'1.2-2' }}</span>
+              <div class="food-qty">
+                <button class="qty-circle-btn"
+                        (click)="cart.decrease(item.id)"
+                        [disabled]="!cart.isInCart(item.id)">
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span class="qty-circle-num">{{ cart.isInCart(item.id) ? cart.quantityOf(item.id) : 1 }}</span>
+                <button class="qty-circle-btn"
+                        (click)="addToCart(item)"
+                        [disabled]="isOutOfStock(item) || isAtMaxStock(item)">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+              <button class="food-add-btn"
+                      (click)="addToCart(item)"
+                      [disabled]="isOutOfStock(item) || isAtMaxStock(item)">
+                {{ cart.isInCart(item.id) ? 'Added' : 'Add' }}
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ── RIGHT: Order panel ────────────────────────────────────────────── -->
+  <aside class="order-panel">
+
+    <!-- Header -->
+    <div class="order-header">
+      <div class="order-title">
+        <mat-icon>receipt_long</mat-icon>
+        <div class="order-title-text">
+          <span class="order-title-main">
+            {{ isAddingToOrder() ? 'Table ' + activeTableOrder()!.tableNumber : orderMode() === 'delivery' ? 'Delivery Order' : orderMode() === 'takeaway' ? 'Takeaway' : (selectedTableId() ? 'Table ' + selectedTableId() : 'Dine-In') }}
+          </span>
+          @if (isAddingToOrder()) {
+            <span class="order-title-sub">{{ activeTableOrder()!.orderNumber }}</span>
+          }
+        </div>
+      </div>
+      @if (!cart.isEmpty()) {
+        <span class="order-count">+{{ cart.itemCount() }}</span>
+      }
+    </div>
+
+    <!-- Order Type Tabs -->
+    <div class="order-type-tabs">
+      <button class="ot-tab" [class.active]="orderMode() === 'dinein'" (click)="setOrderMode('dinein')">
+        <mat-icon>table_restaurant</mat-icon> Dine-In
+      </button>
+      <button class="ot-tab" [class.active]="orderMode() === 'takeaway'" (click)="setOrderMode('takeaway')">
+        <mat-icon>shopping_bag</mat-icon> Takeaway
+      </button>
+      <button class="ot-tab delivery" [class.active]="orderMode() === 'delivery'" (click)="setOrderMode('delivery')">
+        <mat-icon>local_shipping</mat-icon> Delivery
+      </button>
+    </div>
+
+    <!-- Table selector (Dine-In only) -->
+    @if (orderMode() === 'dinein') {
+      <div class="table-selector">
+        <div class="hall-toggle">
+          <button class="hall-btn" [class.active]="selectedHall() === 'AC'" (click)="selectedHall.set('AC')">
+            <mat-icon>ac_unit</mat-icon> AC
+          </button>
+          <button class="hall-btn" [class.active]="selectedHall() === 'Non-AC'" (click)="selectedHall.set('Non-AC')">
+            <mat-icon>wb_sunny</mat-icon> Non-AC
+          </button>
+        </div>
+        <div class="table-chips">
+          @if (visibleTables().length === 0) {
+            <span class="no-tables-hint">No tables in this section</span>
+          }
+          @for (t of visibleTables(); track t.id) {
+            <button class="table-chip"
+              [class.active]="selectedTableId() === t.id"
+              [class.occupied]="t.isOccupied"
+              (click)="selectedTableId.set(t.id)"
+              [title]="t.isOccupied ? 'Table ' + t.tableNumber + ' is occupied' : 'Table ' + t.tableNumber">
+              T{{ t.tableNumber }}
+              @if (tableHasPendingOrder(t.id)) {
+                <span class="open-dot"></span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Delivery fields -->
+    @if (orderMode() === 'delivery') {
+      <div class="delivery-fields">
+        <div class="df-row">
+          <mat-icon>location_on</mat-icon>
+          <input class="df-input" type="text" placeholder="Delivery address *"
+                 [ngModel]="deliveryAddress()" (ngModelChange)="deliveryAddress.set($event)" />
+        </div>
+        <div class="df-row">
+          <mat-icon>phone</mat-icon>
+          <input class="df-input" type="tel" placeholder="Customer phone"
+                 [ngModel]="deliveryPhone()" (ngModelChange)="deliveryPhone.set($event)" />
+        </div>
+        <div class="df-row">
+          <mat-icon>payments</mat-icon>
+          <input class="df-input charge-input" type="number" min="0" placeholder="Delivery charge (₹)"
+                 [ngModel]="deliveryCharge()" (ngModelChange)="deliveryCharge.set(+$event)" />
+        </div>
+      </div>
+    }
+
+    <!-- Customer lookup panel -->
+    <div class="customer-panel">
+      @if (!customer()) {
+        <div class="customer-search">
+          <mat-icon>person_search</mat-icon>
+          <input
+            type="tel"
+            placeholder="Lookup customer by phone..."
+            [ngModel]="customerPhoneInput()"
+            (ngModelChange)="customerPhoneInput.set($event)"
+            (keydown.enter)="lookupCustomer()"
+          />
+          <button class="lookup-btn" (click)="lookupCustomer()" [disabled]="lookingUpCustomer() || !customerPhoneInput()">
+            @if (lookingUpCustomer()) { <mat-spinner diameter="16" /> } @else { <mat-icon>search</mat-icon> }
+          </button>
+        </div>
+      } @else {
+        <div class="customer-card">
+          <div class="cust-info">
+            <div class="cust-avatar">{{ customer()!.name[0] | uppercase }}</div>
+            <div>
+              <div class="cust-name">{{ customer()!.name }}</div>
+              <div class="cust-tier">
+                <mat-icon>{{ tierIcon(customer()!.tier) }}</mat-icon>
+                {{ customer()!.tier }} · {{ customer()!.loyaltyPoints | number }} pts
+              </div>
+            </div>
+          </div>
+          <div class="cust-redeem">
+            <label>Redeem</label>
+            <input
+              type="number"
+              [ngModel]="pointsToRedeem()"
+              (ngModelChange)="pointsToRedeem.set(+$event)"
+              [max]="customer()!.loyaltyPoints"
+              min="0"
+              placeholder="0"
+              class="pts-input"
+            />
+            <span>/ {{ customer()!.loyaltyPoints | number }} pts</span>
+          </div>
+          <button class="cust-clear" (click)="clearCustomer()"><mat-icon>close</mat-icon></button>
+        </div>
+      }
+    </div>
+
+    <!-- Scrollable body: active order + cart items -->
+    <div class="order-body">
+
+      <!-- ── Kitchen Rejection Notice ──────────────────────────────────── -->
+      @if (rejectionForTable(selectedTableId()); as rej) {
+        <div class="rejected-order-box">
+          <div class="rej-header">
+            <mat-icon>cancel</mat-icon>
+            <div class="rej-title">
+              <span class="rej-label">Order Rejected by Kitchen</span>
+              <span class="rej-num">{{ rej.orderNumber }}</span>
+            </div>
+            <button class="rej-dismiss" (click)="dismissRejection(selectedTableId()!)" matTooltip="Dismiss">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          @if (rej.reason) {
+            <div class="rej-reason">
+              <mat-icon>info_outline</mat-icon>
+              <span>{{ rej.reason }}</span>
+            </div>
+          }
+
+          <div class="rej-items">
+            @for (name of rej.itemNames; track name) {
+              <div class="rej-item">
+                <mat-icon class="rej-item-icon">remove_circle</mat-icon>
+                <span class="rej-item-name">{{ name }}</span>
+                <span class="rej-item-status">Cancelled</span>
+              </div>
+            }
+          </div>
+
+          <button class="btn-rej-dismiss" (click)="dismissRejection(selectedTableId()!)">
+            <mat-icon>check</mat-icon>
+            Acknowledge &amp; Place New Order
+          </button>
+        </div>
+      }
+
+      <!-- Active dine-in order summary -->
+      @if (activeTableOrder(); as active) {
+        <div class="active-order-box">
+          <div class="active-order-header">
+            <mat-icon>local_dining</mat-icon>
+            <span>Open Order</span>
+            <span class="active-order-badge">{{ active.items.length }} item{{ active.items.length !== 1 ? 's' : '' }}</span>
+            <span class="active-order-total">₹{{ active.grandTotal | number:'1.2-2' }}</span>
+          </div>
+
+          @if (partialRejectionForOrder(active.id); as prej) {
+            <div class="partial-rej-banner">
+              <div class="prb-header">
+                <mat-icon>warning</mat-icon>
+                <span class="prb-title">Kitchen removed {{ prej.rejectedItems.length }} item(s)</span>
+                <button class="prb-dismiss" (click)="dismissPartialRejection(active.id)" matTooltip="Dismiss">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              @if (prej.reason) {
+                <div class="prb-reason">
+                  <mat-icon>info_outline</mat-icon>
+                  <span>{{ prej.reason }}</span>
+                </div>
+              }
+              <div class="prb-items">
+                @for (name of prej.rejectedItems; track name) {
+                  <div class="prb-item">
+                    <mat-icon class="prb-item-icon">remove_circle_outline</mat-icon>
+                    <span class="prb-item-name">{{ name }}</span>
+                    <span class="prb-item-badge">Removed</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="active-order-items">
+            @for (item of active.items; track item.foodItemId) {
+              <div class="active-order-item">
+                <span class="aoi-name">{{ item.itemName }}</span>
+                <span class="aoi-qty">×{{ item.quantity }}</span>
+                <span class="aoi-price">₹{{ item.lineTotal | number:'1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <button class="btn-bill" (click)="generateBill()" [disabled]="placing()">
+            @if (placing()) { <mat-spinner diameter="16" /> }
+            @else { <mat-icon>receipt</mat-icon> }
+            Generate Bill
+          </button>
+        </div>
+
+        <div class="section-divider">
+          <span>Add more items</span>
+        </div>
+      }
+
+      <!-- Cart items -->
+      @if (cart.isEmpty()) {
+        <div class="empty-cart">
+          <mat-icon>shopping_cart</mat-icon>
+          <p>{{ isAddingToOrder() ? 'Select items to add' : 'No items yet' }}</p>
+          <small>Tap + on any menu item</small>
+        </div>
+      } @else {
+        <div class="order-items-card">
+          @for (item of cart.items(); track item.foodItemId) {
+            <div class="order-item">
+              <div class="oi-image">
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.itemName" />
+                } @else {
+                  <mat-icon>fastfood</mat-icon>
+                }
+              </div>
+              <div class="oi-info">
+                <p class="oi-name">{{ item.itemName }}</p>
+                @if (item.addOnNames) {
+                  <p class="oi-addons">+ {{ item.addOnNames }}</p>
+                }
+                <p class="oi-unit">₹{{ (item.price + item.addOnTotal) | number:'1.2-2' }}</p>
+              </div>
+              <div class="oi-controls">
+                <button class="qty-btn minus" (click)="cart.decrease(item.foodItemId)">
+                  <mat-icon>{{ item.quantity === 1 ? 'delete' : 'remove' }}</mat-icon>
+                </button>
+                <span class="qty">{{ item.quantity }}</span>
+                <button class="qty-btn plus" (click)="increaseInCart(item.foodItemId, item.itemName)">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+              <span class="oi-total">₹{{ ((item.price + item.addOnTotal) * item.quantity) | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      }
+
+    </div><!-- /order-body -->
+
+    <!-- Totals + actions -->
+    @if (!cart.isEmpty()) {
+      <div class="order-footer">
+        <div class="order-totals">
+          <div class="total-row">
+            <span>Subtotal</span>
+            <span>₹{{ cart.subTotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row">
+            <span>Tax</span>
+            <span>₹{{ cart.tax() | number:'1.2-2' }}</span>
+          </div>
+          <div class="discount-row">
+            <span>Discount</span>
+            <div class="discount-control">
+              <button class="discount-mode-btn" (click)="toggleDiscountMode()" [title]="discountMode() === 'amount' ? 'Switch to %' : 'Switch to ₹'">
+                {{ discountMode() === 'amount' ? '₹' : '%' }}
+              </button>
+              <input
+                type="number"
+                class="discount-input"
+                [ngModel]="discountInput()"
+                (ngModelChange)="discountInput.set($event)"
+                (blur)="applyDiscount()"
+                min="0"
+                [max]="discountMode() === 'percent' ? 100 : null"
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <mat-divider />
+          <div class="total-row grand">
+            <span>Grand Total</span>
+            <span>₹{{ cart.grandTotal() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="order-actions">
+          <button class="btn-clear" (click)="clearCart()">
+            <mat-icon>delete_sweep</mat-icon>
+            Clear
+          </button>
+          @if (isAddingToOrder()) {
+            <button class="btn-place" (click)="addToExistingOrder()" [disabled]="placing()">
+              @if (placing()) { <mat-spinner diameter="20" /> }
+              @else { <mat-icon>add_circle</mat-icon> }
+              {{ placing() ? 'Adding...' : 'Add to Order' }}
+            </button>
+          } @else {
+            <button class="btn-place" (click)="placeOrder()" [disabled]="placing()">
+              @if (placing()) { <mat-spinner diameter="20" /> }
+              @else { <mat-icon>check_circle</mat-icon> }
+              {{ placing() ? 'Placing...' : 'Place Order' }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+  </aside>
+
+</div>

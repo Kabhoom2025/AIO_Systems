@@ -1,0 +1,23 @@
+<div class="shell">
+  <header class="shell__header">
+    <a class="shell__brand" routerLink="/">🛡 LinkShield AI</a>
+    <nav class="shell__nav">
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/scan" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">New Scan</a>
+      @if (auth.hasAnyRole('SuperAdmin', 'Admin')) {
+        <a routerLink="/admin" routerLinkActive="active">Admin</a>
+      }
+      @if (auth.currentUser()) {
+        <span class="shell__user">{{ auth.currentUser()?.email }}</span>
+        <button type="button" class="shell__link-button" (click)="logout()">Log out</button>
+      } @else {
+        <a routerLink="/auth/login" routerLinkActive="active">Log in</a>
+        <a routerLink="/auth/register" routerLinkActive="active">Register</a>
+      }
+    </nav>
+  </header>
+
+  <main class="shell__content">
+    <router-outlet />
+  </main>
+</div>

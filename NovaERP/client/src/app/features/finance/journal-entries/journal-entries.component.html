@@ -1,0 +1,107 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Journal Entries</h1>
+  <button *appHasPermission="'finance.create'" pButton type="button" icon="pi pi-plus" label="Add Journal Entry"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="entries" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Entry #</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Total Debit</th>
+        <th>Total Credit</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 16rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-e>
+      <tr>
+        <td><code class="code-badge">{{ e.entryNumber }}</code></td>
+        <td>{{ e.entryDate | date: 'mediumDate' }}</td>
+        <td>{{ e.description }}</td>
+        <td class="font-semibold">{{ e.totalDebit | number: '1.2-2' }}</td>
+        <td class="font-semibold">{{ e.totalCredit | number: '1.2-2' }}</td>
+        <td><p-tag [severity]="statusSeverity(e.status)" [value]="e.status"></p-tag></td>
+        <td>{{ e.ownerName }}</td>
+        <td class="actions-cell">
+          @if (e.status === 'Draft') {
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-check" label="Post"
+                    class="p-button-text p-button-sm p-button-success" (click)="post(e)"></button>
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(e)"></button>
+            <button *appHasPermission="'finance.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(e)"></button>
+          } @else if (e.status === 'Posted') {
+            <button *appHasPermission="'finance.edit'" pButton type="button" icon="pi pi-times" label="Void"
+                    class="p-button-text p-button-sm p-button-danger" (click)="void(e)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No journal entries yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Journal Entry" [(visible)]="showDialog" [modal]="true" [style]="{ width: '42rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Entry Date</span>
+      <p-calendar [(ngModel)]="form.entryDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="full-width">
+      <span>Description</span>
+      <input pInputText [(ngModel)]="form.description" />
+    </label>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Lines</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Line" class="p-button-text p-button-sm" (click)="addLine()"></button>
+    </div>
+    <div class="line-row line-row-header">
+      <span>Ledger Account</span>
+      <span>Debit</span>
+      <span>Credit</span>
+      <span></span>
+    </div>
+    @for (line of lines; track $index) {
+      <div class="line-row">
+        <p-dropdown [options]="ledgerAccounts" [(ngModel)]="line.ledgerAccountId" optionLabel="name" optionValue="id"
+                    placeholder="Select account"></p-dropdown>
+        <p-inputNumber [(ngModel)]="line.debit" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+        <p-inputNumber [(ngModel)]="line.credit" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeLine($index)"></button>
+      </div>
+    }
+    @if (!lines.length) {
+      <div class="empty-cell">No lines yet — add at least one.</div>
+    } @else {
+      <div class="totals-row" [class.unbalanced]="!isBalanced()">
+        <span>Total Debit: <strong>{{ totalDebit() | number: '1.2-2' }}</strong></span>
+        <span>Total Credit: <strong>{{ totalCredit() | number: '1.2-2' }}</strong></span>
+        <span>Difference: <strong>{{ (totalDebit() - totalCredit()) | number: '1.2-2' }}</strong></span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

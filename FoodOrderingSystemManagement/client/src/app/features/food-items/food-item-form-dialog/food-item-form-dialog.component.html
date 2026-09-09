@@ -1,0 +1,95 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+  {{ isEdit ? 'Edit Food Item' : 'New Food Item' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" novalidate class="dialog-form">
+
+    <!-- Category -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category *</mat-label>
+      <mat-select formControlName="categoryId">
+        @for (cat of data.categories; track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.categoryName }}</mat-option>
+        }
+      </mat-select>
+      <mat-icon matPrefix>category</mat-icon>
+      @if (categoryId.hasError('required') && categoryId.touched) {
+        <mat-error>Category is required</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Item name -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Item Name *</mat-label>
+      <input matInput formControlName="itemName" placeholder="e.g. Veg Pizza, Chicken Burger" />
+      <mat-icon matPrefix>fastfood</mat-icon>
+      @if (itemName.hasError('required') && itemName.touched) {
+        <mat-error>Item name is required</mat-error>
+      } @else if (itemName.hasError('maxlength') && itemName.touched) {
+        <mat-error>Maximum 150 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="2" placeholder="Short description..."></textarea>
+      <mat-icon matPrefix>description</mat-icon>
+    </mat-form-field>
+
+    <!-- Image URL -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Image URL</mat-label>
+      <input matInput formControlName="image" placeholder="https://..." />
+      <mat-icon matPrefix>image</mat-icon>
+    </mat-form-field>
+
+    <!-- Price + Quantity row -->
+    <div class="two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Price (₹) *</mat-label>
+        <input matInput type="number" formControlName="price" min="0.01" step="0.01" />
+        <mat-icon matPrefix>currency_rupee</mat-icon>
+        @if (price.hasError('required') && price.touched) {
+          <mat-error>Price is required</mat-error>
+        } @else if (price.hasError('min') && price.touched) {
+          <mat-error>Must be > 0</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Stock Qty *</mat-label>
+        <input matInput type="number" formControlName="availableQuantity" min="0" />
+        <mat-icon matPrefix>inventory</mat-icon>
+        @if (availableQuantity.hasError('required') && availableQuantity.touched) {
+          <mat-error>Quantity is required</mat-error>
+        } @else if (availableQuantity.hasError('min') && availableQuantity.touched) {
+          <mat-error>Cannot be negative</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Available toggle (edit only) -->
+    @if (isEdit) {
+      <div class="toggle-row">
+        <mat-slide-toggle formControlName="isAvailable" color="primary">Available</mat-slide-toggle>
+        <span class="toggle-hint">Unavailable items are hidden in POS</span>
+      </div>
+    }
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="submit()" [disabled]="saving">
+    @if (saving) {
+      <mat-spinner diameter="18" />
+    } @else {
+      <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+    }
+    {{ isEdit ? 'Save Changes' : 'Create' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,332 @@
+<div class="orders-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>receipt_long</mat-icon>
+      <div>
+        <h1>Orders</h1>
+        <p>{{ historyMode() ? 'Showing completed & cancelled orders' : 'Manage all active restaurant orders.' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <!-- History toggle -->
+      <button *hasPermission="'orders.history'"
+              class="history-btn" [class.active]="historyMode()"
+              (click)="toggleHistory()" matTooltip="Order History">
+        <mat-icon>history</mat-icon>
+        History
+      </button>
+
+      <!-- View toggle -->
+      <div class="view-toggle">
+        <button class="toggle-btn" [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')" matTooltip="List View">
+          <mat-icon>view_list</mat-icon>
+        </button>
+        <button class="toggle-btn" [class.active]="viewMode() === 'card'" (click)="viewMode.set('card')" matTooltip="Card View">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+      </div>
+      <button mat-raised-button color="primary" (click)="load()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Type filter — Online / Offline ──────────────────────────────────── -->
+  <div class="type-filter-bar">
+    <button class="type-btn" [class.active]="typeFilter() === 'All'"     (click)="typeFilter.set('All')">
+      <mat-icon>list_alt</mat-icon> All Orders
+    </button>
+    <button *hasPermission="'orders.offline'"
+            class="type-btn" [class.active]="typeFilter() === 'DineIn'"  (click)="typeFilter.set('DineIn')">
+      <mat-icon>table_restaurant</mat-icon> Dine-in (Offline)
+    </button>
+    <button *hasPermission="'orders.online'"
+            class="type-btn" [class.active]="typeFilter() === 'Takeaway'" (click)="typeFilter.set('Takeaway')">
+      <mat-icon>delivery_dining</mat-icon> Takeaway (Online)
+    </button>
+  </div>
+
+  <!-- ── CARD VIEW ─────────────────────────────────────────────────────────── -->
+  @if (viewMode() === 'card') {
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      @for (s of statusOptions; track s) {
+        <div class="stat-card" [class.active]="statusFilter() === s && !historyMode()" (click)="historyMode.set(false); statusFilter.set(s)">
+          <span class="stat-num">{{ countByStatus(s) }}</span>
+          <span class="stat-lbl">{{ s === 'KitchenReady' ? 'Served' : s === 'All' ? 'Total' : s }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Filter chips + search -->
+    <div class="filter-bar">
+      @for (s of statusOptions; track s) {
+        <button class="status-chip" [class.active]="statusFilter() === s && !historyMode()" (click)="historyMode.set(false); statusFilter.set(s)">
+          {{ s === 'KitchenReady' ? 'Served' : s }}
+          <span class="chip-count">{{ countByStatus(s) }}</span>
+        </button>
+      }
+      <div class="spacer"></div>
+      <mat-form-field *hasPermission="'orders.search'" appearance="outline" class="search-field">
+        <mat-label>Search</mat-label>
+        <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Order # or cashier..." />
+        <mat-icon matPrefix>search</mat-icon>
+        @if (searchTerm()) {
+          <button matSuffix mat-icon-button (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+        }
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <app-loading-spinner message="Loading orders..." />
+    } @else if (filtered().length === 0) {
+      <app-empty-state icon="receipt_long"
+        title="{{ historyMode() ? 'No order history found' : searchTerm() || statusFilter() !== 'All' ? 'No orders match your filter' : 'No orders yet' }}"
+        subtitle="{{ searchTerm() ? 'Try a different search.' : 'Place your first order from the POS screen.' }}" />
+    } @else {
+      <div class="card-grid">
+        @for (order of filtered(); track order.id) {
+          <div class="order-card" [class]="'card-' + getStatusClass(order.status)">
+
+            <div class="card-top">
+              <div class="card-item-name">{{ firstItemName(order) }}</div>
+              <span class="card-badge" [class]="getStatusClass(order.status)">
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </div>
+
+            <div class="card-order-num">{{ order.orderNumber }}</div>
+
+            <div class="card-meta">
+              <span class="meta-chip"><mat-icon>schedule</mat-icon>{{ order.orderDate | date:'HH:mm' }}</span>
+              <span class="meta-chip"><mat-icon>calendar_today</mat-icon>{{ order.orderDate | date:'dd MMM' }}</span>
+              <span class="meta-chip">
+                <mat-icon>{{ order.tableNumber ? 'table_restaurant' : 'delivery_dining' }}</mat-icon>
+                {{ order.tableNumber ? 'T' + order.tableNumber : 'Takeaway' }}
+              </span>
+            </div>
+
+            <div class="card-footer">
+              <span class="card-items-count">{{ order.items.length }} items</span>
+              <span class="card-total">₹{{ order.grandTotal | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="card-actions">
+              @if (!isWaiter && order.status === 'Pending' && order.tableNumber) {
+                <button class="ca-btn transfer" (click)="openTransfer(order)" matTooltip="Transfer Table">
+                  <mat-icon>swap_horiz</mat-icon>
+                </button>
+              }
+              @if (order.status === 'Pending' || order.status === 'KitchenReady') {
+                <button *hasPermission="'orders.generate_bill'" class="ca-btn bill" (click)="generateBill(order)" matTooltip="Generate Bill">
+                  <mat-icon>receipt</mat-icon>
+                </button>
+              }
+              @if (order.status === 'Pending' || order.status === 'KitchenReady') {
+                <button *hasPermission="'orders.complete'" class="ca-btn complete" (click)="completeOrder(order)"
+                        [disabled]="completing() === order.id" matTooltip="Quick Complete">
+                  @if (completing() === order.id) { <mat-spinner diameter="14" /> }
+                  @else { <mat-icon>task_alt</mat-icon> }
+                </button>
+              }
+              @if (isAdmin && canCancel(order)) {
+                <button *hasPermission="'orders.cancel'" class="ca-btn cancel countdown"
+                        [disabled]="cancelling() === order.id"
+                        (click)="cancelOrder(order)" [matTooltip]="'Cancel (' + cancelSecondsLeft(order) + 's)'">
+                  @if (cancelling() === order.id) { <mat-spinner diameter="14" /> }
+                  @else { <mat-icon>cancel</mat-icon> }
+                  <span>{{ cancelSecondsLeft(order) }}s</span>
+                </button>
+              }
+              @if (order.status === 'Cancelled') {
+                <button *hasPermission="'orders.reopen'" class="ca-btn reopen"
+                        [disabled]="reopening() === order.id"
+                        (click)="reopenOrder(order)" matTooltip="Reopen Order">
+                  @if (reopening() === order.id) { <mat-spinner diameter="14" /> }
+                  @else { <mat-icon>restart_alt</mat-icon> }
+                </button>
+              }
+              @if (isAdmin && (order.status === 'Completed' || order.status === 'Cancelled')) {
+                <button *hasPermission="'orders.delete'" class="ca-btn delete"
+                        [disabled]="deleting() === order.id"
+                        (click)="deleteOrder(order)" matTooltip="Delete Order">
+                  @if (deleting() === order.id) { <mat-spinner diameter="14" /> }
+                  @else { <mat-icon>delete_forever</mat-icon> }
+                </button>
+              }
+              <button *hasPermission="'orders.view_details'" class="ca-btn receipt" (click)="viewReceipt(order)" matTooltip="View Receipt">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+  <!-- ── LIST VIEW ──────────────────────────────────────────────────────────── -->
+  @else {
+
+    <!-- Status filter chips + search -->
+    <div class="filter-bar">
+      @for (s of statusOptions; track s) {
+        <button class="status-chip" [class.active]="statusFilter() === s && !historyMode()" (click)="historyMode.set(false); statusFilter.set(s)">
+          <mat-icon>{{ getStatusIcon(s) }}</mat-icon>
+          {{ getStatusLabel(s) }}
+          <span class="chip-count">{{ countByStatus(s) }}</span>
+        </button>
+      }
+      <div class="spacer"></div>
+      <mat-form-field *hasPermission="'orders.search'" appearance="outline" class="search-field">
+        <mat-label>Search</mat-label>
+        <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Order # or cashier..." />
+        <mat-icon matPrefix>search</mat-icon>
+        @if (searchTerm()) {
+          <button matSuffix mat-icon-button (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+        }
+      </mat-form-field>
+    </div>
+
+    @if (loading()) {
+      <app-loading-spinner message="Loading orders..." />
+    } @else if (filtered().length === 0) {
+      <app-empty-state
+        icon="receipt_long"
+        title="{{ historyMode() ? 'No order history found' : searchTerm() || statusFilter() !== 'All' ? 'No orders match your filter' : 'No orders yet' }}"
+        subtitle="{{ searchTerm() ? 'Try a different search.' : 'Place your first order from the POS screen.' }}"
+      />
+    } @else {
+      <div class="orders-list">
+        @for (order of filtered(); track order.id) {
+          <mat-expansion-panel class="order-panel" hideToggle>
+            <mat-expansion-panel-header>
+              <div class="panel-header">
+
+                <div class="order-id">
+                  <span class="order-number">{{ order.orderNumber }}</span>
+                  <span class="order-date">{{ order.orderDate | date:'dd MMM y, h:mm a' }}</span>
+                </div>
+
+                <div class="order-cashier">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ order.cashierName }}</span>
+                </div>
+
+                <div class="order-table">
+                  <mat-icon>{{ order.tableNumber ? 'table_restaurant' : 'delivery_dining' }}</mat-icon>
+                  <span>{{ order.tableNumber ? 'T' + order.tableNumber : 'Takeaway' }}</span>
+                </div>
+
+                <span class="status-badge" [class]="getStatusClass(order.status)">
+                  <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
+                  {{ getStatusLabel(order.status) }}
+                </span>
+
+                <span class="order-total">₹{{ order.grandTotal | number:'1.2-2' }}</span>
+
+                <!-- Transfer Table -->
+                @if (!isWaiter && order.status === 'Pending' && order.tableNumber) {
+                  <button class="transfer-btn" (click)="$event.stopPropagation(); openTransfer(order)" matTooltip="Transfer Table">
+                    <mat-icon>swap_horiz</mat-icon>
+                  </button>
+                }
+
+                <!-- Generate Bill -->
+                @if (order.status === 'Pending' || order.status === 'KitchenReady') {
+                  <button *hasPermission="'orders.generate_bill'"
+                          class="bill-btn" (click)="$event.stopPropagation(); generateBill(order)" matTooltip="Generate Bill">
+                    <mat-icon>receipt</mat-icon> Bill
+                  </button>
+                }
+
+                <!-- Quick Complete -->
+                @if (order.status === 'Pending' || order.status === 'KitchenReady' || order.status === 'BillPending') {
+                  <button *hasPermission="'orders.complete'"
+                          class="complete-btn" [disabled]="completing() === order.id"
+                          (click)="$event.stopPropagation(); completeOrder(order)" matTooltip="Complete Order">
+                    @if (completing() === order.id) { <mat-spinner diameter="16" /> }
+                    @else { <mat-icon>task_alt</mat-icon> }
+                  </button>
+                }
+
+                <!-- Cancel (Admin, 60s window) -->
+                @if (isAdmin && canCancel(order)) {
+                  <button *hasPermission="'orders.cancel'"
+                          class="cancel-btn countdown" [disabled]="cancelling() === order.id"
+                          (click)="$event.stopPropagation(); cancelOrder(order)"
+                          [matTooltip]="'Cancel within ' + cancelSecondsLeft(order) + 's'">
+                    @if (cancelling() === order.id) { <mat-spinner diameter="16" /> }
+                    @else { <mat-icon>cancel</mat-icon> }
+                    <span>{{ cancelSecondsLeft(order) }}s</span>
+                  </button>
+                }
+
+                <!-- Reopen Cancelled -->
+                @if (order.status === 'Cancelled') {
+                  <button *hasPermission="'orders.reopen'"
+                          class="reopen-btn" [disabled]="reopening() === order.id"
+                          (click)="$event.stopPropagation(); reopenOrder(order)" matTooltip="Reopen Order">
+                    @if (reopening() === order.id) { <mat-spinner diameter="16" /> }
+                    @else { <mat-icon>restart_alt</mat-icon> }
+                    Reopen
+                  </button>
+                }
+
+                <!-- Delete (Admin, Completed/Cancelled only) -->
+                @if (isAdmin && (order.status === 'Completed' || order.status === 'Cancelled')) {
+                  <button *hasPermission="'orders.delete'"
+                          class="delete-btn" [disabled]="deleting() === order.id"
+                          (click)="$event.stopPropagation(); deleteOrder(order)" matTooltip="Delete Order">
+                    @if (deleting() === order.id) { <mat-spinner diameter="16" /> }
+                    @else { <mat-icon>delete_forever</mat-icon> }
+                  </button>
+                }
+
+                <!-- View Receipt -->
+                <button *hasPermission="'orders.view_details'" mat-icon-button color="primary" matTooltip="View Receipt"
+                        (click)="$event.stopPropagation(); viewReceipt(order)">
+                  <mat-icon>receipt</mat-icon>
+                </button>
+
+              </div>
+            </mat-expansion-panel-header>
+
+            <!-- ── Expanded detail ── -->
+            <div class="order-items-detail">
+              <div class="items-table-head">
+                <span>Item</span><span>Qty</span><span>Unit Price</span><span>Total</span>
+              </div>
+              @for (item of order.items; track item.foodItemId) {
+                <div class="items-table-row">
+                  <span>{{ item.itemName }}</span>
+                  <span>{{ item.quantity }}</span>
+                  <span>₹{{ item.unitPrice | number:'1.2-2' }}</span>
+                  <span>₹{{ item.lineTotal | number:'1.2-2' }}</span>
+                </div>
+                @if (item.addOnNotes) {
+                  <div class="item-addon-row">↳ {{ item.addOnNotes }}</div>
+                }
+              }
+              <div class="order-summary">
+                <div class="summary-row"><span>Subtotal</span><span>₹{{ order.subTotal | number:'1.2-2' }}</span></div>
+                <div class="summary-row"><span>Tax</span><span>₹{{ order.tax | number:'1.2-2' }}</span></div>
+                @if (order.discount > 0) {
+                  <div class="summary-row discount"><span>Discount</span><span>-₹{{ order.discount | number:'1.2-2' }}</span></div>
+                }
+                <div class="summary-row grand"><span>Grand Total</span><span>₹{{ order.grandTotal | number:'1.2-2' }}</span></div>
+              </div>
+            </div>
+
+          </mat-expansion-panel>
+        }
+      </div>
+    }
+
+  }
+
+</div>

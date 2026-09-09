@@ -1,0 +1,100 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+
+  <!-- Toggle button -->
+  <button class="toggle-btn" (click)="toggle()" [matTooltip]="collapsed() ? 'Expand' : 'Collapse'" matTooltipPosition="right">
+    <mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+  </button>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav"
+       cdkDropList
+       [cdkDropListData]="navItems()"
+       (cdkDropListDropped)="drop($event)">
+
+    @for (item of navItems(); track item.label) {
+      @if (isVisible(item)) {
+
+        @if (item.children) {
+          <!-- Group with children -->
+          <div class="nav-group"
+               cdkDrag
+               cdkDragLockAxis="y"
+               [cdkDragDisabled]="collapsed() || !theme.sidebarDragEnabled()">
+
+            <div
+              class="nav-item nav-group-header"
+              [class.group-active]="isGroupActive(item)"
+              (click)="toggleGroup(item.label)"
+              [matTooltip]="collapsed() ? item.label : ''"
+              matTooltipPosition="right"
+              matRipple
+            >
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              @if (!collapsed()) {
+                <span class="nav-label">{{ item.label }}</span>
+                <mat-icon class="expand-icon" [class.rotated]="isGroupExpanded(item.label)">expand_more</mat-icon>
+              }
+            </div>
+
+            @if (!collapsed() && isGroupExpanded(item.label)) {
+              <div class="nav-children">
+                @for (child of item.children; track child.route) {
+                  @if (isVisible(child)) {
+                    <a
+                      class="nav-item nav-sub-item"
+                      [routerLink]="child.route"
+                      [queryParams]="child.queryParams ?? {}"
+                      routerLinkActive="active"
+                      [matTooltip]="collapsed() ? child.label : ''"
+                      matTooltipPosition="right"
+                      matRipple
+                    >
+                      <mat-icon class="nav-icon">{{ child.icon }}</mat-icon>
+                      <span class="nav-label">{{ child.label }}</span>
+                    </a>
+                  }
+                }
+              </div>
+            }
+          </div>
+
+        } @else {
+          <!-- Regular nav item -->
+          <a
+            class="nav-item"
+            cdkDrag
+            cdkDragLockAxis="y"
+            [cdkDragDisabled]="collapsed() || !theme.sidebarDragEnabled()"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/' }"
+            [matTooltip]="collapsed() ? item.label : ''"
+            matTooltipPosition="right"
+            matRipple
+          >
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            @if (!collapsed()) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+          </a>
+        }
+
+      }
+    }
+  </nav>
+
+  <!-- Footer: version + dark mode toggle -->
+  <div class="sidebar-footer">
+    @if (!collapsed()) {
+      <mat-icon class="version-icon">info_outline</mat-icon>
+      <span class="version-text">v1.0.0</span>
+    }
+    <button class="dark-toggle-btn"
+            (click)="theme.toggleDarkMode()"
+            [matTooltip]="theme.darkMode() ? 'Light mode' : 'Dark mode'"
+            matTooltipPosition="right">
+      <mat-icon>{{ theme.darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  </div>
+
+</aside>

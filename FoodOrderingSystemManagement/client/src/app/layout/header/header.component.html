@@ -1,0 +1,230 @@
+<mat-toolbar class="pos-header">
+
+  <!-- Logo + Restaurant Name -->
+  <div class="header-brand">
+    <div class="brand-logo">
+      @if (restaurantName()?.logoUrl) {
+        <img class="brand-logo-img" [src]="restaurantName()!.logoUrl!" alt="logo" />
+      } @else {
+        <mat-icon>restaurant</mat-icon>
+      }
+    </div>
+    <div class="brand-text">
+      <span class="brand-name">
+        {{ restaurantName()?.restaurantName || 'FoodOrder POS' }}
+      </span>
+      <span class="brand-sub">Point of Sale</span>
+    </div>
+  </div>
+
+  <span class="spacer"></span>
+
+  <!-- Current date/time -->
+  <div class="header-datetime">
+    <mat-icon>schedule</mat-icon>
+    <div class="datetime-text">
+      <span class="date">{{ now() | date:'EEE, MMM d, y' }}</span>
+      <span class="time">{{ now() | date:'h:mm a' }}</span>
+    </div>
+  </div>
+
+  <!-- Theme picker -->
+  <div class="theme-wrapper" (click)="$event.stopPropagation()">
+    <button mat-icon-button class="theme-btn" (click)="toggleThemePanel($event)" matTooltip="Change theme">
+      <mat-icon>palette</mat-icon>
+    </button>
+
+    @if (showThemePanel()) {
+      <div class="theme-dropdown">
+        <div class="td-head">
+          <mat-icon>palette</mat-icon>
+          <span>Choose Theme</span>
+        </div>
+        <div class="td-grid">
+          @for (t of themeService.themes; track t.id) {
+            <button class="td-swatch" [class.active]="themeService.activeThemeId() === t.id"
+                    (click)="selectTheme(t)" [matTooltip]="t.name">
+              <span class="swatch-dot" [style.background]="t.primary"></span>
+              <span class="swatch-dark" [style.background]="t.sidebarBg"></span>
+              <span class="swatch-name">{{ t.name }}</span>
+              @if (themeService.activeThemeId() === t.id) {
+                <mat-icon class="swatch-check">check_circle</mat-icon>
+              }
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Documentation -->
+  <button mat-icon-button class="docs-btn" (click)="openDocs()" matTooltip="Help &amp; Documentation">
+    <mat-icon>menu_book</mat-icon>
+  </button>
+
+  <!-- Printer status -->
+  <div class="printer-wrapper" (click)="$event.stopPropagation()">
+    <button mat-icon-button class="printer-btn"
+            [class.status-connected]="printerService.status() === 'connected' && (printerService.getReceiptPrinter() || printerService.getLabelPrinter())"
+            [class.status-idle]="printerService.status() === 'connected' && !printerService.getReceiptPrinter() && !printerService.getLabelPrinter()"
+            [class.status-disconnected]="printerService.status() !== 'connected'"
+            (click)="togglePrinterPanel($event)"
+            [matTooltip]="printerService.status() === 'connected' ? 'Printers connected' : 'Print agent not detected — click for setup'">
+      <mat-icon>{{ printerService.status() === 'connected' ? 'print' : 'print_disabled' }}</mat-icon>
+    </button>
+
+    @if (showPrinterPanel()) {
+      <div class="printer-dropdown">
+        <div class="td-head">
+          <mat-icon>print</mat-icon>
+          <span>Printers</span>
+        </div>
+
+        @if (printerService.status() !== 'connected') {
+          <div class="printer-empty">
+            <p>Print agent not detected.</p>
+            <p class="printer-hint">Run <strong>FoodOrder.PrintAgent.exe</strong> on this machine, then reopen this menu.</p>
+          </div>
+        } @else if (printerService.printers().length === 0) {
+          <div class="printer-empty">
+            <p>No printers found.</p>
+          </div>
+        } @else {
+          <div class="printer-list">
+            @for (p of printerService.printers(); track p) {
+              <div class="printer-row">
+                <span class="printer-name" [matTooltip]="p">{{ p }}</span>
+                <div class="printer-actions">
+                  <button class="p-act-btn"
+                          [class.active]="printerService.getReceiptPrinter() === p"
+                          (click)="setReceiptPrinter(p)">Receipt</button>
+                  <button class="p-act-btn"
+                          [class.active]="printerService.getLabelPrinter() === p"
+                          (click)="setLabelPrinter(p)">Label</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Notifications -->
+  <div class="notif-wrapper" (click)="$event.stopPropagation()">
+    <button mat-icon-button class="notification-btn" (click)="toggleNotifPanel($event)"
+            [class.has-unread]="notifStore.unreadCount() > 0"
+            [matTooltip]="notifStore.unreadCount() > 0 ? notifStore.unreadCount() + ' unread notifications' : 'Notifications'">
+      @if (notifStore.unreadCount() > 0) {
+        <mat-icon [matBadge]="notifStore.unreadCount()" matBadgeColor="warn" matBadgeSize="small">notifications_active</mat-icon>
+      } @else {
+        <mat-icon>notifications</mat-icon>
+      }
+    </button>
+
+    @if (showNotifPanel()) {
+      <div class="notif-dropdown">
+        <div class="nd-head">
+          <span class="nd-title">Notifications</span>
+          @if (notifStore.unreadCount() > 0) {
+            <span class="nd-badge">{{ notifStore.unreadCount() }} new</span>
+          }
+        </div>
+
+        @if (notifStore.notifications().length > 0) {
+          <div class="nd-actions">
+            <button class="nd-act-btn" (click)="notifStore.markAllRead()">Mark all read</button>
+            <button class="nd-act-btn nd-act-clear" (click)="notifStore.clearAll()">Clear all</button>
+          </div>
+        }
+
+        <div class="nd-list">
+          @if (notifStore.notifications().length === 0) {
+            <div class="nd-empty">
+              <mat-icon>notifications_none</mat-icon>
+              <p>No notifications yet</p>
+            </div>
+          } @else {
+            @for (n of notifStore.notifications(); track n.id) {
+              <div class="nd-item"
+                   [class.nd-unread]="!n.read"
+                   [class.nd-rejected]="n.type === 'rejected'">
+                <div class="nd-dot"></div>
+                <div class="nd-body">
+                  <div class="nd-type-badge" [class.badge-rejected]="n.type === 'rejected'" [class.badge-ready]="n.type === 'ready'">
+                    @if (n.type === 'rejected') { ❌ Kitchen Rejected }
+                    @if (n.type === 'ready')    { ✅ Ready for Pickup }
+                  </div>
+                  <p class="nd-msg">{{ n.message }}</p>
+                  @if (n.reason) {
+                    <p class="nd-reason">Reason: {{ n.reason }}</p>
+                  }
+                  <div class="nd-footer">
+                    <span class="nd-time">{{ n.timestamp | date:'h:mm a' }}</span>
+                    @if (n.type === 'ready' && n.orderId && !n.pickedUp) {
+                      <button class="nd-pickup-btn" (click)="notifStore.pickUpOrder(n.id)">
+                        ✅ Mark Picked Up
+                      </button>
+                    }
+                    @if (n.pickedUp) {
+                      <span class="nd-picked">✓ Picked up</span>
+                    }
+                  </div>
+                </div>
+                <button class="nd-x" (click)="notifStore.dismiss(n.id)">✕</button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- User menu -->
+  <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
+    <div class="user-avatar-badge">
+      @if (currentUser()?.profileImage) {
+        <img [src]="currentUser()!.profileImage!" class="user-avatar-img" alt="profile" />
+      } @else {
+        {{ initials }}
+      }
+    </div>
+    <div class="user-info">
+      <span class="user-name">{{ currentUser()?.name }}</span>
+      <span class="user-role">{{ currentUser()?.roleName }}</span>
+    </div>
+    <mat-icon class="chevron">expand_more</mat-icon>
+  </button>
+
+  <mat-menu #userMenu="matMenu" class="user-menu-panel">
+    <div class="menu-header">
+      <div class="menu-avatar">
+        @if (currentUser()?.profileImage) {
+          <img [src]="currentUser()!.profileImage!" class="menu-avatar-img" alt="profile" />
+        } @else {
+          {{ initials }}
+        }
+      </div>
+      <div>
+        <p class="menu-name">{{ currentUser()?.name }}</p>
+        <p class="menu-email">{{ currentUser()?.email }}</p>
+        <span class="menu-role-badge">{{ currentUser()?.roleName }}</span>
+      </div>
+    </div>
+    <mat-divider />
+    <button mat-menu-item disabled>
+      <mat-icon>person</mat-icon>
+      <span>My Profile</span>
+    </button>
+    <button mat-menu-item disabled>
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </button>
+    <mat-divider />
+    <button mat-menu-item (click)="logout()" class="logout-item">
+      <mat-icon>logout</mat-icon>
+      <span>Sign Out</span>
+    </button>
+  </mat-menu>
+
+</mat-toolbar>

@@ -1,0 +1,260 @@
+.card {
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: #1e293b;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 0.5rem;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    span { color: #475569; }
+    input, textarea { width: 100%; }
+  }
+  .checkbox-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.form-grid.one-col {
+  grid-template-columns: 1fr;
+}
+
+.mapping-table-wrapper {
+  max-height: 28rem;
+  overflow-y: auto;
+  margin-top: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+    padding: 0.4rem 0.5rem;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+// Keeps the Outbound/Inbound tab labels visible while the long mapping table beneath
+// scrolls, so switching tabs never requires scrolling back up first.
+::ng-deep .mapping-tabs-card {
+  .p-tabview-nav-container {
+    position: sticky;
+    top: 64px; // sits just below the app's now-sticky top toolbar
+    z-index: 5;
+    background: #fff;
+  }
+}
+
+.detected-fields {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.detected-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.field-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.field-chip {
+  font-family: monospace;
+  font-size: 0.78rem;
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+
+  small { color: #6366f1; opacity: 0.8; }
+
+  &:hover { background: #e0e7ff; }
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+
+.auth-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+
+  code {
+    font-family: monospace;
+    background: #f1f5f9;
+    border-radius: 3px;
+    padding: 0.1rem 0.3rem;
+  }
+}
+
+.send-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.send-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.send-request-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.method-badge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+}
+
+.send-url {
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: #334155;
+  word-break: break-all;
+}
+
+.body-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.body-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.375rem;
+}
+
+.send-request textarea {
+  width: 100%;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.send-response {
+  border-left: 1px solid #e2e8f0;
+  padding-left: 1.25rem;
+}
+
+.response-empty {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  padding: 1rem 0;
+}
+
+.response-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.response-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-badge {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+
+  &.status-ok { color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; }
+  &.status-fail { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+}
+
+.elapsed {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.response-body {
+  max-height: 20rem;
+  overflow: auto;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: monospace;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .send-grid { grid-template-columns: 1fr; }
+  .send-response { border-left: none; padding-left: 0; border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 1rem; }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}

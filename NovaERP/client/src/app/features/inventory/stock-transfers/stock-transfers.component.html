@@ -1,0 +1,71 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Stock Transfers</h1>
+  <button *appHasPermission="'warehouse.create'" pButton type="button" icon="pi pi-plus" label="New Transfer"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="transfers" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Product</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Quantity</th>
+        <th>Date</th>
+        <th>Notes</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td>
+          <code class="code-badge">{{ t.productSku }}</code>
+          <span class="font-semibold"> {{ t.productName }}</span>
+        </td>
+        <td>{{ t.fromWarehouseName }}</td>
+        <td>{{ t.toWarehouseName }}</td>
+        <td>{{ t.quantity | number: '1.0-4' }}</td>
+        <td>{{ t.transferDate | date: 'mediumDate' }}</td>
+        <td>{{ t.notes }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="empty-cell">No stock transfers yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="New Stock Transfer" [(visible)]="showDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Product</span>
+      <p-dropdown [options]="products" optionLabel="name" optionValue="id" [(ngModel)]="form.productId"
+                  placeholder="Select a product" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>From Warehouse</span>
+      <p-dropdown [options]="warehouses" optionLabel="name" optionValue="id" [(ngModel)]="form.fromWarehouseId"
+                  placeholder="Select source" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>To Warehouse</span>
+      <p-dropdown [options]="warehouses" optionLabel="name" optionValue="id" [(ngModel)]="form.toWarehouseId"
+                  placeholder="Select destination" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Quantity</span>
+      <p-inputNumber [(ngModel)]="form.quantity" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="4"
+                      [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Notes</span>
+      <input pInputText [(ngModel)]="form.notes" />
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,1 @@
+import{B as e}from"./chunk-YIFEAXLI.js";function r(){let n=localStorage.getItem(e.tokenKey);if(!n)return null;try{return JSON.parse(atob(n.split(".")[1]))}catch{return null}}function u(){let o=r()?.employeeId;return o?Number(o):null}export{u as a};

@@ -1,0 +1,474 @@
+<div class="kds-root">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="kds-header">
+    <div class="kds-title">
+      <mat-icon>restaurant</mat-icon>
+      <span>Kitchen Display System</span>
+    </div>
+    <div class="kds-counters">
+      <span class="counter new-count" [class.pulsing]="newLane().length > 0">
+        <mat-icon>fiber_new</mat-icon> {{ newLane().length }} New
+      </span>
+      <span class="counter pending-count">
+        <mat-icon>outdoor_grill</mat-icon> {{ preparingLane().length }} Preparing
+      </span>
+      <span class="counter ready-count">
+        <mat-icon>check_circle</mat-icon> {{ readyLane().length }} Ready
+      </span>
+    </div>
+  </header>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="kds-loading">
+      <div class="spinner"></div>
+      <p>Loading kitchen orders…</p>
+    </div>
+  } @else {
+
+    <div class="kds-board">
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- LANE 1 — NEW ORDERS                                             -->
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <div class="kds-lane lane-new">
+        <div class="lane-header new-hdr">
+          <mat-icon>fiber_new</mat-icon>
+          <span>New Orders</span>
+          <span class="lane-badge">{{ newLane().length }}</span>
+        </div>
+
+        @if (newLane().length === 0) {
+          <div class="lane-empty">
+            <mat-icon>inbox</mat-icon>
+            <p>No new orders</p>
+          </div>
+        }
+
+        @for (order of newLane(); track order.id) {
+          <div class="kds-card" [class.warning]="isWarning(order.elapsedMs)" [class.late]="isLate(order.elapsedMs)">
+
+            <div class="card-top">
+              <span class="order-num">{{ order.orderNumber }}</span>
+              @if (order.tableNumber) {
+                <span class="table-tag">T{{ order.tableNumber }}</span>
+              } @else {
+                <span class="table-tag takeaway">TA</span>
+              }
+              <span class="elapsed" [class.warn]="isWarning(order.elapsedMs)" [class.late]="isLate(order.elapsedMs)">
+                <mat-icon class="elapsed-icon">schedule</mat-icon>{{ elapsedLabel(order.elapsedMs) }}
+              </span>
+            </div>
+
+            <ul class="item-list">
+              @for (item of order.preparingItems; track item.foodItemId) {
+                <li class="item-row" [class.item-rejected]="isItemRejected(order.id, item.foodItemId)">
+                  <span class="qty">×{{ item.qty }}</span>
+                  <span class="name">{{ item.name }}</span>
+                  @if (isItemRejected(order.id, item.foodItemId)) {
+                    <span class="item-rej-badge">UNAVAILABLE</span>
+                  }
+                  <button *hasPermission="'kds.reject_item'"
+                          class="reject-item-btn"
+                          [class.active]="isItemRejected(order.id, item.foodItemId)"
+                          (click)="toggleItemReject(order.id, item.foodItemId)"
+                          [matTooltip]="isItemRejected(order.id, item.foodItemId) ? 'Undo' : 'Mark unavailable'">
+                    <mat-icon>{{ isItemRejected(order.id, item.foodItemId) ? 'undo' : 'remove_circle_outline' }}</mat-icon>
+                  </button>
+                </li>
+                @if (item.addOnNotes) {
+                  <li class="addon-note">↳ {{ item.addOnNotes }}</li>
+                }
+              }
+            </ul>
+
+            <!-- Send rejection panel -->
+            @if (rejectedCount(order.id) > 0) {
+              <div class="item-reject-panel">
+                <div class="irp-label">
+                  <mat-icon>cancel</mat-icon>
+                  {{ rejectedCount(order.id) }} item(s) marked unavailable
+                </div>
+                <input class="irp-reason"
+                       type="text"
+                       placeholder="Reason (e.g. Out of stock)"
+                       [value]="getItemRejectReason(order.id)"
+                       (input)="setItemRejectReason(order.id, $any($event.target).value)"
+                       maxlength="120" />
+                <button class="irp-send"
+                        [disabled]="sendingReject() === order.id"
+                        (click)="sendItemRejections(order)">
+                  <mat-icon>{{ sendingReject() === order.id ? 'hourglass_top' : 'send' }}</mat-icon>
+                  {{ sendingReject() === order.id ? 'Sending…' : 'Remove & Notify POS' }}
+                </button>
+              </div>
+            }
+
+            <div class="card-actions">
+              <button *hasPermission="'kds.accept_order'" class="act-btn accept-btn" (click)="acceptOrder(order)">
+                <mat-icon>check_circle</mat-icon> Accept &amp; Start
+              </button>
+              <button *hasPermission="'kds.print_slip'" class="icon-btn" (click)="openPrint(order)" matTooltip="Print slip">
+                <mat-icon>print</mat-icon>
+              </button>
+              <button *hasPermission="'kds.reject_order'" class="icon-btn danger" (click)="openRejectModal(order)" matTooltip="Reject order">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- LANE 2 — PREPARING                                              -->
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <div class="kds-lane lane-preparing">
+        <div class="lane-header preparing-hdr">
+          <mat-icon>outdoor_grill</mat-icon>
+          <span>Preparing</span>
+          <span class="lane-badge">{{ preparingLane().length }}</span>
+        </div>
+
+        @if (preparingLane().length === 0) {
+          <div class="lane-empty">
+            <mat-icon>hourglass_empty</mat-icon>
+            <p>Nothing in progress</p>
+          </div>
+        }
+
+        @for (order of preparingLane(); track order.id) {
+          <div class="kds-card" [class.warning]="isWarning(order.elapsedMs)" [class.late]="isLate(order.elapsedMs)">
+
+            <div class="card-top">
+              <span class="order-num">{{ order.orderNumber }}</span>
+              @if (order.tableNumber) {
+                <span class="table-tag">T{{ order.tableNumber }}</span>
+              } @else {
+                <span class="table-tag takeaway">TA</span>
+              }
+              <span class="elapsed prep-timer" [class.warn]="isWarning(order.elapsedMs)" [class.late]="isLate(order.elapsedMs)">
+                <mat-icon class="elapsed-icon">timer</mat-icon>{{ getPrepTime(order.id) }}
+              </span>
+            </div>
+
+            <!-- Delay badge -->
+            @if (getDelayLabel(order.id)) {
+              <div class="delay-badge">
+                <mat-icon>hourglass_top</mat-icon>
+                <span>{{ getDelayLabel(order.id) }}</span>
+                <button class="delay-cancel-btn" (click)="cancelDelay(order.id)" matTooltip="Cancel delay">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+
+            <!-- Kitchen note -->
+            @if (getNote(order.id)) {
+              <div class="kitchen-note-badge">
+                <mat-icon>sticky_note_2</mat-icon>
+                <span>{{ getNote(order.id) }}</span>
+              </div>
+            }
+
+            <!-- Items with per-item reject -->
+            <ul class="item-list">
+              @for (item of order.preparingItems; track item.foodItemId) {
+                <li class="item-row" [class.item-rejected]="isItemRejected(order.id, item.foodItemId)">
+                  <span class="qty">×{{ item.qty }}</span>
+                  <span class="name">{{ item.name }}</span>
+                  @if (isItemRejected(order.id, item.foodItemId)) {
+                    <span class="item-rej-badge">UNAVAILABLE</span>
+                  }
+                  <button *hasPermission="'kds.reject_item'"
+                          class="reject-item-btn"
+                          [class.active]="isItemRejected(order.id, item.foodItemId)"
+                          (click)="toggleItemReject(order.id, item.foodItemId)"
+                          [matTooltip]="isItemRejected(order.id, item.foodItemId) ? 'Undo' : 'Mark unavailable'">
+                    <mat-icon>{{ isItemRejected(order.id, item.foodItemId) ? 'undo' : 'remove_circle_outline' }}</mat-icon>
+                  </button>
+                </li>
+                @if (item.addOnNotes) {
+                  <li class="addon-note">↳ {{ item.addOnNotes }}</li>
+                }
+              }
+            </ul>
+
+            <!-- Send rejection panel — appears when any item is marked -->
+            @if (rejectedCount(order.id) > 0) {
+              <div class="item-reject-panel">
+                <div class="irp-label">
+                  <mat-icon>cancel</mat-icon>
+                  {{ rejectedCount(order.id) }} item(s) marked unavailable
+                </div>
+                <input class="irp-reason"
+                       type="text"
+                       placeholder="Reason (e.g. Out of stock)"
+                       [value]="getItemRejectReason(order.id)"
+                       (input)="setItemRejectReason(order.id, $any($event.target).value)"
+                       maxlength="120" />
+                <button class="irp-send"
+                        [disabled]="sendingReject() === order.id"
+                        (click)="sendItemRejections(order)">
+                  <mat-icon>{{ sendingReject() === order.id ? 'hourglass_top' : 'send' }}</mat-icon>
+                  {{ sendingReject() === order.id ? 'Sending…' : 'Remove & Notify POS' }}
+                </button>
+              </div>
+            }
+
+            <div class="card-actions">
+              <button *hasPermission="'kds.mark_ready'" class="act-btn ready-btn" (click)="markReady(order)" [disabled]="order.marking">
+                @if (order.marking) {
+                  <mat-icon class="spin-icon">autorenew</mat-icon>
+                } @else {
+                  <mat-icon>done_all</mat-icon>
+                }
+                Mark Ready
+              </button>
+              <button *hasPermission="'kds.kitchen_notes'" class="icon-btn" (click)="openNoteModal(order)" matTooltip="Add kitchen note">
+                <mat-icon>sticky_note_2</mat-icon>
+              </button>
+              <button *hasPermission="'kds.delay_order'" class="icon-btn" (click)="openDelayModal(order)" matTooltip="Delay order">
+                <mat-icon>hourglass_top</mat-icon>
+              </button>
+              <button *hasPermission="'kds.print_slip'" class="icon-btn" (click)="openPrint(order)" matTooltip="Print slip">
+                <mat-icon>print</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- LANE 3 — READY FOR PICKUP                                       -->
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <div class="kds-lane lane-ready">
+        <div class="lane-header ready-hdr">
+          <mat-icon>check_circle</mat-icon>
+          <span>Ready for Pickup</span>
+          <span class="lane-badge">{{ readyLane().length }}</span>
+        </div>
+
+        @if (readyLane().length === 0) {
+          <div class="lane-empty">
+            <mat-icon>done_all</mat-icon>
+            <p>All served!</p>
+          </div>
+        }
+
+        @for (order of readyLane(); track order.id) {
+          <div class="kds-card done">
+
+            <div class="card-top">
+              <span class="order-num">{{ order.orderNumber }}</span>
+              @if (order.tableNumber) {
+                <span class="table-tag">T{{ order.tableNumber }}</span>
+              } @else {
+                <span class="table-tag takeaway">TA</span>
+              }
+              <span class="elapsed">
+                <mat-icon class="elapsed-icon">schedule</mat-icon>{{ elapsedLabel(order.elapsedMs) }}
+              </span>
+            </div>
+
+            @if (getNote(order.id)) {
+              <div class="kitchen-note-badge">
+                <mat-icon>sticky_note_2</mat-icon>
+                <span>{{ getNote(order.id) }}</span>
+              </div>
+            }
+
+            <ul class="item-list">
+              @for (item of order.readyItems; track item.name) {
+                <li class="item-row">
+                  <span class="qty">×{{ item.qty }}</span>
+                  <span class="name">{{ item.name }}</span>
+                </li>
+              }
+            </ul>
+
+            <div class="ready-waiting">
+              <mat-icon>local_dining</mat-icon>
+              <span>Awaiting Pickup by Waiter</span>
+            </div>
+
+            <div class="card-actions">
+              <button *hasPermission="'kds.mark_served'" class="act-btn served-btn" (click)="markServed(order)" [disabled]="order.marking">
+                @if (order.marking) {
+                  <mat-icon class="spin-icon">autorenew</mat-icon>
+                } @else {
+                  <mat-icon>delivery_dining</mat-icon>
+                }
+                Mark Served
+              </button>
+              <button *hasPermission="'kds.print_slip'" class="icon-btn" (click)="openPrint(order)" matTooltip="Print slip">
+                <mat-icon>print</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL — Kitchen Note                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+@if (noteModal()) {
+  <div class="kds-overlay" (click)="closeNoteModal()">
+    <div class="kds-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <mat-icon>sticky_note_2</mat-icon>
+        <span>Kitchen Note — {{ noteModal()!.orderNumber }}</span>
+        <button class="modal-close" (click)="closeNoteModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <textarea
+          class="note-textarea"
+          placeholder="e.g. No onions, extra spicy, allergen alert…"
+          [(ngModel)]="noteInput"
+          rows="4"
+          maxlength="280">
+        </textarea>
+        <p class="note-hint">Visible to kitchen staff only · max 280 chars</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn secondary" (click)="closeNoteModal()">Cancel</button>
+        <button class="modal-btn primary" (click)="saveNote()">
+          <mat-icon>save</mat-icon> Save Note
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL — Delay Order                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+@if (delayModal()) {
+  <div class="kds-overlay" (click)="closeDelayModal()">
+    <div class="kds-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>Delay — {{ delayModal()!.orderNumber }}</span>
+        <button class="modal-close" (click)="closeDelayModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <p class="delay-prompt">How much extra time do you need?</p>
+        <div class="delay-chips">
+          @for (opt of delayOptions; track opt.mins) {
+            <button class="delay-chip" (click)="applyDelay(delayModal()!, opt.mins)">
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn secondary" (click)="closeDelayModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL — Print Kitchen Slip                                              -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+@if (printOrder()) {
+  <div class="kds-overlay no-print" (click)="closePrint()">
+    <div class="kds-modal slip-modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header no-print">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Kitchen Slip — {{ printOrder()!.orderNumber }}</span>
+        <button class="modal-close" (click)="closePrint()"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <!-- ── Slip (visible in modal + in print) ── -->
+      <div class="slip-wrap">
+        <div class="slip">
+          <p class="slip-brand">KITCHEN SLIP</p>
+          <p class="slip-divider">━━━━━━━━━━━━━━━━━━━━━━━</p>
+          <p class="slip-order">{{ printOrder()!.orderNumber }}</p>
+          @if (printOrder()!.tableNumber) {
+            <p class="slip-table">Table {{ printOrder()!.tableNumber }}</p>
+          } @else {
+            <p class="slip-table">Takeaway</p>
+          }
+          <p class="slip-time">{{ formatTime(printOrder()!.createdAt) }}</p>
+          <p class="slip-divider">━━━━━━━━━━━━━━━━━━━━━━━</p>
+
+          <ul class="slip-items">
+            @for (item of printOrder()!.preparingItems; track item.name) {
+              <li class="slip-item">
+                <span class="slip-qty">{{ item.qty }}x</span>
+                <span class="slip-name">{{ item.name }}</span>
+              </li>
+              @if (item.addOnNotes) {
+                <li class="slip-addon">   ↳ {{ item.addOnNotes }}</li>
+              }
+            }
+            @for (item of printOrder()!.readyItems; track item.name) {
+              <li class="slip-item">
+                <span class="slip-qty">{{ item.qty }}x</span>
+                <span class="slip-name">{{ item.name }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (getNote(printOrder()!.id)) {
+            <p class="slip-divider">━━━━━━━━━━━━━━━━━━━━━━━</p>
+            <p class="slip-note"><strong>NOTE:</strong> {{ getNote(printOrder()!.id) }}</p>
+          }
+
+          <p class="slip-divider">━━━━━━━━━━━━━━━━━━━━━━━</p>
+          <p class="slip-footer">KDS · FoodOrder POS v1.0</p>
+        </div>
+      </div>
+
+      <div class="modal-footer no-print">
+        <button class="modal-btn secondary" (click)="closePrint()">Close</button>
+        <button class="modal-btn primary" (click)="printSlip()">
+          <mat-icon>print</mat-icon> Print Now
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL — Reject Order                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+@if (rejectModal()) {
+  <div class="kds-overlay" (click)="closeRejectModal()">
+    <div class="kds-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header reject-hdr">
+        <mat-icon>cancel</mat-icon>
+        <span>Reject — {{ rejectModal()!.orderNumber }}</span>
+        <button class="modal-close" (click)="closeRejectModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <p class="reject-warning">
+          <mat-icon>warning</mat-icon>
+          This will cancel the order, restore stock, and notify the cashier in real time.
+        </p>
+        <textarea
+          class="note-textarea"
+          placeholder="Reason (optional) — e.g. Out of stock, Equipment issue…"
+          [(ngModel)]="rejectReason"
+          rows="3"
+          maxlength="200">
+        </textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn secondary" (click)="closeRejectModal()">Go Back</button>
+        <button class="modal-btn danger" [disabled]="rejecting()" (click)="confirmReject()">
+          <mat-icon>{{ rejecting() ? 'hourglass_top' : 'cancel' }}</mat-icon>
+          {{ rejecting() ? 'Rejecting…' : 'Reject Order' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

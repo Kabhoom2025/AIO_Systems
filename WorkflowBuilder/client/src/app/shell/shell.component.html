@@ -1,0 +1,10 @@
+<div class="shell-topbar">
+  <span class="brand">Workflow Builder</span>
+  <div class="topbar-right">
+    <span class="user-name" *ngIf="userName">{{ userName }}</span>
+    <button pButton type="button" label="Log out" class="p-button-text p-button-sm" (click)="logout()"></button>
+  </div>
+</div>
+<div class="shell-body">
+  <router-outlet></router-outlet>
+</div>

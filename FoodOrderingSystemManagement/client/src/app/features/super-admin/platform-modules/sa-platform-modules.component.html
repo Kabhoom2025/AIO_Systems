@@ -1,0 +1,186 @@
+<!-- Page header -->
+<div class="pm-page">
+
+  <div class="pm-header">
+    <div class="pm-header-left">
+      <div class="pm-header-icon">
+        <mat-icon>apps</mat-icon>
+      </div>
+      <div>
+        <h1 class="pm-title">Platform Modules</h1>
+        <p class="pm-subtitle">Manage industry verticals and assign modules to organizations</p>
+      </div>
+    </div>
+    @if (activeTab() === 'modules') {
+      <button class="pm-btn-primary" (click)="openCreate()">
+        <mat-icon>add</mat-icon> New Module
+      </button>
+    }
+  </div>
+
+  <!-- Tabs -->
+  <div class="pm-tabs">
+    <button class="pm-tab" [class.active]="activeTab() === 'modules'" (click)="setTab('modules')">
+      <mat-icon>extension</mat-icon> Modules
+    </button>
+    <button class="pm-tab" [class.active]="activeTab() === 'organizations'" (click)="setTab('organizations')">
+      <mat-icon>corporate_fare</mat-icon> Organization Assignment
+    </button>
+  </div>
+
+  <!-- ══════ MODULES TAB ══════ -->
+  @if (activeTab() === 'modules') {
+    <div class="pm-content">
+
+      <!-- Inline create/edit form -->
+      @if (showForm()) {
+        <div class="pm-form-card">
+          <h3 class="pm-form-title">{{ isEditing ? 'Edit Module' : 'Create Module' }}</h3>
+          <form [formGroup]="form" (ngSubmit)="save()" class="pm-form">
+            <div class="pm-form-row">
+              <div class="pm-field">
+                <label>Module Name *</label>
+                <input type="text" formControlName="name" placeholder="e.g. Restaurant POS" />
+              </div>
+              <div class="pm-field">
+                <label>Key * <span class="pm-hint">(lowercase, underscores only)</span></label>
+                <input type="text" formControlName="key" placeholder="e.g. restaurant" />
+              </div>
+            </div>
+            <div class="pm-field">
+              <label>Description</label>
+              <input type="text" formControlName="description" placeholder="Brief description..." />
+            </div>
+            <div class="pm-form-row">
+              <div class="pm-field">
+                <label>Material Icon Name</label>
+                <div class="pm-icon-preview-row">
+                  <mat-icon class="pm-icon-preview" [style.color]="form.value.color">{{ form.value.icon || 'widgets' }}</mat-icon>
+                  <input type="text" formControlName="icon" placeholder="e.g. restaurant" />
+                </div>
+              </div>
+              <div class="pm-field">
+                <label>Accent Color</label>
+                <div class="pm-color-row">
+                  <input type="color" formControlName="color" class="pm-color-input" />
+                  <input type="text" formControlName="color" placeholder="#6c757d" />
+                </div>
+              </div>
+              <div class="pm-field pm-field-sm">
+                <label>Sort Order</label>
+                <input type="number" formControlName="sortOrder" min="0" />
+              </div>
+            </div>
+            <div class="pm-form-actions">
+              <button type="button" class="pm-btn-ghost" (click)="cancelForm()">Cancel</button>
+              <button type="submit" class="pm-btn-primary">
+                <mat-icon>save</mat-icon> {{ isEditing ? 'Update' : 'Create' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Module cards grid -->
+      @if (loading()) {
+        <div class="pm-loading">
+          <mat-icon class="pm-spin">refresh</mat-icon> Loading modules...
+        </div>
+      } @else {
+        <div class="pm-grid">
+          @for (mod of modules(); track mod.id) {
+            <div class="pm-card" [class.inactive]="!mod.isActive">
+              <div class="pm-card-accent" [style.background]="mod.color"></div>
+              <div class="pm-card-body">
+                <div class="pm-card-header">
+                  <div class="pm-card-icon" [style.background]="mod.color + '22'" [style.color]="mod.color">
+                    <mat-icon>{{ mod.icon }}</mat-icon>
+                  </div>
+                  <div class="pm-card-meta">
+                    <h3 class="pm-card-name">{{ mod.name }}</h3>
+                    <code class="pm-card-key">{{ mod.key }}</code>
+                  </div>
+                  <div class="pm-card-status" [class.active]="mod.isActive">
+                    {{ mod.isActive ? 'Active' : 'Inactive' }}
+                  </div>
+                </div>
+                <p class="pm-card-desc">{{ mod.description }}</p>
+              </div>
+              <div class="pm-card-footer">
+                <button class="pm-icon-btn" (click)="openEdit(mod)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="pm-icon-btn" (click)="toggleActive(mod)"
+                        [matTooltip]="mod.isActive ? 'Deactivate' : 'Activate'">
+                  <mat-icon>{{ mod.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                </button>
+                <button class="pm-icon-btn danger" (click)="deleteModule(mod)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (modules().length === 0 && !loading()) {
+            <div class="pm-empty">
+              <mat-icon>extension_off</mat-icon>
+              <p>No modules yet. Click <strong>New Module</strong> to create one.</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════ ORGANIZATIONS TAB ══════ -->
+  @if (activeTab() === 'organizations') {
+    <div class="pm-content">
+      <p class="pm-org-hint">Toggle modules for each organization, then click <strong>Save</strong>.</p>
+
+      @for (org of orgStatuses(); track org.organizationId) {
+        <div class="pm-org-card">
+          <div class="pm-org-header">
+            <div class="pm-org-avatar">{{ org.organizationName.charAt(0).toUpperCase() }}</div>
+            <div class="pm-org-info">
+              <h3>{{ org.organizationName }}</h3>
+              <span class="pm-org-count">
+                {{ countEnabled(org) }} of {{ org.modules.length }} modules enabled
+              </span>
+            </div>
+            <button class="pm-btn-save"
+                    (click)="saveOrgModules(org)"
+                    [disabled]="savingOrgId() === org.organizationId">
+              @if (savingOrgId() === org.organizationId) {
+                <mat-icon class="pm-spin">refresh</mat-icon>
+              } @else {
+                <mat-icon>save</mat-icon>
+              }
+              Save
+            </button>
+          </div>
+          <div class="pm-module-toggles">
+            @for (mod of org.modules; track mod.moduleId) {
+              <button class="pm-module-chip"
+                      [class.enabled]="mod.isEnabled"
+                      [style.--chip-color]="mod.color"
+                      (click)="toggleOrgModule(org, mod)"
+                      [matTooltip]="mod.moduleKey">
+                <mat-icon>{{ mod.icon }}</mat-icon>
+                <span>{{ mod.moduleName }}</span>
+                <mat-icon class="chip-check">{{ mod.isEnabled ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (orgStatuses().length === 0) {
+        <div class="pm-empty">
+          <mat-icon>corporate_fare</mat-icon>
+          <p>No organizations found.</p>
+        </div>
+      }
+    </div>
+  }
+
+</div>

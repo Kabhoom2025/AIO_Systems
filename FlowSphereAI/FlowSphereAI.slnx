@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="FlowSphere.API/FlowSphere.API.csproj" />
+  <Project Path="FlowSphere.Application/FlowSphere.Application.csproj" />
+  <Project Path="FlowSphere.Domain/FlowSphere.Domain.csproj" />
+  <Project Path="FlowSphere.Execution/FlowSphere.Execution.csproj" />
+  <Project Path="FlowSphere.Infrastructure/FlowSphere.Infrastructure.csproj" />
+  <Project Path="FlowSphere.Tests/FlowSphere.Tests.csproj" />
+</Solution>

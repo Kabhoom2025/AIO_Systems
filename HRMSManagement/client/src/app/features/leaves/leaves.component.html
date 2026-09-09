@@ -1,0 +1,263 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Leaves</h1>
+</div>
+
+<p-tabView>
+  <!-- ===================== MY LEAVES ===================== -->
+  <p-tabPanel header="My Leaves">
+    <div class="card">
+      <h3>Balances</h3>
+      <div class="balance-cards" *ngIf="!balancesLoading; else balLoading">
+        <div class="balance-card" *ngFor="let b of balances">
+          <span class="type-name">{{ b.leaveTypeName }}</span>
+          <div class="balance-row"><span>Allocated</span><b>{{ b.allocated }}</b></div>
+          <div class="balance-row"><span>Used</span><b>{{ b.used }}</b></div>
+          <div class="balance-row"><span>Carried Fwd</span><b>{{ b.carriedForward }}</b></div>
+          <div class="balance-row available"><span>Available</span><b>{{ b.available }}</b></div>
+        </div>
+        <div class="empty" *ngIf="!balances.length">No leave balances allocated yet.</div>
+      </div>
+      <ng-template #balLoading><div class="empty">Loading balances...</div></ng-template>
+    </div>
+
+    <div class="card">
+      <div class="page-header">
+        <h3>My Requests</h3>
+        <p-button label="Apply for Leave" icon="pi pi-plus" (onClick)="openApplyDialog()"></p-button>
+      </div>
+
+      <p-table [value]="myRequests" [loading]="myRequestsLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Leave Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Days</th>
+            <th>Half Day</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>{{ r.leaveTypeName }}</td>
+            <td>{{ r.startDate | date:'mediumDate' }}</td>
+            <td>{{ r.endDate | date:'mediumDate' }}</td>
+            <td>{{ r.days }}</td>
+            <td>{{ r.isHalfDay ? 'Yes' : 'No' }}</td>
+            <td>{{ r.reason }}</td>
+            <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+            <td>
+              <p-button *ngIf="canCancel(r)" label="Cancel" size="small" severity="danger" (onClick)="cancelRequest(r)"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8">No leave requests yet.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== APPROVALS ===================== -->
+  <p-tabPanel header="Approvals" *appHasPermission="'leaves.approve'">
+    <div class="card">
+      <p-table [value]="pendingRequests" [loading]="pendingLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Days</th>
+            <th>Reason</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>{{ r.employeeName }}</td>
+            <td>{{ r.leaveTypeName }}</td>
+            <td>{{ r.startDate | date:'mediumDate' }}</td>
+            <td>{{ r.endDate | date:'mediumDate' }}</td>
+            <td>{{ r.days }}</td>
+            <td>{{ r.reason }}</td>
+            <td>
+              <p-button label="Approve" size="small" severity="success" (onClick)="openReview(r, 'approve')"></p-button>
+              <p-button label="Reject" size="small" severity="danger" (onClick)="openReview(r, 'reject')"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7">No pending leave requests.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== LEAVE TYPES ===================== -->
+  <p-tabPanel header="Leave Types" *appHasPermission="'leaves.edit'">
+    <div class="card">
+      <div class="page-header">
+        <h3>Leave Types</h3>
+        <p-button label="Add Type" icon="pi pi-plus" (onClick)="openAddType()"></p-button>
+      </div>
+
+      <p-table [value]="leaveTypes" [loading]="typesLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Color</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Paid</th>
+            <th>Annual Quota</th>
+            <th>Max Carry Fwd</th>
+            <th>Requires Approval</th>
+            <th>Active</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-t>
+          <tr>
+            <td><span class="color-dot" [style.background]="t.color || '#9ca3af'"></span></td>
+            <td>{{ t.name }}</td>
+            <td>{{ t.code }}</td>
+            <td>{{ t.isPaid ? 'Yes' : 'No' }}</td>
+            <td>{{ t.annualQuota }}</td>
+            <td>{{ t.maxCarryForward }}</td>
+            <td>{{ t.requiresApproval ? 'Yes' : 'No' }}</td>
+            <td><p-tag [severity]="t.isActive ? 'success' : 'secondary'" [value]="t.isActive ? 'Active' : 'Inactive'"></p-tag></td>
+            <td>
+              <p-button icon="pi pi-pencil" size="small" severity="secondary" (onClick)="openEditType(t)"></p-button>
+              <p-button icon="pi pi-trash" size="small" severity="danger" (onClick)="deleteType(t)"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="9">No leave types configured.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ===================== CALENDAR ===================== -->
+  <p-tabPanel header="Calendar" *appHasPermission="'leaves.view'">
+    <div class="card">
+      <h3>Approved Leaves This Month</h3>
+      <p-table [value]="calendarEntries" [loading]="calendarLoading" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Start</th>
+            <th>End</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr>
+            <td>{{ c.employeeName }}</td>
+            <td>
+              <span class="color-dot" [style.background]="c.color || '#9ca3af'"></span>
+              {{ c.leaveTypeName }}
+            </td>
+            <td>{{ c.startDate | date:'mediumDate' }}</td>
+            <td>{{ c.endDate | date:'mediumDate' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="4">No approved leaves this month.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+</p-tabView>
+
+<!-- Apply for Leave Dialog -->
+<p-dialog header="Apply for Leave" [(visible)]="showApplyDialog" [modal]="true" [style]="{ width: '420px' }">
+  <div class="form-grid">
+    <label>
+      Leave Type
+      <p-dropdown [options]="leaveTypes" optionLabel="name" optionValue="id" [(ngModel)]="applyForm.leaveTypeId" placeholder="Select a type"></p-dropdown>
+    </label>
+    <label>
+      Start Date
+      <p-calendar [(ngModel)]="applyForm.startDate" dateFormat="dd-M-yy"></p-calendar>
+    </label>
+    <label>
+      End Date
+      <p-calendar [(ngModel)]="applyForm.endDate" dateFormat="dd-M-yy"></p-calendar>
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="applyForm.isHalfDay" [binary]="true"></p-checkbox>
+      Half Day
+    </label>
+    <label>
+      Reason
+      <textarea pInputTextarea rows="3" [(ngModel)]="applyForm.reason"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="showApplyDialog = false"></p-button>
+    <p-button label="Submit" [loading]="applySaving" (onClick)="submitApply()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Review (Approve/Reject) Dialog -->
+<p-dialog [header]="reviewAction === 'approve' ? 'Approve Leave Request' : 'Reject Leave Request'" [(visible)]="showReviewDialog" [modal]="true" [style]="{ width: '380px' }">
+  <div class="form-grid">
+    <label>
+      Notes
+      <textarea pInputTextarea rows="3" [(ngModel)]="reviewNotes" placeholder="Optional notes"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="showReviewDialog = false"></p-button>
+    <p-button [label]="reviewAction === 'approve' ? 'Approve' : 'Reject'" [loading]="reviewSaving" (onClick)="submitReview()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Add/Edit Leave Type Dialog -->
+<p-dialog [header]="editingTypeId ? 'Edit Leave Type' : 'Add Leave Type'" [(visible)]="showTypeDialog" [modal]="true" [style]="{ width: '420px' }">
+  <div class="form-grid">
+    <label>
+      Name
+      <input pInputText [(ngModel)]="typeForm.name" />
+    </label>
+    <label>
+      Code
+      <input pInputText [(ngModel)]="typeForm.code" />
+    </label>
+    <label>
+      Annual Quota
+      <p-inputNumber [(ngModel)]="typeForm.annualQuota"></p-inputNumber>
+    </label>
+    <label>
+      Max Carry Forward
+      <p-inputNumber [(ngModel)]="typeForm.maxCarryForward"></p-inputNumber>
+    </label>
+    <label>
+      Color
+      <input type="color" [(ngModel)]="typeForm.color" />
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="typeForm.isPaid" [binary]="true"></p-checkbox>
+      Paid
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="typeForm.requiresApproval" [binary]="true"></p-checkbox>
+      Requires Approval
+    </label>
+    <label class="checkbox-row" *ngIf="editingTypeId">
+      <p-checkbox [(ngModel)]="typeForm.isActive" [binary]="true"></p-checkbox>
+      Active
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="showTypeDialog = false"></p-button>
+    <p-button label="Save" [loading]="typeSaving" (onClick)="saveType()"></p-button>
+  </ng-template>
+</p-dialog>

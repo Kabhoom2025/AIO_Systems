@@ -1,0 +1,41 @@
+.reports-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.date-range { display: flex; align-items: end; gap: 1rem;
+  label { display: flex; flex-direction: column; font-size: 0.8rem; color: #555; gap: 4px;
+    input { padding: 6px; border: 1px solid #ddd; border-radius: 6px; }
+  }
+}
+.btn-primary { background: #1a237e; color: #fff; border: none; padding: 0.55rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; height: fit-content; }
+
+.report-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.06); padding: 1.25rem; margin-bottom: 1.25rem;
+  h3 { margin: 0 0 1rem; color: #1a237e; }
+}
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.stat { display: flex; flex-direction: column; gap: 4px; padding: 0.75rem; background: #f8f9fa; border-radius: 8px;
+  span { font-size: 0.78rem; color: #777; }
+  b { font-size: 1.1rem; color: #222; }
+  &.highlight { background: #e8f5e9; }
+  &.highlight.negative { background: #ffebee; }
+}
+
+.cashbook-table { width: 100%; border-collapse: collapse;
+  th, td { text-align: left; padding: 8px 10px; font-size: 0.82rem; border-bottom: 1px solid #f0f0f0; }
+  th { background: #f8f9fa; color: #555; }
+}
+.type-badge { padding: 2px 8px; border-radius: 10px; background: #43a047; color: #fff; font-size: 0.72rem; font-weight: 700; }
+.type-badge.out { background: #e53935; }
+.loading, .empty { text-align: center; padding: 1.5rem; color: #999; }
+
+.tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+.tab-btn {
+  background: #f0f1f6; border: none; padding: 0.55rem 1.2rem; border-radius: 6px;
+  cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #555;
+  &.active { background: #1a237e; color: #fff; }
+}
+
+.chart-wrap { margin: 1rem 0; height: 260px; }
+.payment-table { margin-top: 1rem; }
+
+.total-row td { font-weight: 700; background: #f8f9fa; }

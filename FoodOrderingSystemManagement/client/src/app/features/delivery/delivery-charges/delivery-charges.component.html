@@ -1,0 +1,63 @@
+<div class="charges-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>price_change</mat-icon>
+      <div><h1>Delivery Charges</h1><p>Distance-based charge slabs</p></div>
+    </div>
+    <a class="btn-secondary" routerLink="/delivery"><mat-icon>arrow_back</mat-icon> Back</a>
+  </div>
+
+  <!-- Add Slab Form -->
+  <div class="add-card">
+    <h3>Add Charge Slab</h3>
+    <div class="form-row">
+      <div class="field">
+        <label>From (km)</label>
+        <input type="number" [(ngModel)]="newSlab.fromKm" min="0" placeholder="0" />
+      </div>
+      <div class="field">
+        <label>To (km)</label>
+        <input type="number" [(ngModel)]="newSlab.toKm" min="0" placeholder="5" />
+      </div>
+      <div class="field">
+        <label>Charge (₹)</label>
+        <input type="number" [(ngModel)]="newSlab.charge" min="0" placeholder="30" />
+      </div>
+      <button class="btn-add" [disabled]="saving() || newSlab.toKm <= newSlab.fromKm || newSlab.charge < 0" (click)="addSlab()">
+        <mat-icon>add</mat-icon> Add Slab
+      </button>
+    </div>
+  </div>
+
+  <!-- Slabs Table -->
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="36"></mat-spinner></div>
+  } @else {
+    <div class="slabs-table">
+      <div class="table-head">
+        <span>From (km)</span>
+        <span>To (km)</span>
+        <span>Charge (₹)</span>
+        <span>Actions</span>
+      </div>
+      @for (s of slabs(); track s.id) {
+        <div class="table-row">
+          <span>{{ s.fromKm }} km</span>
+          <span>{{ s.toKm }} km</span>
+          <span class="charge-val">₹{{ s.charge | number:'1.0-2' }}</span>
+          <span>
+            <button class="btn-delete" (click)="removeSlab(s.id)"><mat-icon>delete</mat-icon></button>
+          </span>
+        </div>
+      }
+      @if (slabs().length === 0) {
+        <div class="empty-state">
+          <mat-icon>price_change</mat-icon>
+          <p>No charge slabs configured yet.</p>
+        </div>
+      }
+    </div>
+  }
+
+</div>

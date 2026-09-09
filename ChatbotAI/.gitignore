@@ -1,0 +1,13 @@
+## .NET
+bin/
+obj/
+*.user
+
+## Angular
+client/node_modules/
+client/dist/
+client/.angular/
+
+## Logs / local secrets
+*.log
+.env

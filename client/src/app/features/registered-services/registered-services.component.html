@@ -1,0 +1,81 @@
+<div class="page-header">
+  <h1>Registered Services</h1>
+  <button mat-flat-button color="primary" (click)="openCreateDialog()">
+    <mat-icon>add</mat-icon>
+    Register Service
+  </button>
+</div>
+<p class="subtitle">
+  Downstream microservices (e.g. FoodOrder.API, Pharmacy.API) that trust JWTs minted by AIO_Systems.
+</p>
+
+@if (loading()) {
+  <mat-spinner diameter="36" />
+} @else {
+  <table mat-table [dataSource]="services()" class="mat-elevation-z1 full-width">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="routePrefix">
+      <th mat-header-cell *matHeaderCellDef>Route Prefix</th>
+      <td mat-cell *matCellDef="let s">/api/{{ s.routePrefix }}</td>
+    </ng-container>
+    <ng-container matColumnDef="baseUrl">
+      <th mat-header-cell *matHeaderCellDef>Base URL</th>
+      <td mat-cell *matCellDef="let s">{{ s.baseUrl }}</td>
+    </ng-container>
+    <ng-container matColumnDef="moduleKeys">
+      <th mat-header-cell *matHeaderCellDef>Modules</th>
+      <td mat-cell *matCellDef="let s">{{ s.moduleKeys || '—' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="isActive">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let s">
+        <mat-chip [class.active-chip]="s.isActive" [class.inactive-chip]="!s.isActive">
+          {{ s.isActive ? 'Active' : 'Inactive' }}
+        </mat-chip>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="health">
+      <th mat-header-cell *matHeaderCellDef>Health</th>
+      <td mat-cell *matCellDef="let s">
+        @if (!s.healthCheckPath) {
+          <span class="muted">Not configured</span>
+        } @else {
+          @switch (pingState(s.id)) {
+            @case ('checking') {
+              <mat-chip class="status-chip checking">Checking…</mat-chip>
+            }
+            @case ('online') {
+              <mat-chip class="status-chip online">Online</mat-chip>
+            }
+            @case ('offline') {
+              <mat-chip class="status-chip offline">Unreachable</mat-chip>
+            }
+            @default {
+              <button mat-button (click)="checkHealth(s)">Check</button>
+            }
+          }
+        }
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let s">
+        <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(s)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Delete" (click)="deleteService(s)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  @if (services().length === 0) {
+    <p class="empty-hint">No microservices registered yet.</p>
+  }
+}

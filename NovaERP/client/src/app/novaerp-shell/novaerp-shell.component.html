@@ -1,0 +1,95 @@
+<p-toast></p-toast>
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav mode="side" [opened]="sidenavOpen()" class="sidenav">
+    <div class="sidenav-header">
+      <div class="brand">NovaERP</div>
+      <div class="nav-search">
+        <mat-icon class="nav-search-icon">search</mat-icon>
+        <input type="text" placeholder="Search menu..." [(ngModel)]="navSearchTerm" autocomplete="off" />
+        @if (navSearchTerm) {
+          <button type="button" class="nav-search-clear" (click)="clearNavSearch()" aria-label="Clear search">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+    <mat-nav-list>
+      @if (!filteredNavGroups.length) {
+        <div class="nav-search-empty">No menu items match "{{ navSearchTerm }}".</div>
+      }
+      @for (group of filteredNavGroups; track group.label) {
+        <div class="nav-group-label">{{ group.label }}</div>
+        @for (item of group.items; track item.route) {
+          <ng-container *appHasPermission="item.permission ?? ''">
+            <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link">
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.label }}</span>
+            </a>
+          </ng-container>
+        }
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      <button mat-icon-button (click)="toggleSidenav()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="spacer"></span>
+      @if (user) {
+        @if (quickAccessItems.length) {
+          <button mat-button [matMenuTriggerFor]="quickAccessMenu">
+            <mat-icon>bolt</mat-icon>
+            Quick Links
+            <mat-icon class="caret">arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #quickAccessMenu="matMenu">
+            @for (item of quickAccessItems; track item.route) {
+              <ng-container *appHasPermission="item.permission ?? ''">
+                <button mat-menu-item [routerLink]="item.route">
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                  <span>{{ item.label }}</span>
+                </button>
+              </ng-container>
+            }
+          </mat-menu>
+        }
+        <span class="org-name">{{ user.organizationName }}</span>
+        <button mat-icon-button (click)="toggleAiPanel()" aria-label="Open AI Assistant">
+          <mat-icon>smart_toy</mat-icon>
+        </button>
+        <button mat-icon-button [routerLink]="'notifications'" [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">
+          <mat-icon>notifications</mat-icon>
+        </button>
+        <button mat-button [matMenuTriggerFor]="userMenu">
+          <mat-icon>account_circle</mat-icon>
+          {{ user.name }}
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <div class="user-menu-header">
+            <div>{{ user.email }}</div>
+            <div class="role">{{ user.role }}</div>
+          </div>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      }
+    </mat-toolbar>
+
+    <div class="content" [@routeAnimations]="prepareRouteAnimation(outlet)">
+      <router-outlet #outlet="outlet"></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<p-sidebar [(visible)]="showAiPanel" position="right" [style]="{ width: '34rem' }" [baseZIndex]="1100">
+  <ng-template pTemplate="header">
+    <span class="ai-panel-title">AI Assistant</span>
+  </ng-template>
+  @if (showAiPanel()) {
+    <app-ai-assistant></app-ai-assistant>
+  }
+</p-sidebar>

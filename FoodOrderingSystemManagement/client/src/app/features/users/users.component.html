@@ -1,0 +1,384 @@
+<div class="users-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <div class="title-icon"><mat-icon>manage_accounts</mat-icon></div>
+      <div>
+        <h1>Staff Accounts</h1>
+        <p>Manage user logins and roles</p>
+      </div>
+    </div>
+    <button mat-flat-button color="primary" (click)="openForm()">
+      <mat-icon>person_add</mat-icon>
+      Add User
+    </button>
+  </div>
+
+  <!-- ── Roles section (original strip) ────────────────── -->
+  <div class="roles-section">
+    <div class="roles-section-header">
+      <div class="roles-section-title">
+        <mat-icon>badge</mat-icon>
+        <span>Roles</span>
+        <span class="roles-count">{{ roles().length }}</span>
+      </div>
+      @if (isAdmin) {
+        @if (!showRoleInput()) {
+          <button mat-stroked-button color="primary" (click)="openRoleInput()">
+            <mat-icon>add</mat-icon>
+            Add Role
+          </button>
+        }
+      }
+    </div>
+
+    <div class="roles-strip">
+      @for (role of roles(); track role.id) {
+        <div class="role-card"
+             [class]="'role-card-' + getRoleClass(role.roleName)"
+             [class.role-card-active]="sheetOpen() && selectedRoleForPerms()?.id === role.id"
+             (click)="openSheet(role)"
+             matTooltip="Manage permissions"
+             matTooltipPosition="above">
+          <div class="role-card-icon">
+            <mat-icon>{{ getRoleIcon(role.roleName) }}</mat-icon>
+          </div>
+          <div class="role-card-body">
+            <span class="role-card-name">{{ role.roleName }}</span>
+            <span class="role-card-count">{{ role.userCount }} user{{ role.userCount !== 1 ? 's' : '' }}</span>
+          </div>
+          <span class="role-card-perm-hint"><mat-icon>chevron_right</mat-icon></span>
+        </div>
+      }
+
+      @if (showRoleInput()) {
+        <div class="role-card role-card-new">
+          <div class="role-card-icon">
+            <mat-icon>add_circle_outline</mat-icon>
+          </div>
+          <div class="role-new-form">
+            <input
+              class="role-name-input"
+              placeholder="Role name…"
+              [value]="newRoleName()"
+              (input)="newRoleName.set($any($event.target).value)"
+              (keydown.enter)="saveRole()"
+              (keydown.escape)="cancelRoleInput()"
+              autofocus />
+            <div class="role-new-actions">
+              <button mat-icon-button color="primary" (click)="saveRole()" [disabled]="savingRole() || !newRoleName().trim()">
+                @if (savingRole()) { <mat-spinner diameter="12" /> } @else { <mat-icon>check</mat-icon> }
+              </button>
+              <button mat-icon-button (click)="cancelRoleInput()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Create user form panel -->
+  @if (showForm()) {
+    <div class="form-panel">
+      <div class="form-panel-header">
+        <div class="form-panel-title">
+          <mat-icon>{{ isEditing ? 'edit' : 'person_add' }}</mat-icon>
+          <span>{{ isEditing ? 'Edit Staff Account' : 'New Staff Account' }}</span>
+        </div>
+        <button mat-icon-button (click)="closeForm()"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="create-form">
+
+        <!-- Avatar upload -->
+        <div class="avatar-upload-row">
+          <div class="avatar-upload-wrap">
+            <div class="avatar-upload-preview" (click)="avatarInput.click()">
+              @if (avatarPreview()) {
+                <img [src]="avatarPreview()!" alt="Preview" class="avatar-img" />
+              } @else {
+                <mat-icon class="avatar-placeholder-icon">person</mat-icon>
+              }
+              <div class="avatar-overlay">
+                <mat-icon>photo_camera</mat-icon>
+              </div>
+            </div>
+            @if (avatarPreview()) {
+              <button type="button" class="avatar-remove-btn" (click)="removeAvatar()" matTooltip="Remove photo">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+            <input #avatarInput type="file" accept="image/*" hidden (change)="onAvatarChange($event)" />
+          </div>
+          <div class="avatar-upload-hint">
+            <span class="avatar-hint-title">Profile Photo</span>
+            <span class="avatar-hint-sub">JPG, PNG or GIF · Max 2 MB</span>
+            <button type="button" class="avatar-browse-btn" (click)="avatarInput.click()">
+              <mat-icon>upload</mat-icon> Choose Photo
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Full Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g. Ravi Kumar" />
+            <mat-icon matPrefix>person</mat-icon>
+            @if (form.get('name')!.hasError('required') && form.get('name')!.touched) {
+              <mat-error>Name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email Address</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="ravi@restaurant.com" />
+            <mat-icon matPrefix>email</mat-icon>
+            @if (form.get('email')!.hasError('required') && form.get('email')!.touched) {
+              <mat-error>Email is required</mat-error>
+            } @else if (form.get('email')!.hasError('email') && form.get('email')!.touched) {
+              <mat-error>Invalid email address</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          @if (!isEditing) {
+            <mat-form-field appearance="outline">
+              <mat-label>Password</mat-label>
+              <input matInput formControlName="password"
+                     [type]="showPassword() ? 'text' : 'password'"
+                     placeholder="Min 6 characters" />
+              <mat-icon matPrefix>lock</mat-icon>
+              <button type="button" matSuffix mat-icon-button (click)="showPassword.set(!showPassword())">
+                <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (form.get('password')!.hasError('required') && form.get('password')!.touched) {
+                <mat-error>Password is required</mat-error>
+              } @else if (form.get('password')!.hasError('minlength') && form.get('password')!.touched) {
+                <mat-error>Minimum 6 characters</mat-error>
+              }
+            </mat-form-field>
+          }
+
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="roleId">
+              @for (r of roles(); track r.id) {
+                <mat-option [value]="r.id">{{ r.roleName }}</mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix>badge</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" mat-stroked-button (click)="closeForm()">Cancel</button>
+          <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+            @if (saving()) {
+              <mat-spinner diameter="16" />
+              <span>{{ isEditing ? 'Saving…' : 'Creating…' }}</span>
+            } @else {
+              <ng-container>
+                <mat-icon>{{ isEditing ? 'save' : 'person_add' }}</mat-icon>
+                <span>{{ isEditing ? 'Save Changes' : 'Create Account' }}</span>
+              </ng-container>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Users list -->
+  @if (loading()) {
+    <app-loading-spinner message="Loading staff accounts..." />
+  } @else if (users().length === 0) {
+    <div class="empty-state">
+      <mat-icon>group</mat-icon>
+      <p>No staff accounts yet</p>
+      <span>Click "Add User" to create one</span>
+    </div>
+  } @else {
+    <div class="users-grid">
+      @for (user of users(); track user.id) {
+        <div class="user-card" [class.inactive]="!user.isActive">
+          <div class="user-avatar" [class]="'avatar-' + getRoleClass(user.roleName)">
+            @if (user.profileImage) {
+              <img [src]="user.profileImage" [alt]="user.name" class="user-avatar-img" />
+            } @else {
+              {{ user.name.charAt(0).toUpperCase() }}
+            }
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-email">{{ user.email }}</div>
+            <div class="user-meta">
+              <span class="role-badge" [class]="'role-' + getRoleClass(user.roleName)">
+                <mat-icon>{{ getRoleIcon(user.roleName) }}</mat-icon>
+                {{ user.roleName }}
+              </span>
+              <span class="joined-date">Joined {{ user.createdDate | date:'dd MMM y' }}</span>
+            </div>
+          </div>
+          <div class="user-actions">
+            <span class="status-badge" [class.active]="user.isActive">
+              <span class="status-dot"></span>
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <button class="toggle-btn edit-btn"
+                    (click)="openEditForm(user)"
+                    matTooltip="Edit user">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button class="toggle-btn"
+                    [class.deactivate]="user.isActive"
+                    [disabled]="toggling() === user.id"
+                    (click)="toggleActive(user)"
+                    [matTooltip]="user.isActive ? 'Deactivate account' : 'Activate account'">
+              @if (toggling() === user.id) {
+                <mat-spinner diameter="14" />
+              } @else {
+                <mat-icon>{{ user.isActive ? 'person_off' : 'person' }}</mat-icon>
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     RIGHT SHEET — permissions panel (slides in from right)
+     ══════════════════════════════════════════════════════ -->
+
+<!-- Backdrop -->
+<div class="rs-backdrop" [class.open]="sheetOpen()" (click)="closeSheet()"></div>
+
+<!-- Sheet -->
+<div class="right-sheet" [class.open]="sheetOpen()">
+
+  @if (selectedRoleForPerms()) {
+
+    <!-- Sheet header -->
+    <div class="rs-header">
+      <div class="rs-role-info">
+        <div class="rs-role-icon" [class]="'rsri-' + getRoleClass(selectedRoleForPerms()!.roleName)">
+          <mat-icon>{{ getRoleIcon(selectedRoleForPerms()!.roleName) }}</mat-icon>
+        </div>
+        <div class="rs-role-text">
+          <span class="rs-role-name">{{ selectedRoleForPerms()!.roleName }}</span>
+          <span class="rs-role-sub">Manage Permissions</span>
+        </div>
+      </div>
+      <div class="rs-header-actions">
+        <span class="rs-count-pill">{{ selectedCount() }}/{{ totalFeatureCount }}</span>
+        <button mat-icon-button (click)="closeSheet()" matTooltip="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="rs-save-bar">
+      <button mat-flat-button color="primary" (click)="savePermissions()"
+              [disabled]="permSaving() || isAdminRoleSel()">
+        @if (permSaving()) {
+          <mat-spinner diameter="16" />
+          <span>Saving…</span>
+        } @else {
+          <ng-container>
+            <mat-icon>save</mat-icon>
+            <span>Save Permissions</span>
+          </ng-container>
+        }
+      </button>
+      @if (isAdminRoleSel()) {
+        <span class="rs-admin-badge">
+          <mat-icon>verified_user</mat-icon>
+          All permissions granted
+        </span>
+      }
+    </div>
+
+    <!-- Search + select all toolbar -->
+    <div class="rs-toolbar">
+      <div class="rs-search-box">
+        <mat-icon class="rss-icon">search</mat-icon>
+        <input class="rss-input" placeholder="Search permissions…"
+               [value]="searchPerms()"
+               (input)="searchPerms.set($any($event.target).value)" />
+        @if (searchPerms()) {
+          <button class="rss-clear" (click)="searchPerms.set('')">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+      <mat-checkbox class="rs-global-chk"
+                    [checked]="isGlobalAllPerms"
+                    [indeterminate]="isGlobalIndeterminate"
+                    [disabled]="isAdminRoleSel()"
+                    (change)="toggleGlobalPerms()">
+        All
+      </mat-checkbox>
+    </div>
+
+    <!-- Permissions accordion -->
+    <div class="rs-body">
+      @if (permLoading()) {
+        <div class="rs-loading"><mat-spinner diameter="36" /></div>
+      } @else {
+        <mat-accordion multi>
+          @for (group of filteredGroups(); track group.moduleKey) {
+            <mat-expansion-panel class="rs-exp-panel" [hideToggle]="true" [expanded]="!!searchPerms()">
+              <mat-expansion-panel-header>
+                <mat-panel-title class="rs-group-title">
+                  <mat-checkbox
+                    [checked]="isGroupAllPerms(group)"
+                    [indeterminate]="isGroupIndPerms(group)"
+                    [disabled]="isAdminRoleSel()"
+                    (change)="toggleGroupPerms(group)"
+                    (click)="$event.stopPropagation()">
+                  </mat-checkbox>
+                  <mat-icon class="rs-g-icon">{{ group.icon }}</mat-icon>
+                  <span>{{ group.module }}</span>
+                  <span class="rs-g-count"
+                        [class.full]="isGroupAllPerms(group)"
+                        [class.partial]="isGroupIndPerms(group)">
+                    {{ getGroupPermCount(group) }}/{{ group.features.length }}
+                  </span>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <div class="rs-feat-list">
+                @for (feat of group.features; track feat.key) {
+                  <div class="rs-feat-item">
+                    <mat-checkbox
+                      [checked]="selectedPermissions().has(feat.key)"
+                      [disabled]="isAdminRoleSel()"
+                      (change)="togglePerm(feat.key)">
+                      {{ feat.label }}
+                    </mat-checkbox>
+                    <code class="rs-feat-key">{{ feat.key }}</code>
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+          }
+
+          @if (filteredGroups().length === 0) {
+            <div class="rs-no-results">
+              <mat-icon>search_off</mat-icon>
+              <span>No match for "{{ searchPerms() }}"</span>
+            </div>
+          }
+        </mat-accordion>
+      }
+    </div>
+
+  }
+</div>

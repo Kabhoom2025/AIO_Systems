@@ -1,0 +1,148 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Delivery</h1>
+</div>
+
+<div class="delivery-board">
+
+  <!-- Left: vehicle picker -->
+  <div class="card vehicle-panel">
+    <div class="panel-title-row">
+      <h3><i class="pi pi-truck"></i> Vehicles</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add New" class="p-button-sm p-button-outlined"
+              routerLink="/vehicles"></button>
+    </div>
+
+    <div class="vehicle-list">
+      @for (v of vehicles; track v.id) {
+        @if (selectedVehicle?.id === v.id) {
+          <div class="vehicle-card selected">
+            <div class="vc-head">
+              <div>
+                <div class="vc-code">{{ v.code }}</div>
+                <div class="vc-model">{{ v.model || '—' }}</div>
+              </div>
+              <span class="radio-dot selected"></span>
+            </div>
+            <div class="vc-meta">
+              <div>
+                <span class="vc-label">Status</span>
+                <p-tag [severity]="statusSeverity(v.status)" [value]="v.status"></p-tag>
+              </div>
+              <div>
+                <span class="vc-label">Capacity</span>
+                <span class="vc-value">{{ v.capacityKg | number: '1.0-0' }} kg</span>
+              </div>
+              <div>
+                <span class="vc-label">Location</span>
+                <span class="vc-value">{{ v.currentWarehouseName || 'Not set' }}</span>
+              </div>
+            </div>
+            <div class="vc-illustration">
+              <img [src]="imageForState(selectedVehicleState)" [alt]="v.code + ' — ' + selectedVehicleState" />
+            </div>
+          </div>
+        } @else {
+          <button type="button" class="vehicle-row" (click)="selectVehicle(v)">
+            <span class="radio-dot"></span>
+            <div class="vr-thumb">
+              <img [src]="imageForState(listRowState(v))" [alt]="v.code" />
+            </div>
+            <div class="vr-meta">
+              <div class="vr-code">{{ v.code }}</div>
+              <div class="vr-model">{{ v.model || '—' }}</div>
+            </div>
+            <div class="vr-right">
+              <div class="vr-cap">{{ v.capacityKg | number: '1.0-0' }} kg</div>
+              <div class="vr-loc">{{ v.currentWarehouseName || v.status }}</div>
+            </div>
+          </button>
+        }
+      }
+      @if (!loadingVehicles && !vehicles.length) {
+        <div class="empty-hint">No active vehicles yet — add one to get started.</div>
+      }
+    </div>
+  </div>
+
+  <!-- Right: gauge + load panel -->
+  <div class="right-col">
+    @if (selectedVehicle && currentLoad) {
+      <div class="card gauge-card">
+        <div class="gauge-photo-wrap">
+          <img class="gauge-photo" [src]="imageForState(selectedVehicleState)" [alt]="selectedVehicleState" />
+          <div class="gauge-badge">
+            <div class="gauge-pct">{{ loadedPercent }}%<span>Loaded</span></div>
+            <div class="gauge-weight">{{ currentLoad.totalWeightKg | number: '1.0-0' }} / {{ currentLoad.vehicleCapacityKg | number: '1.0-0' }} kg</div>
+          </div>
+        </div>
+        <div class="gauge-loadbar" role="progressbar" [attr.aria-valuenow]="loadedPercent" aria-valuemin="0" aria-valuemax="100">
+          <div class="gauge-loadbar-fill" [style.height.%]="loadedPercent"></div>
+          <span class="gauge-loadbar-label">{{ loadedPercent }}%</span>
+        </div>
+      </div>
+
+      <div class="card load-card">
+        <div class="panel-title-row">
+          <h3><i class="pi pi-box"></i> Load Vehicle</h3>
+        </div>
+
+        @if (loadingPanel) {
+          <div class="empty-hint"><i class="pi pi-spin pi-spinner"></i> Loading…</div>
+        } @else if (!groupedRows.length) {
+          <div class="empty-hint">No Picked shipments waiting at this vehicle's location.</div>
+        } @else {
+          <table class="load-table">
+            <thead>
+              <tr><th></th><th>Shipment</th><th>Ship To</th><th>Weight</th><th>Items</th></tr>
+            </thead>
+            <tbody>
+              @for (group of groupedRows; track group.label) {
+                <tr class="group-row"><td colspan="5"><i class="pi pi-chevron-down"></i> {{ group.label }}</td></tr>
+                @for (row of group.rows; track row.shipmentId) {
+                  <tr>
+                    <td>
+                      <input type="checkbox" [checked]="row.assigned"
+                             (change)="toggleShipment(row.shipmentId, $any($event.target).checked)" />
+                    </td>
+                    <td><code class="code-badge">{{ row.shipmentNumber }}</code></td>
+                    <td>{{ row.shipToCity || '—' }}</td>
+                    <td>{{ row.totalWeightKg | number: '1.0-1' }} kg</td>
+                    <td>{{ row.lineCount }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        }
+
+        <div class="load-footer">
+          <div class="lf-vehicle">
+            <div class="lf-code">{{ selectedVehicle.code }}</div>
+            <div class="lf-model">{{ selectedVehicle.model }}</div>
+          </div>
+          <div class="lf-stat">
+            <span class="lf-label">Shipments</span>
+            <span class="lf-value">{{ currentLoad.shipments.length }}</span>
+          </div>
+          <div class="lf-stat">
+            <span class="lf-label">Weight</span>
+            <span class="lf-value">{{ currentLoad.totalWeightKg | number: '1.0-0' }} / {{ currentLoad.vehicleCapacityKg | number: '1.0-0' }} kg</span>
+          </div>
+          <button pButton type="button" label="Dispatch" icon="pi pi-send" [loading]="dispatching"
+                  [disabled]="!currentLoad.shipments.length" (click)="dispatch()"></button>
+        </div>
+      </div>
+    } @else if (selectedVehicle) {
+      <div class="card">
+        <div class="empty-hint">This vehicle has no current location set — assign one from the Vehicles page.</div>
+      </div>
+    } @else {
+      <div class="card">
+        <div class="empty-hint">Select a vehicle to start loading.</div>
+      </div>
+    }
+  </div>
+</div>

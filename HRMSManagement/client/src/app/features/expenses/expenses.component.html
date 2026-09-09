@@ -1,0 +1,166 @@
+<div class="expenses-page">
+  <div class="page-header">
+    <h1>Expenses</h1>
+  </div>
+
+  <div class="card">
+    <p-tabView>
+      <p-tabPanel header="My Claims">
+        <div class="tab-actions">
+          <button pButton type="button" label="New Claim" icon="pi pi-plus" (click)="openNewClaim()"></button>
+        </div>
+
+        <p-table [value]="myClaims" [loading]="loadingMy" dataKey="id" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-claim>
+            <tr>
+              <td>{{ claim.category }}</td>
+              <td>{{ claim.claimDate }}</td>
+              <td>{{ claim.currency }} {{ claim.amount | number: '1.2-2' }}</td>
+              <td><p-tag [value]="claim.status" [severity]="statusSeverity(claim.status)"></p-tag></td>
+              <td>
+                @if (claim.status === 'Pending') {
+                  <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" (click)="deleteClaim(claim)"></button>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5">No claims found.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="Approvals" *appHasPermission="'expenses.view'">
+        @if (summary) {
+          <div class="kpi-grid">
+            <div class="card kpi-card">
+              <span class="kpi-label">Pending</span>
+              <span class="kpi-value">{{ summary.pending }}</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-label">Approved</span>
+              <span class="kpi-value">{{ summary.approved }}</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-label">Reimbursed</span>
+              <span class="kpi-value">{{ summary.reimbursed }}</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-label">Rejected</span>
+              <span class="kpi-value">{{ summary.rejected }}</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-label">Total Pending Amount</span>
+              <span class="kpi-value">{{ summary.totalPendingAmount | number: '1.2-2' }}</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-label">Total Reimbursed Amount</span>
+              <span class="kpi-value">{{ summary.totalReimbursedAmount | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        }
+
+        <div class="filters">
+          <p-dropdown
+            [options]="statuses"
+            [(ngModel)]="statusFilter"
+            placeholder="All Statuses"
+            [showClear]="true"
+            (onChange)="onStatusFilterChange()">
+          </p-dropdown>
+        </div>
+
+        <p-table [value]="allClaims" [loading]="loadingAll" dataKey="id" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Employee</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-claim>
+            <tr>
+              <td>{{ claim.employeeName }} ({{ claim.employeeCode }})</td>
+              <td>{{ claim.category }}</td>
+              <td>{{ claim.claimDate }}</td>
+              <td>{{ claim.currency }} {{ claim.amount | number: '1.2-2' }}</td>
+              <td><p-tag [value]="claim.status" [severity]="statusSeverity(claim.status)"></p-tag></td>
+              <td class="actions-cell">
+                @if (claim.status === 'Pending') {
+                  <button pButton type="button" label="Approve" class="p-button-text p-button-sm" *appHasPermission="'expenses.approve'" (click)="openReview(claim, 'approve')"></button>
+                  <button pButton type="button" label="Reject" class="p-button-text p-button-sm p-button-danger" *appHasPermission="'expenses.approve'" (click)="openReview(claim, 'reject')"></button>
+                }
+                @if (claim.status === 'Approved') {
+                  <button pButton type="button" label="Mark Reimbursed" class="p-button-text p-button-sm" *appHasPermission="'expenses.approve'" (click)="markReimbursed(claim)"></button>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="6">No claims found.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<!-- New claim dialog -->
+<p-dialog header="New Expense Claim" [(visible)]="showClaimDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <div class="field">
+      <label>Category</label>
+      <p-dropdown [options]="categories" [(ngModel)]="claimForm.category"></p-dropdown>
+    </div>
+    <div class="field">
+      <label>Claim Date</label>
+      <p-calendar [(ngModel)]="claimForm.claimDate" dateFormat="yy-mm-dd" [showIcon]="true"></p-calendar>
+    </div>
+    <div class="field">
+      <label>Amount</label>
+      <p-inputNumber [(ngModel)]="claimForm.amount" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label>Currency</label>
+      <input pInputText type="text" [(ngModel)]="claimForm.currency" />
+    </div>
+    <div class="field full-width">
+      <label>Description</label>
+      <textarea pInputTextarea rows="3" [(ngModel)]="claimForm.description"></textarea>
+    </div>
+    <div class="field full-width">
+      <label>Receipt URL</label>
+      <input pInputText type="text" [(ngModel)]="claimForm.receiptUrl" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showClaimDialog = false"></button>
+    <button pButton type="button" label="Submit" (click)="submitClaim()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Review dialog -->
+<p-dialog header="{{ reviewMode === 'approve' ? 'Approve Claim' : 'Reject Claim' }}" [(visible)]="showReviewDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <div class="field full-width">
+      <label>Notes</label>
+      <textarea pInputTextarea rows="3" [(ngModel)]="reviewNotes"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showReviewDialog = false"></button>
+    <button pButton type="button" [label]="reviewMode === 'approve' ? 'Approve' : 'Reject'" (click)="submitReview()"></button>
+  </ng-template>
+</p-dialog>

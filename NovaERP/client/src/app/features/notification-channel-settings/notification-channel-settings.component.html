@@ -1,0 +1,109 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Notification Channel Settings</h1>
+</div>
+
+<div class="card">
+  <p-fieldset legend="Email (SMTP)">
+    <div class="form-grid">
+      <label>
+        <span>SMTP Host</span>
+        <input pInputText [(ngModel)]="form.smtpHost" />
+      </label>
+      <label>
+        <span>SMTP Port</span>
+        <p-inputNumber [(ngModel)]="form.smtpPort" [useGrouping]="false" [style]="{ width: '100%' }"></p-inputNumber>
+      </label>
+      <label>
+        <span>SMTP Username</span>
+        <input pInputText [(ngModel)]="form.smtpUsername" />
+      </label>
+      <label>
+        <span>SMTP Password</span>
+        <p-password [(ngModel)]="form.smtpPassword" [toggleMask]="true" [feedback]="false" placeholder="Leave blank to keep unchanged" [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+      <label>
+        <span>From Email</span>
+        <input pInputText [(ngModel)]="form.smtpFromEmail" />
+      </label>
+      <label>
+        <span>From Name</span>
+        <input pInputText [(ngModel)]="form.smtpFromName" />
+      </label>
+      <label class="checkbox-row">
+        <p-checkbox [(ngModel)]="form.smtpUseSsl" [binary]="true"></p-checkbox>
+        <span>Use SSL</span>
+      </label>
+    </div>
+    <div class="fieldset-actions" *appHasPermission="'settings.edit'">
+      <button pButton type="button" label="Send Test Email" icon="pi pi-send" class="p-button-text p-button-sm"
+              (click)="openTest('Email')"></button>
+    </div>
+  </p-fieldset>
+
+  <p-fieldset legend="SMS" class="mt-4">
+    <div class="form-grid">
+      <label>
+        <span>SMS API URL</span>
+        <input pInputText [(ngModel)]="form.smsApiUrl" />
+      </label>
+      <label>
+        <span>SMS API Key</span>
+        <p-password [(ngModel)]="form.smsApiKey" [toggleMask]="true" [feedback]="false" placeholder="Leave blank to keep unchanged" [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+      <label>
+        <span>Sender ID</span>
+        <input pInputText [(ngModel)]="form.smsSenderId" />
+      </label>
+    </div>
+    <div class="fieldset-actions" *appHasPermission="'settings.edit'">
+      <button pButton type="button" label="Send Test SMS" icon="pi pi-send" class="p-button-text p-button-sm"
+              (click)="openTest('Sms')"></button>
+    </div>
+  </p-fieldset>
+
+  <p-fieldset legend="Push" class="mt-4">
+    <div class="form-grid">
+      <label>
+        <span>Push API URL</span>
+        <input pInputText [(ngModel)]="form.pushApiUrl" />
+      </label>
+      <label>
+        <span>Push Server Key</span>
+        <p-password [(ngModel)]="form.pushServerKey" [toggleMask]="true" [feedback]="false" placeholder="Leave blank to keep unchanged" [style]="{ width: '100%' }" inputStyleClass="w-full"></p-password>
+      </label>
+    </div>
+    <div class="fieldset-actions" *appHasPermission="'settings.edit'">
+      <button pButton type="button" label="Send Test Push" icon="pi pi-send" class="p-button-text p-button-sm"
+              (click)="openTest('Push')"></button>
+    </div>
+  </p-fieldset>
+
+  <div class="form-actions" *appHasPermission="'settings.edit'">
+    <button pButton type="button" label="Save Settings" [loading]="saving" (click)="save()"></button>
+  </div>
+</div>
+
+<p-dialog header="Send Test {{ testChannel }} Notification" [(visible)]="showTestDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid one-col">
+    <label>
+      <span>{{ testChannel === 'Email' ? 'Email Address' : testChannel === 'Sms' ? 'Phone Number' : 'Device Token' }}</span>
+      <input pInputText [(ngModel)]="testTo" />
+    </label>
+    @if (testChannel === 'Email' || testChannel === 'Push') {
+      <label>
+        <span>Subject (optional)</span>
+        <input pInputText [(ngModel)]="testSubject" />
+      </label>
+    }
+    <label>
+      <span>Message</span>
+      <textarea pInputTextarea rows="3" [(ngModel)]="testMessage" style="width: 100%"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showTestDialog = false"></button>
+    <button pButton type="button" label="Send" [loading]="testing" (click)="sendTest()"></button>
+  </ng-template>
+</p-dialog>

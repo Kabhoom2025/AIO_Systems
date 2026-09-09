@@ -1,0 +1,122 @@
+<div class="addons-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>add_circle_outline</mat-icon>
+      <div>
+        <h1>Add-Ons</h1>
+        <p>Manage extra options available on menu items</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      New Add-On
+    </button>
+  </div>
+
+  <!-- How it works hint -->
+  <div class="hint-bar">
+    <mat-icon>info_outline</mat-icon>
+    <span>
+      Set the <strong>Category</strong> field to match a food category name (e.g. <em>pizza</em>, <em>burger</em>).
+      The POS will automatically show those add-ons when a staff member adds that item to an order.
+    </span>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search add-ons</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Name or category…" />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="searchTerm.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+    <span class="count-badge">{{ filtered().length }} add-on{{ filtered().length !== 1 ? 's' : '' }}</span>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="44" />
+      <p>Loading add-ons…</p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>add_circle_outline</mat-icon>
+      <h3>{{ searchTerm() ? 'No results found' : 'No add-ons yet' }}</h3>
+      <p>{{ searchTerm() ? 'Try a different search term.' : 'Click "New Add-On" to create your first add-on.' }}</p>
+      @if (!searchTerm()) {
+        <button mat-raised-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> New Add-On
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Table -->
+  @else {
+    <div class="addons-table">
+      <div class="table-head">
+        <span class="col-icon"></span>
+        <span class="col-name">Name</span>
+        <span class="col-category">Category</span>
+        <span class="col-price">Price</span>
+        <span class="col-status">Status</span>
+        <span class="col-actions">Actions</span>
+      </div>
+
+      @for (addOn of filtered(); track addOn.id) {
+        <div class="table-row" [class.unavailable]="!addOn.isAvailable">
+
+          <span class="col-icon">{{ getCategoryEmoji(addOn.category) }}</span>
+
+          <span class="col-name">
+            <span class="addon-name">{{ addOn.name }}</span>
+          </span>
+
+          <span class="col-category">
+            @if (addOn.category) {
+              <span class="cat-chips">
+                @for (cat of addOn.category.split(','); track cat) {
+                  <span class="cat-chip">{{ cat.trim() }}</span>
+                }
+              </span>
+            } @else {
+              <span class="cat-none">—</span>
+            }
+          </span>
+
+          <span class="col-price">
+            <span class="price-tag">₹{{ addOn.price | number:'1.2-2' }}</span>
+          </span>
+
+          <span class="col-status">
+            <span class="status-badge" [class.active]="addOn.isAvailable" [class.inactive]="!addOn.isAvailable">
+              <mat-icon>{{ addOn.isAvailable ? 'check_circle' : 'cancel' }}</mat-icon>
+              {{ addOn.isAvailable ? 'Available' : 'Unavailable' }}
+            </span>
+          </span>
+
+          <span class="col-actions">
+            <button mat-icon-button color="primary" (click)="openEdit(addOn)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="confirmDelete(addOn)" matTooltip="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </span>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

@@ -1,0 +1,762 @@
+<div class="settings-page">
+
+  <div class="page-header">
+    <div class="page-title">
+      <div class="title-icon"><mat-icon>tune</mat-icon></div>
+      <div>
+        <h1>Settings</h1>
+        <p>Restaurant configuration</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <app-loading-spinner message="Loading settings..." />
+  } @else if (loadError()) {
+    <div class="settings-load-error">
+      <mat-icon>error_outline</mat-icon>
+      <p>Couldn't load settings. Please check your connection and try again.</p>
+      <button mat-stroked-button color="primary" (click)="loadSettings()">
+        <mat-icon>refresh</mat-icon> Retry
+      </button>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+
+      <mat-accordion class="settings-accordion" multi="false">
+
+        <!-- 1. Restaurant Information -->
+        <mat-expansion-panel expanded>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon store-icon"><mat-icon>store</mat-icon></div>
+                <span>Restaurant Information</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Name, address, phone &amp; GST</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Restaurant Name *</mat-label>
+              <input matInput formControlName="restaurantName" />
+              @if (restaurantName.hasError('required') && restaurantName.touched) {
+                <mat-error>Restaurant name is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address</mat-label>
+              <textarea matInput formControlName="address" rows="2"></textarea>
+            </mat-form-field>
+
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="phone" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>GST Number</mat-label>
+                <input matInput formControlName="gstNumber" />
+              </mat-form-field>
+            </div>
+
+            <!-- Logo upload -->
+            <div class="logo-section">
+              <p class="logo-label">
+                <mat-icon>image</mat-icon>
+                Restaurant Logo
+                <span class="logo-hint">Shown in header &amp; as background watermark. Max 2 MB.</span>
+              </p>
+              <div class="logo-row">
+                <div class="logo-preview-box" (click)="triggerFileInput()">
+                  @if (logoPreview()) {
+                    <img [src]="logoPreview()!" alt="Logo preview" class="logo-preview-img" />
+                  } @else {
+                    <div class="logo-placeholder">
+                      <mat-icon>add_photo_alternate</mat-icon>
+                      <span>Click to upload</span>
+                    </div>
+                  }
+                </div>
+                <div class="logo-actions">
+                  <button type="button" mat-stroked-button (click)="triggerFileInput()">
+                    <mat-icon>upload</mat-icon> {{ logoPreview() ? 'Change Logo' : 'Upload Logo' }}
+                  </button>
+                  @if (logoPreview()) {
+                    <button type="button" mat-stroked-button color="warn" (click)="removeLogo()">
+                      <mat-icon>delete</mat-icon> Remove
+                    </button>
+                  }
+                </div>
+              </div>
+              <input #fileInput type="file" accept="image/*" style="display:none" (change)="onLogoSelected($event)" />
+            </div>
+
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 2. POS Settings -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon pos-icon"><mat-icon>point_of_sale</mat-icon></div>
+                <span>POS Settings</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Order type, auto-print &amp; tips</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <mat-form-field appearance="outline" class="tax-field">
+              <mat-label>Default Order Type</mat-label>
+              <mat-select formControlName="posDefaultOrderType">
+                <mat-option value="DineIn">Dine In</mat-option>
+                <mat-option value="Takeaway">Takeaway</mat-option>
+                <mat-option value="Delivery">Delivery</mat-option>
+              </mat-select>
+              <mat-hint>Selected by default when creating a new order</mat-hint>
+            </mat-form-field>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Auto-print bill</span>
+                <span class="toggle-hint">Automatically send bill to printer when an order is placed.</span>
+              </div>
+              <mat-slide-toggle formControlName="posAutoPrintBill" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Enable tips</span>
+                <span class="toggle-hint">Show a tip entry field on the billing screen.</span>
+              </div>
+              <mat-slide-toggle formControlName="posEnableTips" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Require customer phone</span>
+                <span class="toggle-hint">Make phone number mandatory before completing an order.</span>
+              </div>
+              <mat-slide-toggle formControlName="posRequireCustomerPhone" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 3. Menu Settings -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon menu-icon"><mat-icon>restaurant_menu</mat-icon></div>
+                <span>Menu Settings</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Images, descriptions &amp; stock visibility</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Show item images</span>
+                <span class="toggle-hint">Display product images on the menu and ordering screens.</span>
+              </div>
+              <mat-slide-toggle formControlName="menuShowImages" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Show item descriptions</span>
+                <span class="toggle-hint">Display the description text beneath each menu item name.</span>
+              </div>
+              <mat-slide-toggle formControlName="menuShowDescriptions" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Show out-of-stock items</span>
+                <span class="toggle-hint">Keep out-of-stock items visible on the menu (greyed out) instead of hiding them.</span>
+              </div>
+              <mat-slide-toggle formControlName="menuShowOutOfStock" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 4. Tax Configuration -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon tax-icon"><mat-icon>percent</mat-icon></div>
+                <span>Tax Configuration</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Applied to every order</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Tax Name</mat-label>
+                <input matInput formControlName="taxName" placeholder="GST" />
+                <mat-hint>Label shown on bills (e.g. GST, VAT, Service Tax)</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="tax-field">
+                <mat-label>Tax Percentage (%)</mat-label>
+                <input matInput type="number" formControlName="taxPercentage" min="0" max="100" step="0.01" />
+                <mat-hint>E.g. 5 = 5% on every order</mat-hint>
+                @if (taxPercentage.hasError('required') && taxPercentage.touched) {
+                  <mat-error>Required</mat-error>
+                } @else if (taxPercentage.hasError('min') && taxPercentage.touched) {
+                  <mat-error>Cannot be negative</mat-error>
+                } @else if (taxPercentage.hasError('max') && taxPercentage.touched) {
+                  <mat-error>Cannot exceed 100%</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="toggle-row" style="margin-top:8px">
+              <div class="toggle-info">
+                <span class="toggle-label">Tax inclusive pricing</span>
+                <span class="toggle-hint">When enabled, item prices already include tax. When disabled, tax is added on top of the item price.</span>
+              </div>
+              <mat-slide-toggle formControlName="taxInclusive" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 5. Loyalty Points -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon" style="background:#e8f5e9"><mat-icon style="color:#2e7d32">loyalty</mat-icon></div>
+                <span>Loyalty Points</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>CRM earn &amp; redeem rates</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Points per ₹1 spent</mat-label>
+                <input matInput type="number" formControlName="pointsPerRupee" min="0" step="0.1" />
+                <mat-hint>e.g. 1 = 1 point per ₹1</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>₹ value per point</mat-label>
+                <input matInput type="number" formControlName="pointsRedeemRate" min="0" step="0.05" />
+                <mat-hint>e.g. 0.25 = ₹0.25 per point</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 6. Printer Settings -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon printer-icon"><mat-icon>print</mat-icon></div>
+                <span>Printer Settings</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Receipt &amp; kitchen printer configuration</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <p class="settings-hint">
+              For direct/silent printing (no preview dialog) to a USB, Zebra, or network printer, install
+              <strong>QZ Tray</strong> on this machine, then use the printer icon in the top header bar to
+              detect and assign the receipt/label printer for this terminal. Printer assignment is per-machine,
+              not shared across the organization.
+            </p>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Enable printer</span>
+                <span class="toggle-hint">Activate printing support for bills and kitchen orders.</span>
+              </div>
+              <mat-slide-toggle formControlName="printerEnabled" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="two-col" style="margin-top:12px">
+              <mat-form-field appearance="outline">
+                <mat-label>Printer Type</mat-label>
+                <mat-select formControlName="printerType">
+                  <mat-option value="Thermal">Thermal</mat-option>
+                  <mat-option value="Laser">Laser</mat-option>
+                  <mat-option value="Network">Network</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Port</mat-label>
+                <input matInput type="number" formControlName="printerPort" min="1" max="65535" />
+                <mat-hint>Default: 9100</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Printer IP Address</mat-label>
+              <input matInput formControlName="printerIp" placeholder="192.168.1.100" />
+              <mat-hint>Required for network printers</mat-hint>
+            </mat-form-field>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Auto-print on order</span>
+                <span class="toggle-hint">Automatically print a receipt when each order is confirmed.</span>
+              </div>
+              <mat-slide-toggle formControlName="printerAutoPrint" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 7. Payment Gateway -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon payment-icon"><mat-icon>payments</mat-icon></div>
+                <span>Payment Gateway</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>UPI, Razorpay &amp; accepted payment methods</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>UPI ID</mat-label>
+              <input matInput formControlName="upiId" placeholder="yourname@upi" />
+              <mat-hint>e.g. restaurant&#64;okaxis — displayed as QR after bill generation</mat-hint>
+            </mat-form-field>
+
+            <div class="info-chip blue-chip">
+              <mat-icon>info</mat-icon>
+              <span>Razorpay API keys are managed under <strong>Admin → Integration Settings</strong>.</span>
+            </div>
+
+            <div class="section-sub-label">Accepted Payment Methods</div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Cash</span>
+                <span class="toggle-hint">Accept cash payments at the counter.</span>
+              </div>
+              <mat-slide-toggle formControlName="paymentCashEnabled" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Card</span>
+                <span class="toggle-hint">Accept debit / credit card payments via POS terminal.</span>
+              </div>
+              <mat-slide-toggle formControlName="paymentCardEnabled" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Online / Gateway</span>
+                <span class="toggle-hint">Accept payments through Razorpay or other online payment gateway.</span>
+              </div>
+              <mat-slide-toggle formControlName="paymentOnlineEnabled" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 8. Email Configuration -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon email-icon"><mat-icon>email</mat-icon></div>
+                <span>Email Configuration</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>SMTP settings for order &amp; notification emails</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="info-chip blue-chip">
+              <mat-icon>info</mat-icon>
+              <span>Configure your SMTP server to send order confirmations and notifications by email. Leave blank to disable email sending.</span>
+            </div>
+
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>SMTP Host</mat-label>
+                <input matInput formControlName="smtpHost" placeholder="smtp.gmail.com" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>SMTP Port</mat-label>
+                <input matInput type="number" formControlName="smtpPort" min="1" max="65535" />
+                <mat-hint>Default: 587 (TLS)</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput formControlName="smtpUsername" placeholder="your@email.com" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="smtpPassword" />
+              </mat-form-field>
+            </div>
+
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>From Email</mat-label>
+                <input matInput formControlName="smtpFromEmail" placeholder="noreply@restaurant.com" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>From Name</mat-label>
+                <input matInput formControlName="smtpFromName" placeholder="My Restaurant" />
+              </mat-form-field>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Use SSL / TLS</span>
+                <span class="toggle-hint">Enable secure encrypted connection to the SMTP server.</span>
+              </div>
+              <mat-slide-toggle formControlName="smtpSsl" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 9. Backup Settings
+             (SMS / WhatsApp / Razorpay keys are managed in Admin → Integration Settings) -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon backup-icon"><mat-icon>backup</mat-icon></div>
+                <span>Backup Settings</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Automated data backup &amp; delivery</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Enable automatic backup</span>
+                <span class="toggle-hint">Periodically back up application data and send to the configured email address.</span>
+              </div>
+              <mat-slide-toggle formControlName="autoBackupEnabled" color="primary"></mat-slide-toggle>
+            </div>
+
+            <div class="two-col" style="margin-top:12px">
+              <mat-form-field appearance="outline">
+                <mat-label>Backup Email</mat-label>
+                <input matInput formControlName="backupEmail" placeholder="admin@restaurant.com" />
+                <mat-hint>Backup file will be sent to this address</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Backup Frequency (hours)</mat-label>
+                <input matInput type="number" formControlName="backupFrequencyHours" min="1" />
+                <mat-hint>e.g. 24 = once a day</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 12. Display & Promotions -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon" style="background:#f3e5f5"><mat-icon style="color:#7b1fa2">display_settings</mat-icon></div>
+                <span>Display &amp; Promotions</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Dashboard advertisement behaviour</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label">Auto-scroll advertisements</span>
+                <span class="toggle-hint">When enabled, the promotions slider on the dashboard advances automatically every 3.5 seconds.</span>
+              </div>
+              <mat-slide-toggle formControlName="promoAutoScroll" color="primary"></mat-slide-toggle>
+            </div>
+          </div>
+        </mat-expansion-panel>
+
+        <!-- 13. UI Settings -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon theme-icon"><mat-icon>tune</mat-icon></div>
+                <span>UI Settings</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Colours, appearance &amp; layout behaviour</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+
+            <!-- Colour & mode -->
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Primary Colour</mat-label>
+                <input matInput type="color" formControlName="themePrimaryColor" />
+                <mat-hint>Main brand colour used throughout the UI</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Appearance Mode</mat-label>
+                <mat-select formControlName="themeMode">
+                  <mat-option value="light">Light</mat-option>
+                  <mat-option value="dark">Dark</mat-option>
+                </mat-select>
+                <mat-hint>Light or dark background for the interface</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Sidebar drag & drop -->
+            <div class="toggle-row" style="margin-top:16px">
+              <div class="toggle-info">
+                <span class="toggle-label">Sidebar Drag &amp; Drop</span>
+                <span class="toggle-hint">Allow navigation items to be reordered by holding and dragging</span>
+              </div>
+              <mat-slide-toggle
+                color="primary"
+                [checked]="theme.sidebarDragEnabled()"
+                (change)="theme.setSidebarDrag($event.checked)">
+              </mat-slide-toggle>
+            </div>
+
+          </div>
+        </mat-expansion-panel>
+
+        <!-- Google Maps & Location -->
+        <mat-expansion-panel (opened)="onMapPanelOpened()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon maps-icon"><mat-icon>map</mat-icon></div>
+                <span>Google Maps &amp; Location</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>API key, restaurant pin &amp; delivery map</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+
+            <!-- API Key -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Google Maps API Key</mat-label>
+              <input matInput formControlName="googleMapsApiKey" [type]="showApiKey() ? 'text' : 'password'"
+                     placeholder="AIza…" autocomplete="off" />
+              <button matSuffix mat-icon-button type="button" (click)="showApiKey.set(!showApiKey())"
+                      [matTooltip]="showApiKey() ? 'Hide key' : 'Show key'">
+                <mat-icon>{{ showApiKey() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-hint>
+                Enable <strong>Maps JavaScript API</strong> and <strong>Geocoding API</strong> in your
+                <a href="https://console.cloud.google.com/apis" target="_blank" rel="noopener">Google Cloud Console</a>.
+              </mat-hint>
+            </mat-form-field>
+
+            <!-- Lat / Lng manual input -->
+            <div class="two-col" style="margin-top:8px">
+              <mat-form-field appearance="outline">
+                <mat-label>Latitude</mat-label>
+                <input matInput type="number" formControlName="restaurantLatitude"
+                       placeholder="e.g. 12.9716" step="0.0000001"
+                       (change)="onLatLngInputChange()" />
+                <mat-hint>−90 to 90</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Longitude</mat-label>
+                <input matInput type="number" formControlName="restaurantLongitude"
+                       placeholder="e.g. 77.5946" step="0.0000001"
+                       (change)="onLatLngInputChange()" />
+                <mat-hint>−180 to 180</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Map picker -->
+            <div class="map-picker-wrap">
+              <p class="map-picker-hint">
+                <mat-icon>info</mat-icon>
+                Click anywhere on the map to pin your restaurant location. Drag the marker to adjust.
+              </p>
+
+              @if (mapLoading()) {
+                <div class="map-loading">
+                  <mat-spinner diameter="32"></mat-spinner>
+                  <span>Loading map…</span>
+                </div>
+              } @else if (mapError()) {
+                <div class="map-error">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ mapError() }}</span>
+                </div>
+              }
+
+              <div #restaurantMapDiv class="map-container"
+                   [style.display]="mapLoading() || mapError() ? 'none' : 'block'"></div>
+            </div>
+
+          </div>
+        </mat-expansion-panel>
+
+        <!-- SSO Provider Credentials -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="panel-title">
+                <div class="panel-icon sso-icon"><mat-icon>login</mat-icon></div>
+                <span>SSO Provider Credentials</span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>Google, Microsoft, Facebook &amp; GitHub OAuth2 credentials</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-body">
+
+            <p class="section-hint">
+              <mat-icon>info</mat-icon>
+              These credentials enable the SSO login buttons on the Admin login page.
+              Leave a provider's Client ID empty to hide its button from users.
+            </p>
+
+            <!-- Google -->
+            <h3 class="provider-heading">
+              <svg class="provider-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
+            </h3>
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Client ID</mat-label>
+                <input matInput formControlName="ssoGoogleClientId" placeholder="…apps.googleusercontent.com" autocomplete="off" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Client Secret</mat-label>
+                <input matInput formControlName="ssoGoogleClientSecret"
+                       [type]="showGoogleSecret() ? 'text' : 'password'" autocomplete="new-password" />
+                <button matSuffix mat-icon-button type="button" (click)="showGoogleSecret.set(!showGoogleSecret())"
+                        [matTooltip]="showGoogleSecret() ? 'Hide' : 'Show'">
+                  <mat-icon>{{ showGoogleSecret() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+
+            <!-- Microsoft -->
+            <h3 class="provider-heading">
+              <svg class="provider-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#F25022" d="M1 1h10v10H1z"/>
+                <path fill="#00A4EF" d="M13 1h10v10H13z"/>
+                <path fill="#7FBA00" d="M1 13h10v10H1z"/>
+                <path fill="#FFB900" d="M13 13h10v10H13z"/>
+              </svg>
+              Microsoft
+            </h3>
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Client ID</mat-label>
+                <input matInput formControlName="ssoMicrosoftClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Client Secret</mat-label>
+                <input matInput formControlName="ssoMicrosoftClientSecret"
+                       [type]="showMsSecret() ? 'text' : 'password'" autocomplete="new-password" />
+                <button matSuffix mat-icon-button type="button" (click)="showMsSecret.set(!showMsSecret())"
+                        [matTooltip]="showMsSecret() ? 'Hide' : 'Show'">
+                  <mat-icon>{{ showMsSecret() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline" class="full-width" style="margin-top:-8px">
+              <mat-label>Tenant ID</mat-label>
+              <input matInput formControlName="ssoMicrosoftTenantId" placeholder="common" autocomplete="off" />
+              <mat-hint>Use <code>common</code> for any Microsoft account, or your directory (tenant) GUID for a single tenant app.</mat-hint>
+            </mat-form-field>
+
+            <!-- Facebook -->
+            <h3 class="provider-heading" style="margin-top:16px">
+              <svg class="provider-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+              </svg>
+              Facebook
+            </h3>
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>App ID</mat-label>
+                <input matInput formControlName="ssoFacebookAppId" placeholder="1234567890123456" autocomplete="off" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>App Secret</mat-label>
+                <input matInput formControlName="ssoFacebookAppSecret"
+                       [type]="showFbSecret() ? 'text' : 'password'" autocomplete="new-password" />
+                <button matSuffix mat-icon-button type="button" (click)="showFbSecret.set(!showFbSecret())"
+                        [matTooltip]="showFbSecret() ? 'Hide' : 'Show'">
+                  <mat-icon>{{ showFbSecret() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+
+            <!-- GitHub -->
+            <h3 class="provider-heading">
+              <svg class="provider-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#24292F" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+              </svg>
+              GitHub
+            </h3>
+            <div class="two-col">
+              <mat-form-field appearance="outline">
+                <mat-label>Client ID</mat-label>
+                <input matInput formControlName="ssoGitHubClientId" placeholder="Ov23li…" autocomplete="off" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Client Secret</mat-label>
+                <input matInput formControlName="ssoGitHubClientSecret"
+                       [type]="showGhSecret() ? 'text' : 'password'" autocomplete="new-password" />
+                <button matSuffix mat-icon-button type="button" (click)="showGhSecret.set(!showGhSecret())"
+                        [matTooltip]="showGhSecret() ? 'Hide' : 'Show'">
+                  <mat-icon>{{ showGhSecret() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+
+          </div>
+        </mat-expansion-panel>
+
+      </mat-accordion>
+
+      <!-- Save -->
+      <div class="save-row">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <ng-container>
+              <mat-spinner diameter="16" />
+              <span>Saving…</span>
+            </ng-container>
+          } @else {
+            <ng-container>
+              <mat-icon>save</mat-icon>
+              <span>Save Settings</span>
+            </ng-container>
+          }
+        </button>
+      </div>
+
+    </form>
+  }
+
+</div>

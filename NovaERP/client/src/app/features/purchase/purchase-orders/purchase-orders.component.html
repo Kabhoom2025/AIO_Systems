@@ -1,0 +1,120 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Purchase Orders</h1>
+  <button *appHasPermission="'purchase.create'" pButton type="button" icon="pi pi-plus" label="Add Purchase Order"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="orders" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>PO #</th>
+        <th>Vendor</th>
+        <th>Order Date</th>
+        <th>Grand Total</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th style="width: 16rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-o>
+      <tr>
+        <td><code class="code-badge">{{ o.poNumber }}</code></td>
+        <td>{{ o.vendorName }}</td>
+        <td>{{ o.orderDate | date: 'mediumDate' }}</td>
+        <td class="font-semibold">{{ o.grandTotal | number: '1.2-2' }}</td>
+        <td><p-tag [severity]="statusSeverity(o.status)" [value]="o.status"></p-tag></td>
+        <td>{{ o.ownerName }}</td>
+        <td class="actions-cell">
+          @if (o.status === 'Draft') {
+            <button *appHasPermission="'purchase.edit'" pButton type="button" icon="pi pi-check" label="Confirm"
+                    class="p-button-text p-button-sm p-button-success" (click)="confirmOrder(o)"></button>
+            <button *appHasPermission="'purchase.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(o)"></button>
+            <button *appHasPermission="'purchase.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(o)"></button>
+          } @else if (o.status === 'Confirmed') {
+            <button *appHasPermission="'purchase.edit'" pButton type="button" icon="pi pi-inbox" label="Receive"
+                    class="p-button-text p-button-sm p-button-success" (click)="receiveOrder(o)"></button>
+            <button *appHasPermission="'purchase.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancelOrder(o)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No purchase orders yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Purchase Order" [(visible)]="showDialog" [modal]="true" [style]="{ width: '46rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Vendor</span>
+      <p-dropdown [options]="vendors" [(ngModel)]="form.vendorId" optionLabel="name" optionValue="id"
+                  placeholder="Select vendor" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Originating RFQ</span>
+      <p-dropdown [options]="rfqsForVendor()" [(ngModel)]="form.rfqRequestId" optionLabel="rfqNumber" optionValue="id"
+                  placeholder="Optional" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Order Date</span>
+      <p-calendar [(ngModel)]="form.orderDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Lines</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Line" class="p-button-text p-button-sm" (click)="addLine()"></button>
+    </div>
+    <div class="line-row line-row-header">
+      <span>Product</span>
+      <span>Item</span>
+      <span>Qty</span>
+      <span>Unit Price</span>
+      <span>Tax Code</span>
+      <span>Line Total</span>
+      <span></span>
+    </div>
+    @for (line of lines; track $index) {
+      <div class="line-row">
+        <p-dropdown [options]="products" [(ngModel)]="line.productId" optionLabel="name" optionValue="id"
+                    placeholder="None" [showClear]="true" (onChange)="onProductSelect(line)"></p-dropdown>
+        <input pInputText [(ngModel)]="line.itemName" placeholder="Item name" />
+        <p-inputNumber [(ngModel)]="line.quantity" [minFractionDigits]="0" [maxFractionDigits]="4"></p-inputNumber>
+        <p-inputNumber [(ngModel)]="line.unitPrice" mode="decimal" [minFractionDigits]="2"></p-inputNumber>
+        <p-dropdown [options]="taxCodes" [(ngModel)]="line.taxCodeId" optionLabel="code" optionValue="id"
+                    placeholder="None" [showClear]="true"></p-dropdown>
+        <span class="line-total">{{ (lineSubtotal(line) + lineTax(line)) | number: '1.2-2' }}</span>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeLine($index)"></button>
+      </div>
+    }
+    @if (!lines.length) {
+      <div class="empty-cell">No lines yet — add at least one.</div>
+    } @else {
+      <div class="totals-row">
+        <span>Subtotal: <strong>{{ subtotal() | number: '1.2-2' }}</strong></span>
+        <span>Tax: <strong>{{ taxTotal() | number: '1.2-2' }}</strong></span>
+        <span>Grand Total: <strong>{{ grandTotal() | number: '1.2-2' }}</strong></span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

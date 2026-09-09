@@ -1,0 +1,75 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>Languages</h1>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Reference languages</h2>
+  <p-table [value]="languages" [loading]="loadingLanguages" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Native Name</th>
+        <th>RTL</th>
+        <th>Status</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-l>
+      <tr>
+        <td><code class="code-badge">{{ l.code }}</code></td>
+        <td class="font-semibold">{{ l.name }}</td>
+        <td>{{ l.nativeName }}</td>
+        <td>
+          <i class="pi" [ngClass]="l.isRtl ? 'pi-check-circle text-success' : 'pi-minus text-muted'"></i>
+        </td>
+        <td>
+          <p-tag [value]="l.isActive ? 'Active' : 'Inactive'" [severity]="l.isActive ? 'success' : 'danger'"></p-tag>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No languages available.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<div class="card mt-6">
+  <h2 class="section-title">Organization supported languages</h2>
+  <p class="hint">Pick which languages this organization supports, then choose one as the default. Saving replaces the full set in a single call.</p>
+
+  <p-table [value]="selections" [loading]="loadingOrgLanguages" dataKey="code" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 6rem">Supported</th>
+        <th>Language</th>
+        <th style="width: 10rem">Default</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-s>
+      <tr>
+        <td>
+          <p-checkbox [(ngModel)]="s.selected" [binary]="true" (ngModelChange)="onSelectionChange(s)"
+                      *appHasPermission="'settings.edit'"></p-checkbox>
+        </td>
+        <td>{{ s.name }} <code class="code-badge">{{ s.code }}</code></td>
+        <td>
+          @if (defaultLanguageCode === s.code) {
+            <p-tag value="Default" severity="info"></p-tag>
+          } @else {
+            <button *appHasPermission="'settings.edit'" pButton type="button" label="Set default"
+                    class="p-button-text p-button-sm" [disabled]="!s.selected" (click)="setDefault(s.code)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="3" class="empty-cell">No reference languages loaded yet.</td></tr>
+    </ng-template>
+  </p-table>
+
+  <div class="form-actions" *appHasPermission="'settings.edit'">
+    <button pButton type="button" label="Save Supported Languages" [loading]="saving" (click)="saveOrgLanguages()"></button>
+  </div>
+</div>

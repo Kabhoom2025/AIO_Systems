@@ -1,0 +1,122 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Tickets</h1>
+  <button *appHasPermission="'service-desk.create'" pButton type="button" icon="pi pi-plus" label="Add Ticket"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="tickets" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Number</th>
+        <th>Subject</th>
+        <th>Category</th>
+        <th>Requester</th>
+        <th>Assigned To</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th style="width: 22rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td><code class="code-badge">{{ t.ticketNumber }}</code></td>
+        <td class="font-semibold">{{ t.subject }}</td>
+        <td>{{ t.categoryName }}</td>
+        <td>{{ t.requesterName }}</td>
+        <td>{{ t.assignedToName ?? '—' }}</td>
+        <td><p-tag [severity]="prioritySeverity(t.priority)" [value]="t.priority"></p-tag></td>
+        <td><p-tag [severity]="statusSeverity(t.status)" [value]="t.status"></p-tag></td>
+        <td class="actions-cell">
+          @if (t.status === 'Open' || t.status === 'InProgress') {
+            <button *appHasPermission="'service-desk.edit'" pButton type="button" icon="pi pi-user-plus" label="Assign"
+                    class="p-button-text p-button-sm p-button-success" (click)="openAssign(t)"></button>
+            <button *appHasPermission="'service-desk.edit'" pButton type="button" icon="pi pi-check" label="Resolve"
+                    class="p-button-text p-button-sm" (click)="openResolve(t)"></button>
+            <button *appHasPermission="'service-desk.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(t)"></button>
+            <button *appHasPermission="'service-desk.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(t)"></button>
+          } @else if (t.status === 'Resolved') {
+            <button *appHasPermission="'service-desk.edit'" pButton type="button" icon="pi pi-lock" label="Close"
+                    class="p-button-text p-button-sm p-button-danger" (click)="close(t)"></button>
+            <button *appHasPermission="'service-desk.edit'" pButton type="button" icon="pi pi-replay" label="Reopen"
+                    class="p-button-text p-button-sm" (click)="reopen(t)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" class="empty-cell">No tickets yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Ticket" [(visible)]="showDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Subject</span>
+      <input pInputText [(ngModel)]="form.subject" />
+    </label>
+    <label>
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="form.description" rows="3"></textarea>
+    </label>
+    <label>
+      <span>Category</span>
+      <p-dropdown [options]="categories" [(ngModel)]="form.categoryId" optionLabel="name" optionValue="id"
+                  placeholder="Select category" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    @if (!editing) {
+      <label>
+        <span>Requester</span>
+        <p-dropdown [options]="employees" [(ngModel)]="form.requesterId" optionValue="id"
+                    placeholder="Select requester" [style]="{ width: '100%' }">
+          <ng-template let-e pTemplate="item">{{ e.firstName }} {{ e.lastName }}</ng-template>
+          <ng-template let-e pTemplate="selectedItem">{{ e.firstName }} {{ e.lastName }}</ng-template>
+        </p-dropdown>
+      </label>
+    }
+    <label>
+      <span>Priority</span>
+      <p-dropdown [options]="priorities" [(ngModel)]="form.priority" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Assign Ticket" [(visible)]="showAssignDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid single-column">
+    <label>
+      <span>Employee</span>
+      <p-dropdown [options]="employees" [(ngModel)]="assignEmployeeId" optionValue="id"
+                  placeholder="Select employee" [style]="{ width: '100%' }">
+        <ng-template let-e pTemplate="item">{{ e.firstName }} {{ e.lastName }}</ng-template>
+        <ng-template let-e pTemplate="selectedItem">{{ e.firstName }} {{ e.lastName }}</ng-template>
+      </p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showAssignDialog = false"></button>
+    <button pButton type="button" label="Assign" (click)="confirmAssign()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Resolve Ticket" [(visible)]="showResolveDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid single-column">
+    <label>
+      <span>Resolution Notes</span>
+      <textarea pInputTextarea [(ngModel)]="resolutionNotes" rows="4"></textarea>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showResolveDialog = false"></button>
+    <button pButton type="button" label="Resolve" (click)="confirmResolve()"></button>
+  </ng-template>
+</p-dialog>

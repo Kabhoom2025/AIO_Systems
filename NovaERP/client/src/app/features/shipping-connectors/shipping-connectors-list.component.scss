@@ -1,0 +1,17 @@
+.actions-cell { display: flex; gap: 0.25rem; }
+
+.url-cell {
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}

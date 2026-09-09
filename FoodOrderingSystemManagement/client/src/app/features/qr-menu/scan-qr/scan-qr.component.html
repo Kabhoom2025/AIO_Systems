@@ -1,0 +1,155 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>qr_code_scanner</mat-icon></div>
+      <div>
+        <h1 class="page-title">Scan QR</h1>
+        <p class="page-subtitle">Use camera to scan table or menu QR codes</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-layout">
+
+    <!-- ── Scanner panel ─────────────────────────────── -->
+    <div class="scanner-panel">
+
+      <!-- Camera selector -->
+      @if (devices().length > 1) {
+        <mat-form-field appearance="outline" class="device-select">
+          <mat-label>Camera</mat-label>
+          <mat-select [value]="selectedDeviceId()" (selectionChange)="onDeviceChange($event.value)">
+            @for (d of devices(); track d.deviceId) {
+              <mat-option [value]="d.deviceId">{{ d.label || 'Camera ' + ($index + 1) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      <!-- Video viewport -->
+      <div class="video-wrap" [class.active]="scanning()">
+        <video #videoEl autoplay playsinline muted class="video-feed"
+               [class.visible]="scanning()"></video>
+        @if (!scanning()) {
+          <div class="video-placeholder">
+            <mat-icon>videocam</mat-icon>
+            <p>Camera preview will appear here</p>
+          </div>
+        }
+        @if (scanning()) {
+          <div class="scan-overlay">
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+            <div class="scan-line"></div>
+          </div>
+        }
+      </div>
+
+      <!-- Camera error -->
+      @if (cameraError()) {
+        <div class="error-chip">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ cameraError() }}</span>
+        </div>
+      }
+
+      <!-- Start / Stop -->
+      <div class="scanner-actions">
+        @if (!scanning()) {
+          <button mat-raised-button color="primary" (click)="startScan()"
+                  [disabled]="devices().length === 0">
+            <mat-icon>qr_code_scanner</mat-icon> Start Scanning
+          </button>
+        } @else {
+          <button mat-stroked-button color="warn" (click)="stopScan()">
+            <mat-icon>stop_circle</mat-icon> Stop
+          </button>
+        }
+      </div>
+
+      <!-- Manual fallback -->
+      <div class="manual-section">
+        <div class="section-divider"><span>or enter URL manually</span></div>
+        <div class="manual-row">
+          <mat-form-field appearance="outline" class="manual-field">
+            <mat-label>Paste QR URL</mat-label>
+            <input matInput [(ngModel)]="manualUrl" placeholder="https://..." (keyup.enter)="parseManual()" />
+            <mat-icon matSuffix>link</mat-icon>
+          </mat-form-field>
+          <button mat-raised-button color="accent" (click)="parseManual()" [disabled]="!manualUrl.trim()">
+            Parse
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Result panel ───────────────────────────────── -->
+    <div class="result-panel">
+
+      <!-- Latest result -->
+      @if (latestResult()) {
+        <div class="result-card" [class.menu-url]="latestResult()!.isMenuUrl">
+          <div class="result-header">
+            <mat-icon>{{ latestResult()!.isMenuUrl ? 'restaurant_menu' : 'qr_code' }}</mat-icon>
+            <span>{{ latestResult()!.isMenuUrl ? 'Menu QR Detected' : 'QR Scanned' }}</span>
+            <span class="result-time">{{ latestResult()!.scannedAt | date:'HH:mm:ss' }}</span>
+          </div>
+
+          @if (latestResult()!.tableNumber != null) {
+            <div class="table-badge-large">
+              <mat-icon>table_restaurant</mat-icon>
+              Table {{ latestResult()!.tableNumber }}
+            </div>
+          }
+
+          <p class="result-url">{{ latestResult()!.text }}</p>
+
+          <div class="result-actions">
+            <button mat-stroked-button (click)="copyText(latestResult()!.text)">
+              <mat-icon>content_copy</mat-icon> Copy
+            </button>
+            <button mat-raised-button color="primary" (click)="openUrl(latestResult()!.text)">
+              <mat-icon>open_in_new</mat-icon> Open
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="result-empty">
+          <mat-icon>crop_free</mat-icon>
+          <p>Scan result will appear here</p>
+        </div>
+      }
+
+      <!-- History -->
+      @if (history().length > 0) {
+        <div class="history-section">
+          <div class="history-header">
+            <span class="history-label">Recent Scans</span>
+            <button mat-button (click)="clearHistory()">
+              <mat-icon>clear_all</mat-icon> Clear
+            </button>
+          </div>
+          <div class="history-list">
+            @for (r of history(); track r.scannedAt.getTime()) {
+              <div class="history-item" (click)="openUrl(r.text)">
+                <mat-icon class="history-icon" [class.menu]="r.isMenuUrl">
+                  {{ r.isMenuUrl ? 'restaurant_menu' : 'qr_code' }}
+                </mat-icon>
+                <div class="history-info">
+                  <span class="history-text">{{ r.isMenuUrl && r.tableNumber ? 'Table ' + r.tableNumber : r.text }}</span>
+                  <span class="history-time">{{ r.scannedAt | date:'HH:mm:ss' }}</span>
+                </div>
+                <mat-icon class="history-open">open_in_new</mat-icon>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>

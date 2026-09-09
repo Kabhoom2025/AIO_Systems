@@ -1,0 +1,38 @@
+.report-picker {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}
+
+.code-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+.num-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.totals-row {
+  font-weight: 600;
+  color: #1e293b;
+  background: #f8fafc;
+}

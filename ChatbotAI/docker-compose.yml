@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234"
+      POSTGRES_DB: ChatbotAIDB
+    ports:
+      - "5433:5432"
+    volumes:
+      - chatbotai-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Full container mode: `docker compose up`.
+  # Day-to-day dev only needs `docker compose up -d postgres`, then run the API with
+  # `dotnet run` and the client with `npm start` for fast iteration (see README).
+  chatbot-api:
+    build:
+      context: .
+      dockerfile: Chatbot.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ChatbotAIDB;Username=postgres;Password=1234"
+      Jwt__Secret: "${JWT_SECRET:?Set JWT_SECRET in a .env file or your shell before running docker compose}"
+      Jwt__Issuer: "ChatbotAI"
+      Jwt__Audience: "ChatbotAI.Client"
+      AI__Provider: "${AI_PROVIDER:-OpenAI}"
+      AI__ApiKey: "${AI_API_KEY:?Set AI_API_KEY in a .env file or your shell before running docker compose}"
+      AI__Model: "${AI_MODEL:-gpt-4o-mini}"
+      AI__BaseUrl: "${AI_BASE_URL:-}"
+      AI__AzureEndpoint: "${AI_AZURE_ENDPOINT:-}"
+      AI__AzureDeploymentName: "${AI_AZURE_DEPLOYMENT_NAME:-}"
+      Cors__AllowedOrigins__0: "http://localhost:4210"
+    ports:
+      - "5010:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  chatbot-client:
+    build:
+      context: ./client
+    ports:
+      - "4210:80"
+    depends_on:
+      - chatbot-api
+
+volumes:
+  chatbotai-postgres-data:

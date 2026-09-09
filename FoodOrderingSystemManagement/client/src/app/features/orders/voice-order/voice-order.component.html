@@ -1,0 +1,57 @@
+<div class="voice-wrap">
+
+  @if (!supported() && error()) {
+    <div class="voice-unsupported">
+      <mat-icon>mic_off</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (supported()) {
+    <div class="voice-controls">
+      <button mat-fab
+              [color]="listening() ? 'warn' : 'primary'"
+              [class.pulse]="listening()"
+              (click)="toggle()"
+              matTooltip="{{ listening() ? 'Stop listening' : 'Voice order' }}">
+        <mat-icon>{{ listening() ? 'stop' : 'mic' }}</mat-icon>
+      </button>
+
+      <div class="voice-status">
+        @if (listening()) {
+          <span class="listening">Listening… say an item name</span>
+        } @else if (transcript()) {
+          <span class="heard">Heard: "{{ transcript() }}"</span>
+        } @else {
+          <span class="idle">Tap mic to order by voice</span>
+        }
+      </div>
+    </div>
+
+    @if (matches().length > 0) {
+      <div class="matches">
+        <div class="matches-label">Tap to add:</div>
+        @for (item of matches(); track item.id) {
+          <button class="match-item" (click)="select(item)">
+            @if (item.image) {
+              <img [src]="item.image" [alt]="item.itemName" class="thumb" />
+            } @else {
+              <span class="thumb placeholder"><mat-icon>fastfood</mat-icon></span>
+            }
+            <span class="item-name">{{ item.itemName }}</span>
+            <span class="item-price">₹{{ item.price | number:'1.2-2' }}</span>
+            <mat-icon class="add-icon">add_circle</mat-icon>
+          </button>
+        }
+      </div>
+    }
+
+    @if (error()) {
+      <div class="voice-error">
+        <mat-icon>error_outline</mat-icon>
+        {{ error() }}
+      </div>
+    }
+  }
+
+</div>

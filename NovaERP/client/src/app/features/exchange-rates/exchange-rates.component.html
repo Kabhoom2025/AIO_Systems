@@ -1,0 +1,66 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Exchange Rates</h1>
+  <button *appHasPermission="'settings.create'" pButton type="button" icon="pi pi-plus" label="Add Rate"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="rates" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>From</th>
+        <th>To</th>
+        <th>Rate</th>
+        <th>Effective Date</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-r>
+      <tr>
+        <td><code class="code-badge">{{ r.fromCurrencyCode }}</code></td>
+        <td><code class="code-badge">{{ r.toCurrencyCode }}</code></td>
+        <td class="font-semibold">{{ r.rate }}</td>
+        <td>{{ r.effectiveDate | date: 'mediumDate' }}</td>
+        <td class="actions-cell">
+          <button *appHasPermission="'settings.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(r)"></button>
+          <button *appHasPermission="'settings.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(r)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No exchange rates configured.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Exchange Rate" [(visible)]="showDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>From Currency</span>
+      <p-dropdown [options]="currencies" [(ngModel)]="form.fromCurrencyCode" optionLabel="code" optionValue="code"
+                  placeholder="Select Currency" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>To Currency</span>
+      <p-dropdown [options]="currencies" [(ngModel)]="form.toCurrencyCode" optionLabel="code" optionValue="code"
+                  placeholder="Select Currency" [disabled]="!!editing" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Rate</span>
+      <p-inputNumber [(ngModel)]="form.rate" [minFractionDigits]="2" [maxFractionDigits]="6" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Effective Date</span>
+      <p-calendar [(ngModel)]="form.effectiveDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,14 @@
+<p-toast></p-toast>
+<div class="login-page">
+  <p-card header="Workflow Builder" class="login-card">
+    <div class="form-field">
+      <label>Email</label>
+      <input pInputText type="email" [(ngModel)]="email" (keyup.enter)="submit()" placeholder="admin@workflowbuilder.local" />
+    </div>
+    <div class="form-field">
+      <label>Password</label>
+      <p-password [(ngModel)]="password" [feedback]="false" [toggleMask]="true" (keyup.enter)="submit()" styleClass="full-width"></p-password>
+    </div>
+    <button pButton type="button" label="Log in" class="full-width" [loading]="loading" (click)="submit()"></button>
+  </p-card>
+</div>

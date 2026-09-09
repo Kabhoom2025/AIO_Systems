@@ -1,0 +1,371 @@
+<div class="promo-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>local_offer</mat-icon>
+      <div>
+        <h1>Offers &amp; Promotions</h1>
+        <p>Manage coupons, promo codes, happy hours, combos, and more</p>
+      </div>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon> New Promotion
+    </button>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="summary-chips">
+    <div class="chip blue"  (click)="filterStatus.set('all')"     [class.active]="filterStatus() === 'all'">
+      <mat-icon>list</mat-icon> All <span>{{ counts().all }}</span>
+    </div>
+    <div class="chip green" (click)="filterStatus.set('Active')"  [class.active]="filterStatus() === 'Active'">
+      <mat-icon>check_circle</mat-icon> Active <span>{{ counts().active }}</span>
+    </div>
+    <div class="chip amber" (click)="filterStatus.set('Upcoming')" [class.active]="filterStatus() === 'Upcoming'">
+      <mat-icon>schedule</mat-icon> Upcoming <span>{{ counts().upcoming }}</span>
+    </div>
+    <div class="chip red"   (click)="filterStatus.set('Expired')" [class.active]="filterStatus() === 'Expired'">
+      <mat-icon>event_busy</mat-icon> Expired <span>{{ counts().expired }}</span>
+    </div>
+  </div>
+
+  <!-- Filters row -->
+  <div class="filter-row">
+    <div class="search-box">
+      <mat-icon>search</mat-icon>
+      <input type="text" placeholder="Search by name or code…"
+        [value]="search()" (input)="search.set($any($event.target).value)" />
+    </div>
+    <div class="type-tabs">
+      <button class="ttab" [class.active]="filterType() === 'all'" (click)="filterType.set('all')">All Types</button>
+      @for (t of promoTypes; track t) {
+        <button class="ttab" [class.active]="filterType() === t" (click)="filterType.set(t)">
+          <mat-icon>{{ typeIcon(t) }}</mat-icon> {{ typeLabel(t) }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner><span>Loading promotions…</span></div>
+  }
+
+  <!-- Empty -->
+  @else if (filteredPromos().length === 0) {
+    <div class="empty-state">
+      <mat-icon>local_offer</mat-icon>
+      <h3>No promotions found</h3>
+      <p>Create your first promotion to attract more customers.</p>
+      <button class="btn-primary" (click)="openCreate()"><mat-icon>add</mat-icon> Create Promotion</button>
+    </div>
+  }
+
+  <!-- Grid -->
+  @else {
+    <div class="promo-grid">
+      @for (p of filteredPromos(); track p.id) {
+        <div class="promo-card" [style.--stripe]="typeColor(p.promotionType)">
+          <div class="card-stripe"></div>
+          <div class="card-body">
+            <div class="card-top">
+              <div class="badge-icon">{{ p.badgeIcon || '🎫' }}</div>
+              <div class="card-info">
+                <span class="type-chip" [style.background]="typeColor(p.promotionType) + '22'" [style.color]="typeColor(p.promotionType)">
+                  <mat-icon>{{ typeIcon(p.promotionType) }}</mat-icon>{{ typeLabel(p.promotionType) }}
+                </span>
+                <h3 class="promo-name">{{ p.name }}</h3>
+                @if (p.code) {
+                  <span class="promo-code">{{ p.code }}</span>
+                }
+              </div>
+              <span class="status-pill" [attr.data-status]="p.status">{{ p.status }}</span>
+            </div>
+
+            <div class="discount-row">
+              <span class="discount-val">{{ discountLabel(p) }}</span>
+              @if (p.minOrderValue) { <span class="constraint">Min ₹{{ p.minOrderValue | number:'1.0-0' }}</span> }
+              @if (p.maxDiscount)   { <span class="constraint">Max ₹{{ p.maxDiscount | number:'1.0-0' }}</span> }
+            </div>
+
+            @if (p.promotionType === 'HappyHour' && p.happyHourStart) {
+              <p class="meta-line"><mat-icon>schedule</mat-icon> {{ p.happyHourStart }} – {{ p.happyHourEnd }} · {{ p.happyHourDays }}</p>
+            }
+            @if (p.promotionType === 'BuyOneGetOne') {
+              <p class="meta-line"><mat-icon>redeem</mat-icon> Buy {{ p.buyQty }} Get {{ p.getQty }} Free</p>
+            }
+            @if (p.promotionType === 'GiftCard' && p.giftCardBalance) {
+              <p class="meta-line"><mat-icon>card_giftcard</mat-icon>
+                Balance: ₹{{ (p.giftCardBalance - (p.giftCardUsed ?? 0)) | number:'1.0-0' }} / ₹{{ p.giftCardBalance | number:'1.0-0' }}
+              </p>
+            }
+            @if (p.startDate || p.endDate) {
+              <p class="meta-line">
+                <mat-icon>date_range</mat-icon>
+                @if (p.startDate) { {{ p.startDate | date:'dd MMM' }} }
+                @if (p.startDate && p.endDate) { – }
+                @if (p.endDate)   { {{ p.endDate | date:'dd MMM yyyy' }} }
+              </p>
+            }
+            @if (p.usageLimit) {
+              <p class="meta-line"><mat-icon>people</mat-icon> {{ p.usedCount }} / {{ p.usageLimit }} used</p>
+            }
+
+            <div class="card-actions">
+              <button class="act-btn" [class.active]="p.isActive" (click)="toggle(p)"
+                [matTooltip]="p.isActive ? 'Deactivate' : 'Activate'">
+                <mat-icon>{{ p.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+              </button>
+              <button class="act-btn edit" (click)="openEdit(p)" matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="act-btn del" (click)="removePromo(p)" matTooltip="Delete">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- Overlay + Slide Panel -->
+@if (showPanel()) {
+  <div class="overlay" (click)="closePanel()"></div>
+  <div class="slide-panel">
+
+    <div class="panel-head">
+      <h3>{{ editId() ? 'Edit Promotion' : 'New Promotion' }}</h3>
+      <button class="close-btn" (click)="closePanel()"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- Type selector -->
+      <div class="form-section">
+        <label class="form-label">Promotion Type</label>
+        <div class="type-grid">
+          @for (t of promoTypes; track t) {
+            <button class="type-btn" [class.selected]="form().promotionType === t"
+              [style.--tc]="typeColor(t)"
+              (click)="patchForm({ promotionType: t, badgeIcon: typeMeta[t].defaultBadge, bannerColor: typeMeta[t].color }); onTypeChange()">
+              <mat-icon>{{ typeIcon(t) }}</mat-icon>
+              <span>{{ typeLabel(t) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Basic info -->
+      <div class="form-section">
+        <label class="form-label">Name <span class="req">*</span></label>
+        <input class="form-input" type="text" placeholder="e.g. Diwali Special 20% Off"
+          [value]="form().name" (input)="patchForm({ name: $any($event.target).value })" />
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">Description</label>
+        <textarea class="form-input form-textarea" rows="2"
+          placeholder="Short description for customers…"
+          [value]="form().description ?? ''"
+          (input)="patchForm({ description: $any($event.target).value })"></textarea>
+      </div>
+
+      <!-- Discount -->
+      <div class="form-row">
+        <div class="form-section">
+          <label class="form-label">Discount Type</label>
+          <select class="form-input"
+            [value]="form().discountType"
+            (change)="patchForm({ discountType: $any($event.target).value })">
+            <option value="Percentage">Percentage (%)</option>
+            <option value="FlatAmount">Flat Amount (₹)</option>
+            <option value="FreeItem">Free Item</option>
+            <option value="PointsMultiplier">Points Multiplier</option>
+          </select>
+        </div>
+        <div class="form-section">
+          <label class="form-label">Value</label>
+          <input class="form-input" type="number" min="0"
+            [value]="form().discountValue"
+            (input)="patchForm({ discountValue: +$any($event.target).value })" />
+        </div>
+      </div>
+
+      <!-- Code field -->
+      @if (showCodeField()) {
+        <div class="form-section">
+          <label class="form-label">{{ form().promotionType === 'GiftCard' ? 'Gift Card Code' : 'Promo Code' }}</label>
+          <input class="form-input code-input" type="text"
+            placeholder="e.g. SAVE20"
+            [value]="form().code ?? ''"
+            (input)="patchForm({ code: $any($event.target).value.toUpperCase() })" />
+        </div>
+      }
+
+      <!-- Gift Card balance -->
+      @if (showGiftCard()) {
+        <div class="form-section">
+          <label class="form-label">Gift Card Value (₹)</label>
+          <input class="form-input" type="number" min="0"
+            [value]="form().giftCardBalance ?? ''"
+            (input)="patchForm({ giftCardBalance: +$any($event.target).value })" />
+        </div>
+      }
+
+      <!-- Happy Hour -->
+      @if (showHappyHour()) {
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Start Time</label>
+            <input class="form-input" type="time"
+              [value]="form().happyHourStart ?? ''"
+              (input)="patchForm({ happyHourStart: $any($event.target).value })" />
+          </div>
+          <div class="form-section">
+            <label class="form-label">End Time</label>
+            <input class="form-input" type="time"
+              [value]="form().happyHourEnd ?? ''"
+              (input)="patchForm({ happyHourEnd: $any($event.target).value })" />
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">Days (e.g. Mon,Tue,Wed,Thu,Fri)</label>
+          <input class="form-input" type="text" placeholder="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
+            [value]="form().happyHourDays ?? ''"
+            (input)="patchForm({ happyHourDays: $any($event.target).value })" />
+        </div>
+      }
+
+      <!-- BOGO / Combo -->
+      @if (showBogo()) {
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Buy Qty</label>
+            <input class="form-input" type="number" min="1"
+              [value]="form().buyQty ?? 1"
+              (input)="patchForm({ buyQty: +$any($event.target).value })" />
+          </div>
+          <div class="form-section">
+            <label class="form-label">Get Qty Free</label>
+            <input class="form-input" type="number" min="1"
+              [value]="form().getQty ?? 1"
+              (input)="patchForm({ getQty: +$any($event.target).value })" />
+          </div>
+        </div>
+      }
+
+      <!-- Loyalty Reward -->
+      @if (showLoyalty()) {
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Min Spend Threshold (₹)</label>
+            <input class="form-input" type="number" min="0"
+              [value]="form().spendThreshold ?? ''"
+              (input)="patchForm({ spendThreshold: +$any($event.target).value })" />
+          </div>
+          <div class="form-section">
+            <label class="form-label">Points Multiplier</label>
+            <input class="form-input" type="number" min="1" step="0.5"
+              [value]="form().pointsMultiplierVal ?? 2"
+              (input)="patchForm({ pointsMultiplierVal: +$any($event.target).value })" />
+          </div>
+        </div>
+      }
+
+      <!-- Date range -->
+      @if (showDateRange()) {
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Start Date</label>
+            <input class="form-input" type="date"
+              [value]="form().startDate ? $any(form().startDate)?.slice(0,10) : ''"
+              (input)="patchForm({ startDate: $any($event.target).value || undefined })" />
+          </div>
+          <div class="form-section">
+            <label class="form-label">End Date</label>
+            <input class="form-input" type="date"
+              [value]="form().endDate ? $any(form().endDate)?.slice(0,10) : ''"
+              (input)="patchForm({ endDate: $any($event.target).value || undefined })" />
+          </div>
+        </div>
+      }
+
+      <!-- Constraints -->
+      <div class="form-row">
+        <div class="form-section">
+          <label class="form-label">Min Order Value (₹)</label>
+          <input class="form-input" type="number" min="0" placeholder="0 = any"
+            [value]="form().minOrderValue ?? ''"
+            (input)="patchForm({ minOrderValue: +$any($event.target).value || undefined })" />
+        </div>
+        <div class="form-section">
+          <label class="form-label">Max Discount (₹)</label>
+          <input class="form-input" type="number" min="0" placeholder="Leave blank = no cap"
+            [value]="form().maxDiscount ?? ''"
+            (input)="patchForm({ maxDiscount: +$any($event.target).value || undefined })" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-section">
+          <label class="form-label">Usage Limit</label>
+          <input class="form-input" type="number" min="0" placeholder="Blank = unlimited"
+            [value]="form().usageLimit ?? ''"
+            (input)="patchForm({ usageLimit: +$any($event.target).value || undefined })" />
+        </div>
+        <div class="form-section">
+          <label class="form-label">Per-Customer Limit</label>
+          <input class="form-input" type="number" min="0" placeholder="Blank = unlimited"
+            [value]="form().usageLimitPerCustomer ?? ''"
+            (input)="patchForm({ usageLimitPerCustomer: +$any($event.target).value || undefined })" />
+        </div>
+      </div>
+
+      <!-- Display settings -->
+      <div class="form-section">
+        <label class="form-label">Badge Icon (emoji)</label>
+        <input class="form-input" type="text" maxlength="4"
+          [value]="form().badgeIcon ?? ''"
+          (input)="patchForm({ badgeIcon: $any($event.target).value })" />
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">Banner Color</label>
+        <div class="color-row">
+          @for (c of bannerColors; track c) {
+            <button class="color-swatch" [style.background]="c"
+              [class.selected]="form().bannerColor === c"
+              (click)="patchForm({ bannerColor: c })"></button>
+          }
+        </div>
+      </div>
+
+      <!-- Toggles -->
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <span>Active</span>
+          <input type="checkbox" [checked]="form().isActive"
+            (change)="patchForm({ isActive: $any($event.target).checked })" />
+        </label>
+        <label class="toggle-label">
+          <span>Show on menu page</span>
+          <input type="checkbox" [checked]="form().isPublic"
+            (change)="patchForm({ isPublic: $any($event.target).checked })" />
+        </label>
+      </div>
+
+    </div>
+
+    <div class="panel-footer">
+      <button class="btn-cancel" (click)="closePanel()" [disabled]="saving()">Cancel</button>
+      <button class="btn-save" (click)="save()" [disabled]="saving() || !form().name.trim()">
+        @if (saving()) { <mat-spinner diameter="16"></mat-spinner> }
+        @else { {{ editId() ? 'Save Changes' : 'Create Promotion' }} }
+      </button>
+    </div>
+  </div>
+}

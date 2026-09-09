@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Organization' : 'New Organization' }}</h2>
+
+<mat-dialog-content class="form-grid">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput name="name" [(ngModel)]="model.name" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Email</mat-label>
+    <input matInput name="email" [(ngModel)]="model.email" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Phone</mat-label>
+    <input matInput name="phone" [(ngModel)]="model.phone" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Address</mat-label>
+    <input matInput name="address" [(ngModel)]="model.address" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Timezone</mat-label>
+    <input matInput name="timezone" [(ngModel)]="model.timezone" placeholder="Asia/Kolkata" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Currency</mat-label>
+    <input matInput name="currency" [(ngModel)]="model.currency" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Logo URL</mat-label>
+    <input matInput name="logoUrl" [(ngModel)]="model.logoUrl" />
+  </mat-form-field>
+
+  @if (isEdit) {
+    <mat-slide-toggle name="isActive" [(ngModel)]="model.isActive">Active</mat-slide-toggle>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()">Save</button>
+</mat-dialog-actions>

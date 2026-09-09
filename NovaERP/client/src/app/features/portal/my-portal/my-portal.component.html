@@ -1,0 +1,133 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>My Portal</h1>
+</div>
+
+@if (noEmployeeLinked) {
+  <div class="card empty-state">
+    <i class="pi pi-info-circle"></i>
+    <p>No employee record is linked to your account. Contact an administrator if you believe this is a mistake.</p>
+  </div>
+} @else {
+  <div class="card">
+    <p-tabView>
+      <p-tabPanel header="My Profile">
+        @if (profile) {
+          <div class="profile-grid">
+            <div><span class="field-label">Employee Code</span><span class="field-value">{{ profile.employeeCode }}</span></div>
+            <div><span class="field-label">Name</span><span class="field-value">{{ profile.firstName }} {{ profile.lastName }}</span></div>
+            <div><span class="field-label">Department</span><span class="field-value">{{ profile.departmentName }}</span></div>
+            <div><span class="field-label">Job Title</span><span class="field-value">{{ profile.jobTitle }}</span></div>
+            <div><span class="field-label">Employment Type</span><span class="field-value">{{ profile.employmentType }}</span></div>
+            <div><span class="field-label">Reporting Manager</span><span class="field-value">{{ profile.reportingManagerName ?? '—' }}</span></div>
+            <div><span class="field-label">Email</span><span class="field-value">{{ profile.email }}</span></div>
+            <div><span class="field-label">Phone</span><span class="field-value">{{ profile.phone ?? '—' }}</span></div>
+            <div><span class="field-label">Date of Joining</span><span class="field-value">{{ profile.dateOfJoining | date: 'mediumDate' }}</span></div>
+            <div><span class="field-label">Status</span><span class="field-value"><p-tag [value]="profile.status" [severity]="profile.status === 'Active' ? 'success' : 'warn'"></p-tag></span></div>
+          </div>
+        }
+      </p-tabPanel>
+
+      <p-tabPanel header="My Leave Requests">
+        <div class="tab-header">
+          <button pButton type="button" icon="pi pi-plus" label="Request Leave" (click)="openNew()"></button>
+        </div>
+        <p-table [value]="leaveRequests" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Leave Type</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Days</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th style="width: 8rem">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-r>
+            <tr>
+              <td>{{ r.leaveTypeName }}</td>
+              <td>{{ r.startDate | date: 'mediumDate' }}</td>
+              <td>{{ r.endDate | date: 'mediumDate' }}</td>
+              <td>{{ r.daysRequested | number: '1.0-2' }}</td>
+              <td>{{ r.reason }}</td>
+              <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+              <td>
+                @if (r.status === 'Pending') {
+                  <button pButton type="button" icon="pi pi-ban" label="Cancel" class="p-button-text p-button-sm p-button-danger" (click)="cancel(r)"></button>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="7" class="empty-cell">No leave requests yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="My Payslips">
+        <p-table [value]="payslips" dataKey="payRunId" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Period</th>
+              <th>Run #</th>
+              <th>Basic</th>
+              <th>HRA</th>
+              <th>Allowances</th>
+              <th>Deductions</th>
+              <th>Gross Pay</th>
+              <th>Net Pay</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-p>
+            <tr>
+              <td>{{ monthName(p.periodMonth) }} {{ p.periodYear }}</td>
+              <td><code class="code-badge">{{ p.runNumber }}</code></td>
+              <td>{{ p.basicSalary | number: '1.2-2' }}</td>
+              <td>{{ p.hra | number: '1.2-2' }}</td>
+              <td>{{ p.otherAllowances | number: '1.2-2' }}</td>
+              <td>{{ p.deductions | number: '1.2-2' }}</td>
+              <td class="font-semibold">{{ p.grossPay | number: '1.2-2' }}</td>
+              <td class="font-semibold">{{ p.netPay | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="8" class="empty-cell">No payslips yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+}
+
+<p-dialog header="Request Leave" [(visible)]="showDialog" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Leave Type</span>
+      <p-dropdown [options]="leaveTypes" [(ngModel)]="form.leaveTypeId" optionLabel="name" optionValue="id"
+                  placeholder="Select leave type" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Start Date</span>
+      <p-calendar [(ngModel)]="form.startDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>End Date</span>
+      <p-calendar [(ngModel)]="form.endDate" dateFormat="dd/mm/yy" [showIcon]="true" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Days Requested</span>
+      <p-inputNumber [(ngModel)]="form.daysRequested" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Reason</span>
+      <input pInputText [(ngModel)]="form.reason" />
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Submit" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

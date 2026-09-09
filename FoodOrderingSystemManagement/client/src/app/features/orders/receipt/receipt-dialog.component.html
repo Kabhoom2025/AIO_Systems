@@ -1,0 +1,90 @@
+<div class="receipt" id="receipt-print">
+
+  <!-- Header -->
+  <div class="receipt-header">
+    <mat-icon class="receipt-logo">restaurant</mat-icon>
+    <h2>{{ settings()?.restaurantName || 'FoodOrder POS' }}</h2>
+    @if (settings()?.address) { <p>{{ settings()!.address }}</p> }
+    @if (settings()?.phone)   { <p>📞 {{ settings()!.phone }}</p> }
+    @if (settings()?.gstNumber) { <p>GST: {{ settings()!.gstNumber }}</p> }
+  </div>
+
+  <mat-divider />
+
+  <!-- Order meta -->
+  <div class="receipt-meta">
+    <div class="meta-row">
+      <span>Order #</span><strong>{{ order.orderNumber }}</strong>
+    </div>
+    <div class="meta-row">
+      <span>Cashier</span><strong>{{ order.cashierName }}</strong>
+    </div>
+    <div class="meta-row">
+      <span>Date</span><strong>{{ order.orderDate | date:'dd MMM yyyy, h:mm a' }}</strong>
+    </div>
+    <div class="meta-row">
+      <span>Status</span>
+      <span class="status-badge">{{ order.status }}</span>
+    </div>
+  </div>
+
+  <mat-divider />
+
+  <!-- Items -->
+  <div class="receipt-items">
+    <div class="items-head">
+      <span>Item</span><span>Qty</span><span>Price</span><span>Total</span>
+    </div>
+    @for (item of order.items; track item.foodItemId) {
+      <div class="item-row">
+        <span class="item-name">{{ item.itemName }}</span>
+        <span>{{ item.quantity }}</span>
+        <span>₹{{ item.unitPrice | number:'1.2-2' }}</span>
+        <span>₹{{ item.lineTotal | number:'1.2-2' }}</span>
+      </div>
+    }
+  </div>
+
+  <mat-divider />
+
+  <!-- Totals -->
+  <div class="receipt-totals">
+    <div class="total-row"><span>Subtotal</span><span>₹{{ order.subTotal | number:'1.2-2' }}</span></div>
+    <div class="total-row"><span>Tax</span><span>₹{{ order.tax | number:'1.2-2' }}</span></div>
+    @if (order.discount > 0) {
+      <div class="total-row discount"><span>Discount</span><span>-₹{{ order.discount | number:'1.2-2' }}</span></div>
+    }
+    <mat-divider />
+    <div class="total-row grand"><span>Grand Total</span><span>₹{{ order.grandTotal | number:'1.2-2' }}</span></div>
+  </div>
+
+  @if (order.customerName || order.pointsEarned) {
+    <div class="loyalty-section">
+      @if (order.customerName) {
+        <div class="loyalty-row"><span>Customer</span><strong>{{ order.customerName }} ({{ order.customerTier }})</strong></div>
+      }
+      @if (order.pointsRedeemed && order.pointsRedeemed > 0) {
+        <div class="loyalty-row redeemed"><span>Points Redeemed</span><span>-{{ order.pointsRedeemed }} pts</span></div>
+      }
+      @if (order.pointsEarned && order.pointsEarned > 0) {
+        <div class="loyalty-row earned"><span>Points Earned</span><span>+{{ order.pointsEarned }} pts</span></div>
+        <div class="loyalty-row balance"><span>New Balance</span><strong>{{ order.newPointsBalance }} pts</strong></div>
+      }
+    </div>
+  }
+
+  <div class="receipt-footer">
+    <p>Thank you for dining with us! 🙏</p>
+  </div>
+
+</div>
+
+<!-- Dialog actions -->
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="close()">
+    <mat-icon>close</mat-icon> Close
+  </button>
+  <button mat-raised-button color="primary" (click)="print()">
+    <mat-icon>print</mat-icon> Print
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,20 @@
+<p-toast />
+<div class="login-page">
+  <div class="login-card">
+    <h2>Pharmacy Login</h2>
+    <p class="subtitle">Demo login — seeded on first API startup</p>
+
+    <label class="field">
+      Email
+      <input pInputText type="email" [(ngModel)]="email" (keyup.enter)="login()" />
+    </label>
+    <label class="field">
+      Password
+      <p-password [(ngModel)]="password" [feedback]="false" [toggleMask]="true" (keyup.enter)="login()" />
+    </label>
+
+    <p-button label="Sign In" styleClass="w-full" [loading]="loading()" (onClick)="login()" />
+
+    <div class="hint">Default demo credentials: admin&#64;pharmacy.local / Admin&#64;123</div>
+  </div>
+</div>

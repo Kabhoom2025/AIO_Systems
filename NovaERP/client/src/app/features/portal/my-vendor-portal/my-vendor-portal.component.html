@@ -1,0 +1,79 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+  <h1>My Vendor Portal</h1>
+</div>
+
+@if (noVendorLinked) {
+  <div class="card empty-state">
+    <i class="pi pi-info-circle"></i>
+    <p>No vendor record is linked to your account. Contact an administrator if you believe this is a mistake.</p>
+  </div>
+} @else {
+  <div class="card">
+    <p-tabView>
+      <p-tabPanel header="Profile">
+        @if (profile) {
+          <div class="profile-grid">
+            <div><span class="field-label">Name</span><span class="field-value">{{ profile.name }}</span></div>
+            <div><span class="field-label">Category</span><span class="field-value">{{ profile.category ?? '—' }}</span></div>
+            <div><span class="field-label">Contact Email</span><span class="field-value">{{ profile.contactEmail ?? '—' }}</span></div>
+            <div><span class="field-label">Contact Phone</span><span class="field-value">{{ profile.contactPhone ?? '—' }}</span></div>
+            <div><span class="field-label">Address</span><span class="field-value">{{ profile.address ?? '—' }}</span></div>
+            <div><span class="field-label">Status</span><span class="field-value"><p-tag [value]="profile.isActive ? 'Active' : 'Inactive'" [severity]="profile.isActive ? 'success' : 'warn'"></p-tag></span></div>
+          </div>
+        }
+      </p-tabPanel>
+
+      <p-tabPanel header="Purchase Orders">
+        <p-table [value]="purchaseOrders" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>PO #</th>
+              <th>Order Date</th>
+              <th>Status</th>
+              <th>Grand Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-o>
+            <tr>
+              <td><code class="code-badge">{{ o.poNumber }}</code></td>
+              <td>{{ o.orderDate | date: 'mediumDate' }}</td>
+              <td><p-tag [severity]="orderStatusSeverity(o.status)" [value]="o.status"></p-tag></td>
+              <td class="font-semibold">{{ o.grandTotal | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="4" class="empty-cell">No purchase orders yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <p-tabPanel header="Bills">
+        <p-table [value]="bills" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Bill #</th>
+              <th>Bill Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-b>
+            <tr>
+              <td><code class="code-badge">{{ b.billNumber }}</code></td>
+              <td>{{ b.billDate | date: 'mediumDate' }}</td>
+              <td>{{ b.dueDate | date: 'mediumDate' }}</td>
+              <td><p-tag [severity]="billStatusSeverity(b.status)" [value]="b.status"></p-tag></td>
+              <td class="font-semibold">{{ b.totalAmount | number: '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5" class="empty-cell">No bills yet.</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+}

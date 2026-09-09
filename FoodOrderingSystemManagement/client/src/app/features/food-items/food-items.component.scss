@@ -1,0 +1,168 @@
+.food-items-page { }
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+}
+
+.page-title {
+  display: flex; align-items: center; gap: 14px;
+  mat-icon { font-size: 36px; width: 36px; height: 36px; color: var(--primary); }
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 2px; color: #212121; }
+  p  { font-size: .875rem; color: #757575; margin: 0; }
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+.toolbar {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+
+.search-field { flex: 1; min-width: 240px; max-width: 400px; }
+
+.count-badge {
+  font-size: .875rem; color: #757575; white-space: nowrap;
+  background: #f5f5f5; padding: 6px 14px; border-radius: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+// ── Category chips ────────────────────────────────────────────────────────────
+.category-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 20px;
+}
+
+.chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e0e0e0;
+  background: #fff; cursor: pointer; font-size: .85rem; font-weight: 500;
+  color: #616161; transition: all var(--transition);
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+  &:hover { border-color: var(--primary); color: var(--primary); }
+
+  &.active {
+    background: var(--primary); border-color: var(--primary);
+    color: #fff; box-shadow: 0 2px 8px rgba(191,54,12,.3);
+  }
+}
+
+.chip-count {
+  background: rgba(0,0,0,.1); border-radius: 10px;
+  padding: 1px 7px; font-size: .75rem; font-weight: 700;
+  .active & { background: rgba(255,255,255,.25); }
+}
+
+// ── Loading / empty ───────────────────────────────────────────────────────────
+.loading-center {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 0; gap: 16px;
+  color: #9e9e9e; font-size: .95rem;
+}
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 0; gap: 12px; text-align: center;
+  mat-icon { font-size: 64px; width: 64px; height: 64px; color: #e0e0e0; }
+  h3 { font-size: 1.2rem; font-weight: 600; color: #424242; margin: 0; }
+  p  { color: #9e9e9e; margin: 0 0 8px; font-size: .9rem; }
+}
+
+// ── Food grid ─────────────────────────────────────────────────────────────────
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.food-card {
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex; flex-direction: column;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.13) !important;
+  }
+
+  &.unavailable { opacity: .6; }
+
+  mat-card-content {
+    padding: 14px 16px 6px !important;
+    flex: 1;
+  }
+
+  mat-card-actions {
+    display: flex; justify-content: center; gap: 4px;
+    padding: 8px 12px 12px !important;
+    border-top: 1px solid #f5f5f5;
+  }
+}
+
+// ── Food image ────────────────────────────────────────────────────────────────
+.food-image {
+  position: relative; width: 100%; height: 150px;
+  overflow: hidden; background: #f5f5f5;
+
+  img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform .3s ease;
+    .food-card:hover & { transform: scale(1.04); }
+  }
+}
+
+.food-image-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #f5f5f5, #eeeeee);
+  mat-icon { font-size: 52px; width: 52px; height: 52px; color: #bdbdbd; }
+}
+
+.avail-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: .7rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 12px; text-transform: uppercase; letter-spacing: .4px;
+  &.available   { background: #e8f5e9; color: #2e7d32; }
+  &.unavailable { background: #ffebee; color: #c62828; }
+}
+
+// ── Card content ──────────────────────────────────────────────────────────────
+.category-label {
+  font-size: .7rem; font-weight: 600; color: var(--primary);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+
+.item-name {
+  font-size: .95rem; font-weight: 700; color: #212121;
+  margin: 4px 0 6px; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.item-desc {
+  font-size: .78rem; color: #9e9e9e; margin: 0 0 10px; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.item-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: auto; padding-top: 8px;
+}
+
+.item-price {
+  font-size: 1.05rem; font-weight: 700; color: var(--primary);
+}
+
+.stock-badge {
+  display: flex; align-items: center; gap: 4px;
+  font-size: .75rem; font-weight: 600;
+  padding: 3px 9px; border-radius: 12px;
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  &.ok  { background: #e8f5e9; color: #2e7d32; }
+  &.low { background: #fff3e0; color: #e65100; }
+  &.out { background: #ffebee; color: #c62828; }
+}

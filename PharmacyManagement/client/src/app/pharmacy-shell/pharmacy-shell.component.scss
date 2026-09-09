@@ -1,0 +1,118 @@
+.shell-container {
+  height: 100vh;
+}
+
+.shell-sidenav {
+  width: 260px;
+  border-right: none;
+  background: var(--mat-sys-surface-container-low);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.1rem 1.25rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--mat-sys-primary);
+}
+
+.active-link {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.shell-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mat-sys-surface-container-high);
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin-right: 0.5rem;
+
+  input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.85rem;
+    width: 180px;
+    color: inherit;
+  }
+}
+
+.user-info {
+  padding: 0.5rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  .user-name { font-weight: 600; font-size: 0.9rem; }
+  .user-meta { font-size: 0.75rem; opacity: 0.7; }
+}
+
+.shell-content {
+  padding: 0;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.notification-empty {
+  padding: 1.25rem;
+  text-align: center;
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+.notification-item {
+  height: auto !important;
+  line-height: normal !important;
+  padding: 0.5rem 1rem !important;
+  white-space: normal !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 2px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &.unread {
+    background: var(--mat-sys-secondary-container);
+  }
+
+  .notification-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .notification-message {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    white-space: normal;
+  }
+
+  .notification-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+  }
+}

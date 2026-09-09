@@ -1,0 +1,91 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Tax Codes</h1>
+  <button *appHasPermission="'tax.create'" pButton type="button" icon="pi pi-plus" label="Add Tax Code"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="taxCodes" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Components</th>
+        <th>Total Rate</th>
+        <th>Active</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td><code class="code-badge">{{ t.code }}</code></td>
+        <td class="font-semibold">{{ t.name }}</td>
+        <td>{{ t.components.length }}</td>
+        <td class="font-semibold">{{ t.totalRatePercent }}%</td>
+        <td>
+          <p-tag [severity]="t.isActive ? 'success' : 'danger'" [value]="t.isActive ? 'Active' : 'Inactive'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button *appHasPermission="'tax.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(t)"></button>
+          <button *appHasPermission="'tax.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(t)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="empty-cell">No tax codes configured.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Tax Code" [(visible)]="showDialog" [modal]="true"
+          [style]="{ width: '38rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Code</span>
+      <input pInputText [(ngModel)]="form.code" [disabled]="!!editing" placeholder="e.g. GST18" />
+    </label>
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="form.name" placeholder="e.g. GST 18%" />
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="form.isActive" [binary]="true"></p-checkbox>
+      <span>Active</span>
+    </label>
+  </div>
+
+  <div class="components-section">
+    <div class="components-header">
+      <h3>Rate Components</h3>
+      <button pButton type="button" icon="pi pi-plus" label="Add Component" class="p-button-text p-button-sm" (click)="addComponent()"></button>
+    </div>
+    <div class="component-row component-row-header">
+      <span>Name</span>
+      <span>Rate %</span>
+      <span></span>
+    </div>
+    @for (component of components; track $index) {
+      <div class="component-row">
+        <input pInputText [(ngModel)]="component.name" placeholder="e.g. CGST" />
+        <p-inputNumber [(ngModel)]="component.ratePercent" [minFractionDigits]="0" [maxFractionDigits]="4" suffix="%"></p-inputNumber>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                (click)="removeComponent($index)"></button>
+      </div>
+    }
+    @if (!components.length) {
+      <div class="empty-cell">No components yet — add at least one.</div>
+    } @else {
+      <div class="total-row">Total rate: <strong>{{ totalRate() }}%</strong></div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

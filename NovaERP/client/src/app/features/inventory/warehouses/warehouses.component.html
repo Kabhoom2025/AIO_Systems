@@ -1,0 +1,115 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Warehouses</h1>
+  <button *appHasPermission="'warehouse.create'" pButton type="button" icon="pi pi-plus" label="Add Warehouse"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="warehouses" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Branch</th>
+        <th>Active</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-w>
+      <tr>
+        <td><code class="code-badge">{{ w.code }}</code></td>
+        <td class="font-semibold">{{ w.name }}</td>
+        <td>{{ w.branchName }}</td>
+        <td>
+          <p-tag [severity]="w.isActive ? 'success' : 'danger'" [value]="w.isActive ? 'Active' : 'Inactive'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button *appHasPermission="'warehouse.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(w)"></button>
+          <button *appHasPermission="'warehouse.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(w)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No warehouses yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Warehouse" [(visible)]="showDialog" [modal]="true" [style]="{ width: '30rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Branch</span>
+      <p-dropdown [options]="branches" [(ngModel)]="form.branchId" optionLabel="name" optionValue="id"
+                  placeholder="Select branch" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Code</span>
+      <input pInputText [(ngModel)]="form.code" [disabled]="!!editing" placeholder="e.g. WH-BLR" />
+    </label>
+    <label>
+      <span>Name (Company)</span>
+      <input pInputText [(ngModel)]="form.name" />
+    </label>
+    <label>
+      <span>Contact</span>
+      <input pInputText [(ngModel)]="form.contactName" />
+    </label>
+    <label>
+      <span>Email</span>
+      <input pInputText [(ngModel)]="form.email" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input pInputText [(ngModel)]="form.phone" />
+    </label>
+    <label>
+      <span>Address 1</span>
+      <input pInputText [(ngModel)]="form.address" />
+    </label>
+    <label>
+      <span>Address 2</span>
+      <input pInputText [(ngModel)]="form.addressLine2" />
+    </label>
+    <label>
+      <span>City</span>
+      <input pInputText [(ngModel)]="form.city" />
+    </label>
+    <label>
+      <span>Zip</span>
+      <input pInputText [(ngModel)]="form.postalCode" />
+    </label>
+    <label>
+      <span>State</span>
+      <input pInputText [(ngModel)]="form.state" />
+    </label>
+    <label>
+      <span>Country</span>
+      <input pInputText [(ngModel)]="form.country" />
+    </label>
+    <label>
+      <span>Tax Type</span>
+      <input pInputText [(ngModel)]="form.taxType" />
+    </label>
+    <label>
+      <span>Tax Country</span>
+      <input pInputText [(ngModel)]="form.taxCountry" />
+    </label>
+    <label>
+      <span>Tax ID</span>
+      <input pInputText [(ngModel)]="form.taxId" />
+    </label>
+    <label class="checkbox-row">
+      <p-checkbox [(ngModel)]="form.isActive" [binary]="true"></p-checkbox>
+      <span>Active</span>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

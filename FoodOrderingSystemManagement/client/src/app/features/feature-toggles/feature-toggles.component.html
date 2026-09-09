@@ -1,0 +1,56 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>toggle_on</mat-icon></div>
+      <div>
+        <h1 class="page-title">Feature Toggles</h1>
+        <p class="page-subtitle">Enable or disable features for your restaurant. Changes are saved to the database.</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="saving() || loading()">
+      @if (saving()) { <mat-spinner diameter="16"></mat-spinner> }
+      @if (!saving()) { <mat-icon>save</mat-icon> }
+      {{ saving() ? 'Saving...' : 'Save Changes' }}
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="center-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  <!-- Content -->
+  @if (!loading() && settings()) {
+    @for (cat of categories(); track cat) {
+      <div class="category-section">
+        <h2 class="category-label">{{ cat }}</h2>
+        <div class="features-card">
+          @for (feature of featuresFor(cat); track feature.key) {
+            <div class="feature-row" [class.enabled]="isEnabled(feature.key)">
+              <div class="feature-icon-wrap" [class.active]="isEnabled(feature.key)">
+                <mat-icon>{{ feature.icon }}</mat-icon>
+              </div>
+              <div class="feature-info">
+                <span class="feature-name">{{ feature.name }}</span>
+                <span class="feature-desc">{{ feature.description }}</span>
+              </div>
+              <div class="toggle-col">
+                <span class="status-label" [class.on]="isEnabled(feature.key)">
+                  {{ isEnabled(feature.key) ? 'Enabled' : 'Disabled' }}
+                </span>
+                <mat-slide-toggle
+                  [checked]="isEnabled(feature.key)"
+                  (change)="toggle(feature.key)"
+                  color="primary">
+                </mat-slide-toggle>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+
+</div>

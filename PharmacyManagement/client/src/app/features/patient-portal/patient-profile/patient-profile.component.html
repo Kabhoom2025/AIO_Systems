@@ -1,0 +1,86 @@
+<div class="profile-page">
+  <div class="page-header">
+    <div class="eyebrow">Your account</div>
+    <h1>My Profile</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading your profile…</div>
+  } @else {
+    <div class="profile-card">
+      <div class="field readonly">
+        <span>Mobile Number</span>
+        <input type="text" [value]="'+91 ' + phone" disabled />
+        <em>Contact support to change your number.</em>
+      </div>
+
+      <div class="field">
+        <span>Verification Status</span>
+        <span class="badge" [class.verified]="isVerified()">{{ isVerified() ? 'Verified' : 'Not Verified' }}</span>
+      </div>
+
+      <div class="grid">
+        <label class="field">
+          <span>Full Name</span>
+          <input type="text" [(ngModel)]="form.name" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" [(ngModel)]="form.email" />
+        </label>
+        <label class="field">
+          <span>Date of Birth</span>
+          <input type="date" [(ngModel)]="form.dateOfBirth" />
+        </label>
+        <label class="field">
+          <span>Gender</span>
+          <select [(ngModel)]="form.gender">
+            <option value="">Select…</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label class="field span-2">
+          <span>Address</span>
+          <input type="text" [(ngModel)]="form.address" />
+        </label>
+        <label class="field">
+          <span>Blood Group</span>
+          <input type="text" [(ngModel)]="form.bloodGroup" placeholder="e.g. O+" />
+        </label>
+        <label class="field">
+          <span>Allergies</span>
+          <input type="text" [(ngModel)]="form.allergies" />
+        </label>
+        <label class="field span-2">
+          <span>Chronic Diseases</span>
+          <input type="text" [(ngModel)]="form.chronicDiseases" />
+        </label>
+        <label class="field">
+          <span>Emergency Contact Name</span>
+          <input type="text" [(ngModel)]="form.emergencyContactName" />
+        </label>
+        <label class="field">
+          <span>Emergency Contact Phone</span>
+          <input type="text" [(ngModel)]="form.emergencyContactPhone" />
+        </label>
+        <label class="field">
+          <span>Insurance Provider</span>
+          <input type="text" [(ngModel)]="form.insuranceProvider" />
+        </label>
+        <label class="field">
+          <span>Insurance Policy Number</span>
+          <input type="text" [(ngModel)]="form.insurancePolicyNumber" />
+        </label>
+      </div>
+
+      @if (errorMessage()) { <div class="error-msg">{{ errorMessage() }}</div> }
+      @if (successMessage()) { <div class="success-msg">{{ successMessage() }}</div> }
+
+      <button class="btn-primary" [disabled]="saving()" (click)="save()">
+        {{ saving() ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+  }
+</div>

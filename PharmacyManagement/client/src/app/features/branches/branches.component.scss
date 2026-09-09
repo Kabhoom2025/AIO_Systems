@@ -1,0 +1,40 @@
+.branches-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.btn-primary { background: #1a237e; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+
+.branches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.branch-card { border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+.branch-card.inactive { opacity: 0.6; }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 1rem; background: #f8f9fa;
+  h3 { margin: 0; font-size: 1rem; color: #1a237e; }
+  .code { font-size: 0.8rem; color: #666; }
+}
+.type-badge { padding: 3px 10px; border-radius: 12px; color: #fff; font-size: 0.75rem; font-weight: 700; background: #43a047; }
+.type-badge.warehouse { background: #6d4c41; }
+.card-body { padding: 0.75rem 1rem; }
+.info-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; color: #555;
+  b { color: #222; }
+}
+.card-actions { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid #f0f0f0;
+  button { flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; font-size: 0.8rem; }
+  button.danger { color: #e53935; border-color: #e53935; }
+  button.danger:hover { background: #e53935; color: #fff; }
+}
+.loading, .empty { text-align: center; padding: 3rem; color: #999; }
+
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.dialog { background: #fff; border-radius: 12px; padding: 2rem; width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  h3 { margin: 0 0 1.5rem; color: #1a237e; }
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  label { display: flex; flex-direction: column; font-size: 0.85rem; color: #555; gap: 4px;
+    input, select { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+  }
+  .full-width { grid-column: 1 / -1; }
+  .checkbox-row { flex-direction: row; align-items: center; gap: 8px; }
+}
+.dialog-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;
+  button { padding: 8px 20px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
+}

@@ -1,0 +1,161 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>RFQs</h1>
+  <button *appHasPermission="'procurement.create'" pButton type="button" icon="pi pi-plus" label="Add RFQ"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="rfqs" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>RFQ #</th>
+        <th>Title</th>
+        <th>Response Deadline</th>
+        <th>Status</th>
+        <th>Winning Vendor</th>
+        <th>Owner</th>
+        <th style="width: 16rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-r>
+      <tr>
+        <td><code class="code-badge">{{ r.rfqNumber }}</code></td>
+        <td class="font-semibold">{{ r.title }}</td>
+        <td>{{ r.responseDeadline ? (r.responseDeadline | date: 'mediumDate') : '—' }}</td>
+        <td><p-tag [severity]="statusSeverity(r.status)" [value]="r.status"></p-tag></td>
+        <td>{{ r.winningVendorName || '—' }}</td>
+        <td>{{ r.ownerName }}</td>
+        <td class="actions-cell">
+          @if (r.status === 'Draft') {
+            <button *appHasPermission="'procurement.edit'" pButton type="button" icon="pi pi-send" label="Send"
+                    class="p-button-text p-button-sm p-button-success" (click)="send(r)"></button>
+            <button *appHasPermission="'procurement.edit'" pButton type="button" icon="pi pi-pencil"
+                    class="p-button-text p-button-sm" (click)="openEdit(r)"></button>
+            <button *appHasPermission="'procurement.delete'" pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger" (click)="delete(r)"></button>
+          } @else if (r.status === 'Sent') {
+            <button *appHasPermission="'procurement.edit'" pButton type="button" icon="pi pi-eye" label="View"
+                    class="p-button-text p-button-sm" (click)="openEdit(r)"></button>
+            <button *appHasPermission="'procurement.edit'" pButton type="button" icon="pi pi-check" label="Close"
+                    class="p-button-text p-button-sm p-button-success" (click)="openClose(r)"></button>
+            <button *appHasPermission="'procurement.edit'" pButton type="button" icon="pi pi-times" label="Cancel"
+                    class="p-button-text p-button-sm p-button-danger" (click)="cancelRfq(r)"></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No RFQs yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? (editing.status === 'Draft' ? 'Edit' : 'View') : 'Add' }} RFQ" [(visible)]="showDialog" [modal]="true" [style]="{ width: '44rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Title</span>
+      <input pInputText [(ngModel)]="form.title" [disabled]="!!editing && editing.status !== 'Draft'" />
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [disabled]="!!editing && editing.status !== 'Draft'" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Response Deadline</span>
+      <p-calendar [(ngModel)]="form.responseDeadline" dateFormat="dd/mm/yy" [showIcon]="true"
+                  [disabled]="!!editing && editing.status !== 'Draft'" [style]="{ width: '100%' }"></p-calendar>
+    </label>
+    <label>
+      <span>Description</span>
+      <input pInputText [(ngModel)]="form.description" [disabled]="!!editing && editing.status !== 'Draft'" />
+    </label>
+  </div>
+
+  <div class="lines-section">
+    <div class="lines-header">
+      <h3>Items</h3>
+      @if (!editing || editing.status === 'Draft') {
+        <button pButton type="button" icon="pi pi-plus" label="Add Item" class="p-button-text p-button-sm" (click)="addItem()"></button>
+      }
+    </div>
+    @for (item of items; track $index) {
+      <div class="item-row">
+        <input pInputText [(ngModel)]="item.itemName" placeholder="Item name" [disabled]="!!editing && editing.status !== 'Draft'" />
+        <p-inputNumber [(ngModel)]="item.quantity" [minFractionDigits]="0" [disabled]="!!editing && editing.status !== 'Draft'"></p-inputNumber>
+        @if (!editing || editing.status === 'Draft') {
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-danger"
+                  (click)="removeItem($index)"></button>
+        }
+      </div>
+    }
+    @if (!items.length) {
+      <div class="empty-cell">No items yet.</div>
+    }
+  </div>
+
+  <div class="lines-section">
+    <h3>Invited Vendors</h3>
+    @if (!editing || editing.status === 'Draft') {
+      @for (vendor of vendors; track vendor.id) {
+        <label class="vendor-row">
+          <p-checkbox [ngModel]="isVendorInvited(vendor.id)" (onChange)="toggleVendor(vendor.id)" [binary]="true"></p-checkbox>
+          <span>{{ vendor.name }}</span>
+        </label>
+      }
+    } @else {
+      <div class="quotes-list">
+        @for (quote of editing.quotes; track quote.id) {
+          <div class="quote-row">
+            <span class="vendor-name">{{ quote.vendorName }}</span>
+            <span class="quote-amount">{{ quote.quotedAmount != null ? (quote.quotedAmount | number: '1.2-2') : 'No response yet' }}</span>
+            @if (editing.status === 'Sent') {
+              <button pButton type="button" label="Record Quote" class="p-button-text p-button-sm" (click)="openRecordQuote(editing, quote)"></button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-text" (click)="showDialog = false"></button>
+    @if (!editing || editing.status === 'Draft') {
+      <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+    }
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Record Quote — {{ quoteVendor?.vendorName }}" [(visible)]="showQuoteDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid single-col">
+    <label>
+      <span>Quoted Amount</span>
+      <p-inputNumber [(ngModel)]="quoteForm.quotedAmount" mode="decimal" [minFractionDigits]="2" [style]="{ width: '100%' }"></p-inputNumber>
+    </label>
+    <label>
+      <span>Notes</span>
+      <input pInputText [(ngModel)]="quoteForm.notes" />
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showQuoteDialog = false"></button>
+    <button pButton type="button" label="Save Quote" [loading]="quoteSaving" (click)="submitQuote()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Close RFQ — {{ closingRfq?.rfqNumber }}" [(visible)]="showCloseDialog" [modal]="true" [style]="{ width: '26rem' }">
+  <div class="form-grid single-col">
+    <label>
+      <span>Winning Vendor</span>
+      <p-dropdown [options]="closingRfq?.quotes ?? []" [(ngModel)]="winningVendorId" optionLabel="vendorName" optionValue="vendorId"
+                  placeholder="Optional" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showCloseDialog = false"></button>
+    <button pButton type="button" label="Close RFQ" [loading]="closeSaving" (click)="submitClose()"></button>
+  </ng-template>
+</p-dialog>

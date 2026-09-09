@@ -1,0 +1,39 @@
+.wf-link {
+  cursor: pointer;
+  color: #2563eb;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wf-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.version-line {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}

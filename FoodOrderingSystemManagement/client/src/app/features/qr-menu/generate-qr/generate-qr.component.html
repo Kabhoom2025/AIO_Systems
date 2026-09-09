@@ -1,0 +1,130 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>qr_code_2</mat-icon></div>
+      <div>
+        <h1 class="page-title">Generate QR</h1>
+        <p class="page-subtitle">Create QR codes for tables or any custom URL</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-layout">
+
+    <!-- ── Options panel ─────────────────────────────────── -->
+    <div class="options-panel">
+
+      <!-- Mode -->
+      <div class="option-group">
+        <label class="option-label">Type</label>
+        <mat-button-toggle-group [value]="mode" (change)="mode = $event.value; onModeChange()">
+          <mat-button-toggle value="table">
+            <mat-icon>table_restaurant</mat-icon> Table QR
+          </mat-button-toggle>
+          <mat-button-toggle value="custom">
+            <mat-icon>link</mat-icon> Custom URL
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <!-- Table selector -->
+      @if (mode === 'table') {
+        <div class="option-group">
+          <label class="option-label">Table</label>
+          @if (loadingTables()) {
+            <div class="inline-spinner"><mat-spinner diameter="22"></mat-spinner><span>Loading tables…</span></div>
+          } @else if (tables().length === 0) {
+            <p class="empty-hint">No active tables found.</p>
+          } @else {
+            <mat-form-field appearance="outline" class="full-field">
+              <mat-label>Select Table</mat-label>
+              <mat-select [(ngModel)]="selectedTableNumber">
+                @for (t of tables(); track t.id) {
+                  <mat-option [value]="t.tableNumber">
+                    Table {{ t.tableNumber }} &mdash; {{ t.hall }} &bull; {{ t.capacity }} seats
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+          @if (qrUrl) {
+            <p class="url-preview">{{ qrUrl }}</p>
+          }
+        </div>
+      }
+
+      <!-- Custom URL input -->
+      @if (mode === 'custom') {
+        <div class="option-group">
+          <label class="option-label">URL</label>
+          <mat-form-field appearance="outline" class="full-field">
+            <mat-label>Enter URL</mat-label>
+            <input matInput [(ngModel)]="customUrl" placeholder="https://..." />
+            <mat-icon matSuffix>link</mat-icon>
+          </mat-form-field>
+        </div>
+      }
+
+      <!-- Size -->
+      <div class="option-group">
+        <label class="option-label">Size</label>
+        <mat-button-toggle-group [value]="qrSize" (change)="qrSize = $event.value">
+          <mat-button-toggle [value]="200">Small</mat-button-toggle>
+          <mat-button-toggle [value]="300">Medium</mat-button-toggle>
+          <mat-button-toggle [value]="400">Large</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <!-- Color -->
+      <div class="option-group">
+        <label class="option-label">QR Color</label>
+        <div class="color-row">
+          <input type="color" [(ngModel)]="qrColor" class="color-input" />
+          <span class="color-val">{{ qrColor }}</span>
+        </div>
+      </div>
+
+      <button mat-raised-button color="primary" class="generate-btn"
+              (click)="generateQr()" [disabled]="generating() || !qrUrl">
+        @if (generating()) { <mat-spinner diameter="18"></mat-spinner> }
+        @if (!generating()) { <mat-icon>qr_code_2</mat-icon> }
+        {{ generating() ? 'Generating…' : 'Generate QR' }}
+      </button>
+    </div>
+
+    <!-- ── Preview panel ──────────────────────────────────── -->
+    <div class="preview-panel">
+      <div class="preview-card">
+        <div class="preview-label">Preview</div>
+
+        @if (generating()) {
+          <div class="preview-loading"><mat-spinner diameter="40"></mat-spinner></div>
+        } @else if (qrDataUrl()) {
+          <div class="qr-frame">
+            <img [src]="qrDataUrl()!" alt="QR Code"
+                 [style.width.px]="Math.min(qrSize, 320)" [style.height.px]="Math.min(qrSize, 320)" />
+          </div>
+          <p class="qr-url-text">{{ qrUrl }}</p>
+          <div class="preview-actions">
+            <button mat-stroked-button (click)="copyUrl()">
+              <mat-icon>content_copy</mat-icon> Copy URL
+            </button>
+            <button mat-stroked-button (click)="download()">
+              <mat-icon>download</mat-icon> Download
+            </button>
+            <button mat-raised-button color="primary" (click)="print()">
+              <mat-icon>print</mat-icon> Print
+            </button>
+          </div>
+        } @else {
+          <div class="preview-empty">
+            <mat-icon>qr_code</mat-icon>
+            <p>Choose a table or URL, then click <strong>Generate QR</strong></p>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

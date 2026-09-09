@@ -1,0 +1,84 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Departments</h1>
+  <button *appHasPermission="'departments.create'" pButton type="button" icon="pi pi-plus" label="Add Department"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="departments" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Code</th>
+        <th>Cost Center</th>
+        <th>Branch</th>
+        <th>Parent Department</th>
+        <th>Status</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-d>
+      <tr>
+        <td class="font-semibold">{{ d.name }}</td>
+        <td><code class="code-badge">{{ d.code }}</code></td>
+        <td>{{ d.costCenter || '-' }}</td>
+        <td>{{ d.branchName || '-' }}</td>
+        <td>{{ d.parentName || '-' }}</td>
+        <td>
+          <p-tag [value]="d.isActive ? 'Active' : 'Inactive'" [severity]="d.isActive ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button *appHasPermission="'departments.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(d)"></button>
+          <button *appHasPermission="'departments.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(d)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty-cell">No departments configured.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Department" [(visible)]="showDialog" [modal]="true" [style]="{ width: '32rem' }">
+  <div class="form-grid">
+    <label class="col-span-2">
+      <span>Department Name</span>
+      <input pInputText [(ngModel)]="form.name" />
+    </label>
+    <label>
+      <span>Department Code</span>
+      <input pInputText [(ngModel)]="form.code" />
+    </label>
+    <label>
+      <span>Cost Center</span>
+      <input pInputText [(ngModel)]="form.costCenter" />
+    </label>
+    <label>
+      <span>Branch</span>
+      <p-dropdown [options]="branches" [(ngModel)]="form.branchId" optionLabel="name" optionValue="id" placeholder="Select Branch" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label>
+      <span>Parent Department</span>
+      <p-dropdown [options]="parentOptions" [(ngModel)]="form.parentId" optionLabel="name" optionValue="id" placeholder="Select Parent" [showClear]="true" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+    <label class="col-span-2">
+      <span>Description</span>
+      <textarea pInputTextarea [(ngModel)]="form.description" rows="3"></textarea>
+    </label>
+    @if (editing) {
+      <label class="checkbox-row col-span-2 mt-2">
+        <input type="checkbox" [(ngModel)]="form.isActive" />
+        <span>Active</span>
+      </label>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

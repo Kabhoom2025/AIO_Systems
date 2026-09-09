@@ -1,0 +1,257 @@
+<div class="sa-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>corporate_fare</mat-icon>
+      <div>
+        <h1>Organization Management</h1>
+        <p>Create and manage all organizations on this platform</p>
+      </div>
+    </div>
+    <button class="btn-new-org" (click)="openCreate()">
+      <mat-icon>add</mat-icon> New Organization
+    </button>
+  </div>
+
+  <!-- ── Stats ───────────────────────────────────────────────────────────── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon orgs"><mat-icon>domain</mat-icon></div>
+      <div><span class="stat-value">{{ totalOrgs() }}</span><span class="stat-label">Total Organizations</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active"><mat-icon>check_circle</mat-icon></div>
+      <div><span class="stat-value">{{ activeOrgs() }}</span><span class="stat-label">Active</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon users"><mat-icon>people</mat-icon></div>
+      <div><span class="stat-value">{{ totalUsers() }}</span><span class="stat-label">Total Users</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon inactive"><mat-icon>cancel</mat-icon></div>
+      <div><span class="stat-value">{{ totalOrgs() - activeOrgs() }}</span><span class="stat-label">Inactive</span></div>
+    </div>
+  </div>
+
+  <!-- ── Body ────────────────────────────────────────────────────────────── -->
+  <div class="body-wrap">
+
+    <!-- Left: list -->
+    <div class="list-panel">
+
+      <!-- Toolbar -->
+      <div class="list-toolbar">
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input [(ngModel)]="searchTerm" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+                 placeholder="Search organizations…" />
+          @if (searchTerm()) {
+            <button class="clear-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+          }
+        </div>
+        <div class="filter-tabs">
+          <button class="ftab" [class.active]="filterActive() === 'all'"      (click)="filterActive.set('all')">All</button>
+          <button class="ftab" [class.active]="filterActive() === 'active'"   (click)="filterActive.set('active')">Active</button>
+          <button class="ftab" [class.active]="filterActive() === 'inactive'" (click)="filterActive.set('inactive')">Inactive</button>
+        </div>
+      </div>
+
+      <!-- List head -->
+      <div class="list-head">
+        <span>Organization</span>
+        <span>Contact</span>
+        <span>Users</span>
+        <span>Status</span>
+        <span>Actions</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="36"></mat-spinner><p>Loading…</p></div>
+      } @else if (filtered().length === 0) {
+        <div class="empty-state">
+          <mat-icon>domain_disabled</mat-icon>
+          <h3>{{ searchTerm() ? 'No results' : 'No organizations yet' }}</h3>
+          <p>{{ searchTerm() ? 'Try a different search.' : 'Click "New Organization" to get started.' }}</p>
+        </div>
+      } @else {
+        <div class="list-body">
+          @for (org of filtered(); track org.id) {
+            <div class="list-row" [class.selected]="selectedId() === org.id" (click)="selectOrg(org.id)">
+
+              <div class="org-cell">
+                <div class="org-avatar" [style.background]="selectedId() === org.id ? '#1a237e' : '#e8eaf6'"
+                     [style.color]="selectedId() === org.id ? '#fff' : '#1a237e'">
+                  {{ orgInitial(org.name) }}
+                </div>
+                <div>
+                  <span class="org-name">{{ org.name }}</span>
+                  @if (org.currency) { <span class="org-currency">{{ org.currency }}</span> }
+                </div>
+              </div>
+
+              <div class="contact-cell">
+                @if (org.email) { <span><mat-icon>email</mat-icon>{{ org.email }}</span> }
+                @if (org.phone) { <span><mat-icon>phone</mat-icon>{{ org.phone }}</span> }
+                @if (!org.email && !org.phone) { <span class="no-contact">—</span> }
+              </div>
+
+              <div class="users-cell">
+                <mat-icon>people</mat-icon>
+                <span>{{ org.userCount }}</span>
+              </div>
+
+              <div>
+                <span class="status-badge" [class.active]="org.isActive" [class.inactive]="!org.isActive">
+                  {{ org.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+
+              <div class="actions-cell" (click)="$event.stopPropagation()">
+                <button class="action-btn add-admin" (click)="openAddAdmin(org, $event)" matTooltip="Add Admin">
+                  <mat-icon>person_add</mat-icon>
+                </button>
+                <button class="action-btn edit" (click)="openEdit(org, $event)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="action-btn delete" (click)="confirmDelete(org, $event)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Right: detail panel -->
+    @if (selectedOrg()) {
+      <div class="detail-panel">
+        <div class="detail-header">
+          <div class="detail-avatar">{{ orgInitial(selectedOrg()!.name) }}</div>
+          <div class="detail-title">
+            <h2>{{ selectedOrg()!.name }}</h2>
+            <span class="status-badge" [class.active]="selectedOrg()!.isActive" [class.inactive]="!selectedOrg()!.isActive">
+              {{ selectedOrg()!.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <button class="detail-close" (click)="selectedId.set(null)"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <div class="detail-meta">
+          @if (selectedOrg()!.email) {
+            <div class="meta-row"><mat-icon>email</mat-icon><span>{{ selectedOrg()!.email }}</span></div>
+          }
+          @if (selectedOrg()!.phone) {
+            <div class="meta-row"><mat-icon>phone</mat-icon><span>{{ selectedOrg()!.phone }}</span></div>
+          }
+          @if (selectedOrg()!.address) {
+            <div class="meta-row"><mat-icon>location_on</mat-icon><span>{{ selectedOrg()!.address }}</span></div>
+          }
+          @if (selectedOrg()!.timezone) {
+            <div class="meta-row"><mat-icon>schedule</mat-icon><span>{{ selectedOrg()!.timezone }}</span></div>
+          }
+          <div class="meta-row"><mat-icon>payments</mat-icon><span>{{ selectedOrg()!.currency ?? 'INR' }}</span></div>
+          <div class="meta-row"><mat-icon>calendar_today</mat-icon><span>Created {{ selectedOrg()!.createdDate | date:'dd MMM yyyy' }}</span></div>
+        </div>
+
+        <!-- Branches section -->
+        <div class="admins-section">
+          <div class="admins-header">
+            <span class="admins-title"><mat-icon>store</mat-icon> Branches</span>
+            <button class="btn-add-admin" (click)="openAddBranch(selectedOrg()!, $event)">
+              <mat-icon>add_business</mat-icon> Add Branch
+            </button>
+          </div>
+
+          @if (branchesLoading()) {
+            <div class="users-loading"><mat-spinner diameter="28"></mat-spinner></div>
+          } @else if (branches().length === 0) {
+            <div class="no-users">
+              <mat-icon>store</mat-icon>
+              <p>No branches yet. Add one to get started — one restaurant, multiple locations.</p>
+            </div>
+          } @else {
+            <div class="users-list">
+              @for (branch of branches(); track branch.id) {
+                <div class="user-row">
+                  <div class="user-avatar">{{ orgInitial(branch.name) }}</div>
+                  <div class="user-info">
+                    <span class="user-name">
+                      {{ branch.name }}
+                      @if (branch.isDefault) { <span class="role-badge" style="color:#1a237e;background:#e8eaf6;margin-left:6px;">Main</span> }
+                    </span>
+                    <span class="user-email">{{ branch.address || 'No address set' }}{{ branch.phone ? ' · ' + branch.phone : '' }}</span>
+                  </div>
+                  @if (branchReportFor(branch.id); as report) {
+                    <div class="branch-sales">
+                      <span class="branch-sales-amount">{{ report.totalRevenue | currency:'INR':'symbol':'1.0-0' }}</span>
+                      <span class="branch-sales-orders">{{ report.totalOrders }} orders</span>
+                    </div>
+                  }
+                  <span class="user-status" [class.active]="branch.isActive" [class.inactive]="!branch.isActive">
+                    {{ branch.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                  <div class="actions-cell" (click)="$event.stopPropagation()">
+                    <button class="action-btn edit" (click)="openEditBranch(branch, $event)" matTooltip="Edit Branch">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button class="action-btn delete" (click)="confirmDeleteBranch(branch, $event)" matTooltip="Delete Branch">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Admins section -->
+        <div class="admins-section">
+          <div class="admins-header">
+            <span class="admins-title"><mat-icon>manage_accounts</mat-icon> Users & Admins</span>
+            <button class="btn-add-admin" (click)="openAddAdmin(selectedOrg()!, $event)">
+              <mat-icon>person_add</mat-icon> Add Admin
+            </button>
+          </div>
+
+          @if (usersLoading()) {
+            <div class="users-loading"><mat-spinner diameter="28"></mat-spinner></div>
+          } @else if (orgUsers().length === 0) {
+            <div class="no-users">
+              <mat-icon>person_off</mat-icon>
+              <p>No users yet. Add an admin to get started.</p>
+            </div>
+          } @else {
+            <div class="users-list">
+              @for (user of orgUsers(); track user.id) {
+                <div class="user-row">
+                  <div class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+                  <div class="user-info">
+                    <span class="user-name">{{ user.name }}</span>
+                    <span class="user-email">{{ user.email }}{{ user.branchName ? ' · ' + user.branchName : '' }}</span>
+                  </div>
+                  <span class="role-badge" [style.color]="roleColor(user.roleName)"
+                        [style.background]="roleBg(user.roleName)">
+                    {{ user.roleName }}
+                  </span>
+                  <span class="user-status" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                  <div class="actions-cell" (click)="$event.stopPropagation()">
+                    <button class="action-btn delete" (click)="confirmDeleteUser(user, $event)" matTooltip="Delete User">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+  </div>
+</div>

@@ -1,0 +1,120 @@
+<div class="po-page">
+  <div class="page-header">
+    <h2>Purchase Orders</h2>
+    <div class="header-actions">
+      <button (click)="exportCsv()">Export CSV</button>
+      <button class="btn-primary" (click)="openAdd()">+ New Purchase Order</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="po-table">
+      <thead>
+        <tr>
+          <th>PO Number</th><th>Supplier</th><th>Order Date</th><th>Status</th><th>Total</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (po of purchaseOrders(); track po.id) {
+          <tr>
+            <td><a (click)="viewDetail(po)">{{ po.poNumber }}</a></td>
+            <td>{{ po.supplierName }}</td>
+            <td>{{ po.orderDate | date:'mediumDate' }}</td>
+            <td><span class="status-badge" [style.background]="statusColor(po.status)">{{ po.status }}</span></td>
+            <td>₹{{ po.totalAmount }}</td>
+            <td class="row-actions">
+              @if (po.status === 'Draft') {
+                <button (click)="updateStatus(po, 'Sent')">Send</button>
+                <button class="danger" (click)="updateStatus(po, 'Cancelled')">Cancel</button>
+              }
+              @if (po.status === 'Sent') {
+                <button class="danger" (click)="updateStatus(po, 'Cancelled')">Cancel</button>
+              }
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="6" class="empty">No purchase orders found.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>New Purchase Order</h3>
+        <div class="form-grid">
+          <label>Supplier
+            <select [(ngModel)]="form.supplierId">
+              <option [ngValue]="null">Select supplier…</option>
+              @for (s of suppliers(); track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+            </select>
+          </label>
+          <label>Expected Delivery Date <input type="date" [(ngModel)]="form.expectedDeliveryDate" /></label>
+          <label class="full-width">Notes <input [(ngModel)]="form.notes" /></label>
+        </div>
+
+        <h4>Items</h4>
+        <table class="items-table">
+          <thead><tr><th>Medicine</th><th>Qty</th><th>Unit Price (₹)</th><th>Line Total</th><th></th></tr></thead>
+          <tbody>
+            @for (item of form.items; track $index) {
+              <tr>
+                <td>
+                  <select [(ngModel)]="item.medicineId">
+                    <option [ngValue]="null">Select medicine…</option>
+                    @for (m of medicines(); track m.id) { <option [ngValue]="m.id">{{ m.name }}</option> }
+                  </select>
+                </td>
+                <td><input type="number" min="1" [(ngModel)]="item.quantity" /></td>
+                <td><input type="number" min="0" [(ngModel)]="item.unitPrice" /></td>
+                <td>₹{{ (item.quantity || 0) * (item.unitPrice || 0) }}</td>
+                <td><button class="danger" (click)="removeItemRow($index)">✕</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <button class="add-row-btn" (click)="addItemRow()">+ Add Item</button>
+        <div class="total-row">Total: <b>₹{{ formTotal }}</b></div>
+
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save Draft</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (detail(); as d) {
+    <div class="dialog-overlay">
+      <div class="dialog po-print-area">
+        <h3>{{ d.poNumber }}</h3>
+        <div class="info-row"><span>Supplier</span><b>{{ d.supplierName }}</b></div>
+        <div class="info-row"><span>Order Date</span><b>{{ d.orderDate | date:'mediumDate' }}</b></div>
+        <div class="info-row"><span>Status</span><b>{{ d.status }}</b></div>
+        <div class="info-row"><span>Notes</span><b>{{ d.notes || '-' }}</b></div>
+        <table class="items-table">
+          <thead><tr><th>Medicine</th><th>Ordered</th><th>Received</th><th>Unit Price</th></tr></thead>
+          <tbody>
+            @for (i of d.items; track i.id) {
+              <tr>
+                <td>{{ i.medicineName }}</td>
+                <td>{{ i.quantity }}</td>
+                <td>{{ i.receivedQuantity }}</td>
+                <td>₹{{ i.unitPrice }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="info-row total"><span>Total</span><b>₹{{ d.totalAmount }}</b></div>
+        <div class="dialog-actions no-print">
+          <button (click)="closeDetail()">Close</button>
+          <button class="btn-primary" (click)="printPo()">Print PO</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,69 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+  <h1>Accounts</h1>
+  <button *appHasPermission="'crm.create'" pButton type="button" icon="pi pi-plus" label="Add Account"
+          (click)="openNew()"></button>
+</div>
+
+<div class="card">
+  <p-table [value]="accounts" [loading]="loading" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Industry</th>
+        <th>Website</th>
+        <th>Owner</th>
+        <th style="width: 10rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-a>
+      <tr>
+        <td class="font-semibold">{{ a.name }}</td>
+        <td>{{ a.industry || '—' }}</td>
+        <td>{{ a.website || '—' }}</td>
+        <td>{{ a.ownerName }}</td>
+        <td class="actions-cell">
+          <button *appHasPermission="'crm.edit'" pButton type="button" icon="pi pi-pencil"
+                  class="p-button-text p-button-sm" (click)="openEdit(a)"></button>
+          <button *appHasPermission="'crm.delete'" pButton type="button" icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger" (click)="delete(a)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" class="empty-cell">No accounts yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog header="{{ editing ? 'Edit' : 'Add' }} Account" [(visible)]="showDialog" [modal]="true" [style]="{ width: '30rem' }">
+  <div class="form-grid">
+    <label>
+      <span>Name</span>
+      <input pInputText [(ngModel)]="form.name" />
+    </label>
+    <label>
+      <span>Industry</span>
+      <input pInputText [(ngModel)]="form.industry" placeholder="e.g. Manufacturing" />
+    </label>
+    <label>
+      <span>Website</span>
+      <input pInputText [(ngModel)]="form.website" placeholder="https://…" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input pInputText [(ngModel)]="form.phone" />
+    </label>
+    <label>
+      <span>Owner</span>
+      <p-dropdown [options]="users" [(ngModel)]="form.ownerId" optionLabel="name" optionValue="id"
+                  placeholder="Select owner" [style]="{ width: '100%' }"></p-dropdown>
+    </label>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Save" [loading]="saving" (click)="save()"></button>
+  </ng-template>
+</p-dialog>

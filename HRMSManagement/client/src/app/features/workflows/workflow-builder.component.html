@@ -1,0 +1,302 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="builder-root" *ngIf="!loading; else loadingTpl">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span class="crumb-link" (click)="backToList()">Menu</span>
+        <span class="sep">&gt;</span>
+        <span class="crumb-link" (click)="backToList()">Workflows</span>
+      </div>
+      <h1>{{ workflow?.name }}</h1>
+      <div class="subtitle">
+        <span *ngIf="savedText">{{ savedText }}</span>
+        <span *ngIf="savedText"> &middot; </span>
+        <span *ngIf="draftVersion">Version {{ draftVersion.versionNumber }} [Draft]</span>
+        <span *ngIf="workflow?.publishedVersionNumber"> &middot; Published: v{{ workflow?.publishedVersionNumber }}</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button pButton type="button" label="View Runs" icon="pi pi-history" class="p-button-outlined p-button-sm" (click)="openExecutions()"></button>
+      <button
+        pButton
+        type="button"
+        [label]="previewMode ? 'Exit Preview' : 'Preview'"
+        icon="pi pi-eye"
+        class="p-button-outlined"
+        (click)="togglePreview()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Publish"
+        class="publish-btn"
+        *appHasPermission="'workflows.edit'"
+        (click)="confirmPublish()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Body: canvas + properties panel -->
+  <div class="body-row">
+    <div class="canvas-wrapper">
+      <div
+        class="canvas-inner"
+        #canvasEl
+        [style.width.px]="canvasWidth()"
+        [style.height.px]="canvasHeight()"
+        (click)="onCanvasClick()"
+      >
+        <svg class="edges-svg" [attr.width]="canvasWidth()" [attr.height]="canvasHeight()">
+          <path *ngFor="let edge of graph.edges" [attr.d]="edgePath(edge)" stroke="#9ca3af" stroke-width="2" fill="none" />
+        </svg>
+
+        <ng-container *ngFor="let edge of graph.edges">
+          <div *ngIf="edge.label" [ngClass]="edgeLabelClass(edge)" [ngStyle]="edgeLabelStyle(edge)">{{ edge.label }}</div>
+        </ng-container>
+
+        <div
+          *ngFor="let node of graph.nodes; trackBy: trackById"
+          class="node-card"
+          [class.node-end]="node.type === 'end'"
+          [class.selected]="selectedNode?.id === node.id"
+          [style.left.px]="node.x"
+          [style.top.px]="node.y"
+          [style.width.px]="nodeWidth(node)"
+          [style.border-color]="nodeBorderColor(node)"
+          (click)="selectNode(node); $event.stopPropagation()"
+        >
+          <div class="node-header" [style.background]="nodeHeaderBg(node)" (mousedown)="onNodeMouseDown($event, node)">
+            <i
+              class="pi node-icon"
+              [ngClass]="{
+                'pi-file': node.type === 'trigger',
+                'pi-directions': node.type === 'condition',
+                'pi-bolt': node.type === 'action',
+                'pi-flag': node.type === 'end'
+              }"
+            ></i>
+            <span class="node-title">{{ nodeTypeLabel(node) }}</span>
+            <span class="node-badge" *ngIf="node.type !== 'end'">{{
+              node.type === 'trigger' ? 'Trigger' : node.type === 'condition' ? 'Condition' : 'Action'
+            }}</span>
+          </div>
+          <div class="node-body" *ngIf="node.type !== 'end'">
+            <ng-container [ngSwitch]="node.type">
+              <span *ngSwitchCase="'trigger'">{{ triggerBodyText(node) }}</span>
+              <span *ngSwitchCase="'condition'">{{ conditionSummary(node) }}</span>
+              <span *ngSwitchCase="'action'">{{ actionBodyText(node) }}</span>
+            </ng-container>
+          </div>
+        </div>
+
+        <ng-container *ngFor="let node of graph.nodes">
+          <button
+            *ngIf="isLeaf(node) && !previewMode"
+            type="button"
+            class="add-btn"
+            [style.left.px]="node.x + nodeWidth(node) / 2 - 14"
+            [style.top.px]="node.y + nodeHeight(node) + 16"
+            (click)="toggleAddMenu(node.id, $event)"
+          >
+            +
+          </button>
+          <div
+            *ngIf="addMenuNodeId === node.id"
+            class="add-menu"
+            [style.left.px]="node.x + nodeWidth(node) / 2 - 75"
+            [style.top.px]="node.y + nodeHeight(node) + 52"
+          >
+            <button type="button" (click)="addStep(node.id)"><i class="pi pi-bolt"></i> New Step</button>
+            <button type="button" (click)="addIfElse(node.id)"><i class="pi pi-directions"></i> If / else</button>
+            <button type="button" (click)="addEnd(node.id)"><i class="pi pi-flag"></i> End</button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="properties-panel" *ngIf="showPropertiesPanel && selectedNode as sn">
+      <div class="panel-header">
+        <span>Properties</span>
+        <button type="button" class="close-btn" (click)="closePanel()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="panel-type-row">
+        <span class="type-badge" [style.background]="nodeHeaderBg(sn)" [style.border-color]="nodeBorderColor(sn)">{{
+          nodeTypeLabel(sn)
+        }}</span>
+        <button pButton type="button" label="Change" class="p-button-text p-button-sm" [disabled]="true"></button>
+      </div>
+
+      <div class="form-field">
+        <label>Description</label>
+        <input
+          pInputText
+          type="text"
+          [ngModel]="descriptionOf(sn)"
+          (ngModelChange)="onDescriptionChange(sn, $event)"
+          placeholder="Add description here"
+          [disabled]="previewMode"
+        />
+      </div>
+
+      <ng-container [ngSwitch]="sn.type">
+        <!-- Trigger -->
+        <div *ngSwitchCase="'trigger'">
+          <div class="form-field">
+            <label>Trigger</label>
+            <input pInputText type="text" [value]="asTriggerData(sn).label" disabled />
+          </div>
+        </div>
+
+        <!-- Condition -->
+        <div *ngSwitchCase="'condition'">
+          <div class="section-title">Conditions</div>
+          <div class="group-card" *ngFor="let group of asConditionData(sn).groups; let gi = index">
+            <div class="group-header">
+              {{ asConditionData(sn).groups.length === 1 ? 'Conditions (AND)' : branchLabelForGroupIndex(gi) }}
+            </div>
+            <div class="condition-row" *ngFor="let rule of group.conditions; let ri = index">
+              <p-dropdown
+                [options]="triggerFields"
+                optionLabel="label"
+                optionValue="key"
+                [(ngModel)]="rule.field"
+                (onChange)="onConditionFieldChange(rule)"
+                placeholder="Field"
+                [disabled]="previewMode"
+              ></p-dropdown>
+              <p-dropdown
+                [options]="operatorOptionsFor(rule)"
+                [(ngModel)]="rule.operator"
+                (ngModelChange)="scheduleAutosave()"
+                placeholder="Operator"
+                [disabled]="previewMode"
+              ></p-dropdown>
+              <ng-container [ngSwitch]="valueKind(rule)">
+                <p-dropdown
+                  *ngSwitchCase="'boolean'"
+                  [options]="['true', 'false']"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                ></p-dropdown>
+                <p-dropdown
+                  *ngSwitchCase="'options'"
+                  [options]="triggerFieldOptions(rule)"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                ></p-dropdown>
+                <input
+                  *ngSwitchCase="'number'"
+                  pInputText
+                  type="number"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                />
+                <input
+                  *ngSwitchDefault
+                  pInputText
+                  type="text"
+                  [(ngModel)]="rule.value"
+                  (ngModelChange)="scheduleAutosave()"
+                  [disabled]="previewMode"
+                />
+              </ng-container>
+              <button type="button" class="row-remove" (click)="removeCondition(group, ri)" [disabled]="previewMode">✕</button>
+            </div>
+            <button
+              pButton
+              type="button"
+              label="Add Condition"
+              class="p-button-text p-button-sm"
+              (click)="addCondition(group)"
+              [disabled]="previewMode"
+            ></button>
+          </div>
+          <button
+            pButton
+            type="button"
+            label="Add Group"
+            icon="pi pi-plus"
+            class="p-button-outlined p-button-sm"
+            (click)="addGroup(sn)"
+            [disabled]="previewMode"
+          ></button>
+
+          <div class="section-title" style="margin-top: 1.25rem">Next Step</div>
+          <div class="branch-card" *ngFor="let group of asConditionData(sn).groups; let gi = index">
+            <ng-container *ngIf="edgeForBranch(sn.id, branchIdForGroupIndex(gi)) as be">
+              <span class="branch-pill" [ngClass]="gi === 0 ? 'pill-true' : gi === 1 ? 'pill-false' : 'pill-other'">{{
+                branchLabelForGroupIndex(gi)
+              }}</span>
+              <span class="branch-target">{{ be.target && nodeById(be.target) ? nodeTypeLabel(nodeById(be.target)!) : '' }}</span>
+              <button pButton type="button" icon="pi pi-arrow-right" class="p-button-text p-button-sm" (click)="jumpToNode(be.target)"></button>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Action -->
+        <div *ngSwitchCase="'action'">
+          <div class="form-field">
+            <label>Action Type</label>
+            <p-dropdown
+              [options]="actionTypes"
+              optionLabel="label"
+              optionValue="key"
+              [(ngModel)]="asActionData(sn).actionType"
+              (onChange)="onActionTypeChange(sn)"
+              placeholder="Select action"
+              [disabled]="previewMode"
+            ></p-dropdown>
+          </div>
+          <div class="form-field" *ngFor="let f of configFieldsFor(sn)">
+            <label>{{ f.label }}</label>
+            <p-dropdown
+              *ngIf="f.options && f.options.length"
+              [options]="f.options"
+              [ngModel]="asActionData(sn).config[f.key]"
+              (ngModelChange)="updateConfigValue(sn, f.key, $event)"
+              [disabled]="previewMode"
+            ></p-dropdown>
+            <input
+              *ngIf="!f.options || !f.options.length"
+              pInputText
+              [type]="f.type === 'number' ? 'number' : 'text'"
+              [ngModel]="asActionData(sn).config[f.key]"
+              (ngModelChange)="updateConfigValue(sn, f.key, $event)"
+              [disabled]="previewMode"
+            />
+          </div>
+        </div>
+
+        <!-- End -->
+        <div *ngSwitchCase="'end'">
+          <p class="muted">This path ends here. No further configuration is needed.</p>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">Loading workflow…</div>
+</ng-template>
+
+<p-dialog header="Recent Executions" [(visible)]="showExecutionsDialog" [modal]="true" [style]="{ width: '700px' }">
+  <div *ngIf="executionsLoading" class="muted">Loading…</div>
+  <div *ngIf="!executionsLoading && executions.length === 0" class="muted">No executions yet.</div>
+  <div class="execution-row" *ngFor="let ex of executions">
+    <div class="execution-head">
+      <p-tag [value]="ex.status" [severity]="executionSeverity(ex.status)"></p-tag>
+      <span>{{ ex.triggerEntityType }} #{{ ex.triggerEntityId }}</span>
+      <span class="muted">{{ ex.createdDate | date: 'medium' }}</span>
+    </div>
+    <div *ngIf="ex.errorMessage" class="error-text">{{ ex.errorMessage }}</div>
+    <pre>{{ prettyPath(ex.pathJson) }}</pre>
+  </div>
+</p-dialog>

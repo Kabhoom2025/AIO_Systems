@@ -1,0 +1,30 @@
+<div class="home">
+  <header class="home__header">
+    <h1>LinkShield AI</h1>
+    <p>URL Reputation, Phishing Detection &amp; Threat Intelligence Platform</p>
+  </header>
+
+  <section class="home__status-card">
+    @if (checking()) {
+      <p class="status status--checking">Checking LinkShield.API connection...</p>
+    } @else if (apiUnreachable()) {
+      <p class="status status--down">
+        LinkShield.API is unreachable. Start it with <code>dotnet run</code> from
+        <code>LinkShield/LinkShield.API</code>.
+      </p>
+    } @else {
+      <p class="status status--up">
+        Connected to {{ apiHealth()?.service }} — {{ apiHealth()?.status }}
+      </p>
+      <p class="status__timestamp">Server time (UTC): {{ apiHealth()?.timeUtc }}</p>
+    }
+  </section>
+
+  <section class="home__notice">
+    <p>
+      This is the initial LinkShield AI scaffold. The scan submission form, SOC dashboard,
+      and admin panel are not built yet — see <code>LinkShield/PROJECT_PLAN.md</code> for the
+      build order.
+    </p>
+  </section>
+</div>

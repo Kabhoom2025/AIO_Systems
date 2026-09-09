@@ -1,0 +1,68 @@
+<div class="expenses-page">
+  <div class="page-header">
+    <h2>Expenses</h2>
+    <div class="header-actions">
+      <button (click)="exportCsv()">Export CSV</button>
+      <button *appHasPermission="'expenses.create'" class="btn-primary" (click)="openAdd()">+ Add Expense</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <table class="expenses-table">
+      <thead><tr><th>Date</th><th>Category</th><th>Branch</th><th>Payment</th><th>Amount</th><th>Notes</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (e of expenses(); track e.id) {
+          <tr>
+            <td>{{ e.expenseDate | date:'mediumDate' }}</td>
+            <td><span class="category-badge">{{ e.category }}</span></td>
+            <td>{{ e.branchName }}</td>
+            <td>{{ e.paymentMethod }}</td>
+            <td>₹{{ e.amount }}</td>
+            <td>{{ e.notes || '-' }}</td>
+            <td class="row-actions">
+              <button *appHasPermission="'expenses.edit'" (click)="openEdit(e)">Edit</button>
+              <button *appHasPermission="'expenses.delete'" class="danger" (click)="delete(e.id)">Delete</button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="7" class="empty">No expenses recorded yet.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Expense</h3>
+        <div class="form-grid">
+          <label>Branch
+            <select [(ngModel)]="form.branchId">
+              @for (b of branches(); track b.id) { <option [ngValue]="b.id">{{ b.name }}</option> }
+            </select>
+          </label>
+          <label>Category
+            <select [(ngModel)]="form.category">
+              @for (c of categoryOptions; track c) { <option [value]="c">{{ c }}</option> }
+            </select>
+          </label>
+          <label>Amount (₹) <input type="number" min="0" [(ngModel)]="form.amount" /></label>
+          <label>Date <input type="date" [(ngModel)]="form.expenseDate" /></label>
+          <label>Payment Method
+            <select [(ngModel)]="form.paymentMethod">
+              @for (p of paymentOptions; track p) { <option [value]="p">{{ p }}</option> }
+            </select>
+          </label>
+          <label class="full-width">Notes <input [(ngModel)]="form.notes" /></label>
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,23 @@
+.appointments-page { padding: 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px;
+  h2 { margin: 0; font-size: 1.5rem; color: #1a237e; }
+}
+.filters { display: flex; gap: 10px;
+  select, input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; }
+  input { min-width: 220px; }
+}
+
+.appointments-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  th, td { text-align: left; padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  th { background: #f8f9fa; color: #555; }
+}
+.sub { color: #999; font-size: 0.78rem; }
+
+.status-badge { color: #fff; font-weight: 600; font-size: 0.74rem; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.02em; }
+
+.row-actions { display: flex; gap: 6px;
+  button { padding: 4px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; font-size: 0.75rem; }
+  button.danger { color: #e53935; border-color: #e53935; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+.loading, .empty { text-align: center; padding: 3rem; color: #999; }

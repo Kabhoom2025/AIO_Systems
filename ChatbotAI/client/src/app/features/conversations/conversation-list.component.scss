@@ -1,0 +1,97 @@
+// Angular gives a component's host element `display: inline` by default, which breaks
+// height-based flex layouts (the host never stretches to fill its flex parent). Since this
+// component is a flex item inside the sidenav (sharing space with the pinned footer below
+// it), it needs to be a flex container itself.
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  gap: 8px;
+}
+
+.new-chat-btn {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.search-field {
+  width: 100%;
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background: var(--app-surface-alt);
+  }
+}
+
+.conversation-items {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--app-text);
+  animation: fade-in-up 0.2s ease;
+
+  &:hover {
+    background: var(--app-surface-alt);
+  }
+
+  &.active {
+    background: var(--app-surface-alt);
+    font-weight: 600;
+  }
+}
+
+.conversation-icon {
+  color: var(--app-text-muted);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.conversation-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.conversation-menu-trigger {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.conversation-item:hover .conversation-menu-trigger,
+.conversation-item.active .conversation-menu-trigger {
+  opacity: 1;
+}
+
+.empty-state {
+  color: var(--app-text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 24px;
+  padding: 0 12px;
+}

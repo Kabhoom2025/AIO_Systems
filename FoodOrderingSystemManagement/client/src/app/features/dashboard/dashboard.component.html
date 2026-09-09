@@ -1,0 +1,446 @@
+<div class="dashboard">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h1>Welcome back, {{ currentUser()?.name }}! 👋</h1>
+      <p>{{ isSuperAdmin() ? "Here's your sales analytics overview." : "Here's what's happening at your restaurant today." }}</p>
+    </div>
+    <div class="welcome-icon">
+      <mat-icon>{{ isSuperAdmin() ? 'analytics' : 'restaurant' }}</mat-icon>
+    </div>
+  </div>
+
+  <!-- License status banner (branch admin only) -->
+  @if (!isSuperAdmin() && licenseStatus() && licenseStatus() !== 'ok') {
+    <div class="license-banner" [class]="'license-banner--' + licenseStatus()">
+      <mat-icon class="lb-icon">
+        @switch (licenseStatus()) {
+          @case ('expired')  { block }
+          @case ('expiring') { warning }
+          @default           { info }
+        }
+      </mat-icon>
+      <div class="lb-text">
+        @switch (licenseStatus()) {
+          @case ('expired') {
+            <strong>License Expired</strong> — Your organization's license has expired.
+            All features are restricted. Please contact your system administrator to renew.
+          }
+          @case ('expiring') {
+            <strong>License Expiring Soon</strong> — Your license expires in
+            <strong>{{ licenseDaysLeft() }} day{{ licenseDaysLeft() === 1 ? '' : 's' }}</strong>.
+            Contact your administrator to renew before it expires.
+          }
+          @case ('trial') {
+            <strong>Trial Active</strong> — You are on a Trial plan
+            ({{ license()?.plan }}). {{ licenseDaysLeft() }} day{{ licenseDaysLeft() === 1 ? '' : 's' }} remaining.
+            Contact your administrator to activate a full license.
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Active Promotions Slider -->
+  @if (activePromos().length > 0) {
+    <section class="section promo-section">
+      <div class="section-title-row">
+        <h2 class="section-title">
+          <mat-icon>local_offer</mat-icon>
+          Active Offers
+        </h2>
+        <a class="promo-manage-link" routerLink="/promotions">
+          Manage <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
+
+      <!-- Sliding carousel -->
+      <div class="promo-slider-wrap">
+        <div class="promo-slider"
+             [style.transform]="'translateX(' + (-promoSlideIdx() * 25) + '%)'">
+          @for (p of activePromos(); track p.id; let i = $index) {
+            <div class="promo-slide"
+              [style.--pc]="promoTypeColor(p.promotionType)"
+              (click)="promoSlideIdx.set(i)">
+              <div class="ps-gradient"></div>
+              <div class="ps-content">
+                <span class="ps-badge">{{ p.badgeIcon || '🎫' }}</span>
+                <div class="ps-body">
+                  <span class="ps-type">{{ promoTypeLabel(p.promotionType) }}</span>
+                  <p class="ps-name">{{ p.name }}</p>
+                  <span class="ps-discount">{{ promoDiscountLabel(p) }}</span>
+                  @if (p.code) {
+                    <span class="ps-code">{{ p.code }}</span>
+                  }
+                  @if (p.endDate) {
+                    <span class="ps-expiry">Until {{ p.endDate | date:'dd MMM' }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Dot indicators -->
+      @if (activePromos().length > 1) {
+        <div class="promo-dots">
+          @for (p of activePromos(); track p.id; let i = $index) {
+            <button class="promo-dot" [class.active]="promoSlideIdx() === i"
+              (click)="promoSlideIdx.set(i)"></button>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- Quick actions -->
+  <section class="section">
+    <h2 class="section-title">
+      <mat-icon>flash_on</mat-icon>
+      Quick Actions
+    </h2>
+    <div class="quick-actions">
+      @for (action of quickActions; track action.route) {
+        <a class="action-card"
+           [routerLink]="action.route"
+           matRipple
+           [style.--card-color]="action.color"
+           [style.--card-bg-image]="'url(' + action.image + ')'">
+          <div class="action-icon-wrap" [class]="action.animClass">
+            <div class="action-icon">
+              <mat-icon>{{ action.icon }}</mat-icon>
+            </div>
+          </div>
+          <span class="action-label">{{ action.label }}</span>
+          <mat-icon class="action-arrow">arrow_forward</mat-icon>
+        </a>
+      }
+    </div>
+  </section>
+
+  <!-- Info cards -->
+  <section class="section">
+    <h2 class="section-title">
+      <mat-icon>info_outline</mat-icon>
+      System Info
+    </h2>
+    <div class="info-grid">
+      <mat-card class="info-card api-status-card"
+                (click)="checkApiHealth()"
+                [matTooltip]="apiLastChecked() ? 'Last checked: ' + (apiLastChecked() | date:'HH:mm:ss') + ' · Click to refresh' : 'Click to check'"
+                style="cursor:pointer">
+        <mat-card-content>
+          <div class="info-card-inner">
+
+            @if (apiStatus() === 'checking') {
+              <div class="info-icon grey api-icon-spin">
+                <mat-icon>sync</mat-icon>
+              </div>
+              <div>
+                <p class="info-label">API Status</p>
+                <p class="info-value grey">Checking…</p>
+              </div>
+            }
+
+            @if (apiStatus() === 'online') {
+              <div class="info-icon green">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div>
+                <p class="info-label">API Status</p>
+                <p class="info-value green">Online</p>
+                @if (apiLastChecked()) {
+                  <p class="info-sub">Checked {{ apiLastChecked() | date:'HH:mm:ss' }}</p>
+                }
+              </div>
+            }
+
+            @if (apiStatus() === 'offline') {
+              <div class="info-icon red api-icon-pulse">
+                <mat-icon>cancel</mat-icon>
+              </div>
+              <div>
+                <p class="info-label">API Status</p>
+                <p class="info-value red">Offline</p>
+                @if (apiLastChecked()) {
+                  <p class="info-sub">Last seen {{ apiLastChecked() | date:'HH:mm:ss' }}</p>
+                }
+              </div>
+            }
+
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-content>
+          <div class="info-card-inner">
+            <div class="info-icon blue">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div>
+              <p class="info-label">Logged In As</p>
+              <p class="info-value">{{ currentUser()?.roleName }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-content>
+          <div class="info-card-inner">
+            <div class="info-icon orange">
+              <mat-icon>point_of_sale</mat-icon>
+            </div>
+            <div>
+              <p class="info-label">System</p>
+              <p class="info-value">FoodOrder POS v1.0</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-content>
+          <div class="info-card-inner">
+            <div class="info-icon purple">
+              <mat-icon>devices</mat-icon>
+            </div>
+            <div>
+              <p class="info-label">Platform</p>
+              <p class="info-value">Angular 19 + .NET 9</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+  <!-- Super Admin Sales Dashboard -->
+  @if (isSuperAdmin()) {
+    <section class="section">
+      <h2 class="section-title">
+        <mat-icon>trending_up</mat-icon>
+        Sales Analytics
+      </h2>
+
+      <!-- Sales Overview Cards -->
+      <div class="sales-overview">
+        <!-- Daily Sales Card -->
+        <mat-card class="sales-card daily" [class.expanded]="isCardExpanded('daily')" (click)="toggleCard('daily')">
+          <mat-card-content>
+            @if (!isCardExpanded('daily')) {
+              <div class="sales-card-header">
+                <mat-icon>today</mat-icon>
+                <span>Daily Sales</span>
+              </div>
+              <div class="sales-amount">₹{{ salesData().daily.toFixed(2) }}</div>
+              <p class="sales-label">Today's Total</p>
+            } @else {
+              <div class="expanded-content">
+                <div class="expanded-header">
+                  <mat-icon>today</mat-icon>
+                  <span>Daily Sales Details</span>
+                </div>
+                <div class="details-grid">
+                  @for (detail of getCardDetails('daily'); track detail.label) {
+                    <div class="detail-item">
+                      <div class="detail-icon" [style.color]="detail.color">
+                        <mat-icon>{{ detail.icon }}</mat-icon>
+                      </div>
+                      <div class="detail-text">
+                        <div class="detail-label">{{ detail.label }}</div>
+                        <div class="detail-value">{{ detail.value }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Monthly Sales Card -->
+        <mat-card class="sales-card monthly" [class.expanded]="isCardExpanded('monthly')" (click)="toggleCard('monthly')">
+          <mat-card-content>
+            @if (!isCardExpanded('monthly')) {
+              <div class="sales-card-header">
+                <mat-icon>calendar_month</mat-icon>
+                <span>Monthly Sales</span>
+              </div>
+              <div class="sales-amount">₹{{ salesData().monthly.toFixed(2) }}</div>
+              <p class="sales-label">This Month</p>
+            } @else {
+              <div class="expanded-content">
+                <div class="expanded-header">
+                  <mat-icon>calendar_month</mat-icon>
+                  <span>Monthly Sales Details</span>
+                </div>
+                <div class="details-grid">
+                  @for (detail of getCardDetails('monthly'); track detail.label) {
+                    <div class="detail-item">
+                      <div class="detail-icon" [style.color]="detail.color">
+                        <mat-icon>{{ detail.icon }}</mat-icon>
+                      </div>
+                      <div class="detail-text">
+                        <div class="detail-label">{{ detail.label }}</div>
+                        <div class="detail-value">{{ detail.value }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Total Orders Card -->
+        <mat-card class="sales-card orders" [class.expanded]="isCardExpanded('orders')" (click)="toggleCard('orders')">
+          <mat-card-content>
+            @if (!isCardExpanded('orders')) {
+              <div class="sales-card-header">
+                <mat-icon>shopping_cart</mat-icon>
+                <span>Total Orders</span>
+              </div>
+              <div class="sales-amount">{{ salesData().totalOrders }}</div>
+              <p class="sales-label">All Time</p>
+            } @else {
+              <div class="expanded-content">
+                <div class="expanded-header">
+                  <mat-icon>shopping_cart</mat-icon>
+                  <span>Order Status Breakdown</span>
+                </div>
+                <div class="details-grid">
+                  @for (detail of getCardDetails('orders'); track detail.label) {
+                    <div class="detail-item">
+                      <div class="detail-icon" [style.color]="detail.color">
+                        <mat-icon>{{ detail.icon }}</mat-icon>
+                      </div>
+                      <div class="detail-text">
+                        <div class="detail-label">{{ detail.label }}</div>
+                        <div class="detail-value">{{ detail.value }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Average Order Value Card -->
+        <mat-card class="sales-card average" [class.expanded]="isCardExpanded('average')" (click)="toggleCard('average')">
+          <mat-card-content>
+            @if (!isCardExpanded('average')) {
+              <div class="sales-card-header">
+                <mat-icon>average_rating</mat-icon>
+                <span>Avg Order Value</span>
+              </div>
+              <div class="sales-amount">₹{{ salesData().avgOrderValue.toFixed(2) }}</div>
+              <p class="sales-label">Per Order</p>
+            } @else {
+              <div class="expanded-content">
+                <div class="expanded-header">
+                  <mat-icon>average_rating</mat-icon>
+                  <span>Order Value Analysis</span>
+                </div>
+                <div class="details-grid">
+                  @for (detail of getCardDetails('average'); track detail.label) {
+                    <div class="detail-item">
+                      <div class="detail-icon" [style.color]="detail.color">
+                        <mat-icon>{{ detail.icon }}</mat-icon>
+                      </div>
+                      <div class="detail-text">
+                        <div class="detail-label">{{ detail.label }}</div>
+                        <div class="detail-value">{{ detail.value }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Order Status Distribution -->
+      <mat-card class="trend-card">
+        <mat-card-header>
+          <mat-card-title>Order Status Distribution</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="status-container">
+            <div class="donut-chart-wrapper">
+              <div class="donut-chart" [style.--stops]="getGradientStops()"></div>
+              <div class="donut-center">
+                <div class="total-label">Total Orders</div>
+                <div class="total-count">{{ salesData().totalOrders }}</div>
+              </div>
+            </div>
+
+            <div class="status-legend">
+              @for (item of orderStatusData(); track item.status) {
+                <div class="legend-item">
+                  <div class="legend-color" [style.backgroundColor]="item.color"></div>
+                  <div class="legend-info">
+                    <span class="legend-status">{{ item.status }}</span>
+                    <span class="legend-count">{{ item.count }} ({{ item.percentage }}%)</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Monthly Sales Trend -->
+      <mat-card class="trend-card">
+        <mat-card-header>
+          <mat-card-title>Monthly Sales Trend</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="sales-bars">
+            @for (data of monthlySalesData(); track data.date) {
+              <div class="bar-container">
+                <div class="bar" [style.height.%]="(data.sales / (monthlySalesData()[monthlySalesData().length - 1].sales || 1)) * 100">
+                  <span class="bar-value">₹{{ (data.sales / 1000).toFixed(1) }}k</span>
+                </div>
+                <span class="bar-label">{{ data.date }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Top Selling Items -->
+      <mat-card class="trend-card">
+        <mat-card-header>
+          <mat-card-title>Top Selling Items</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="items-list">
+            @for (item of topSellingItems(); track item.name; let i = $index) {
+              <div class="item-row">
+                <div class="item-rank">{{ i + 1 }}</div>
+                <div class="item-info">
+                  <div class="item-name">{{ item.name }}</div>
+                  <div class="item-qty">{{ item.quantity }} sold</div>
+                </div>
+                <div class="item-sales">
+                  <div class="sales-amount">₹{{ item.sales.toFixed(2) }}</div>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="(item.sales / (topSellingItems()[0].sales || 1)) * 100">
+                  </mat-progress-bar>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  }
+
+</div>

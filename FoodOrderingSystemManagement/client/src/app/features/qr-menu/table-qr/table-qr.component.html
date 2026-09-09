@@ -1,0 +1,91 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap"><mat-icon>table_restaurant</mat-icon></div>
+      <div>
+        <h1 class="page-title">Table QR Codes</h1>
+        <p class="page-subtitle">View, download and print QR codes for every table</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (!loading() && !generating() && filteredTables().length > 0) {
+        <button mat-raised-button color="primary" (click)="printAll()">
+          <mat-icon>print</mat-icon> Print All
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Hall filter -->
+  @if (!loading() && halls().length > 2) {
+    <div class="filter-row">
+      <mat-button-toggle-group [value]="hallFilter()" (change)="hallFilter.set($event.value)">
+        @for (h of halls(); track h) {
+          <mat-button-toggle [value]="h">{{ h }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    </div>
+  }
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="center-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  <!-- Generating QRs overlay -->
+  @if (!loading() && generating()) {
+    <div class="generating-banner">
+      <mat-spinner diameter="18"></mat-spinner>
+      <span>Generating QR codes…</span>
+    </div>
+  }
+
+  <!-- Table grid -->
+  @if (!loading() && filteredTables().length > 0) {
+    <div class="tables-grid">
+      @for (t of filteredTables(); track t.id) {
+        <div class="table-card">
+          <div class="card-header">
+            <div class="table-badge">T{{ t.tableNumber }}</div>
+            <div class="table-meta">
+              <span class="table-num">Table {{ t.tableNumber }}</span>
+              <span class="table-detail">{{ t.hall }} &bull; {{ t.capacity }} seats</span>
+            </div>
+          </div>
+
+          <div class="qr-wrap">
+            @if (generating() || !getQr(t.id)) {
+              <div class="qr-placeholder">
+                <mat-spinner diameter="28"></mat-spinner>
+              </div>
+            } @else {
+              <img [src]="getQr(t.id)!" alt="QR for table {{ t.tableNumber }}" class="qr-img" />
+            }
+          </div>
+
+          <p class="menu-url">{{ menuUrl(t.tableNumber) }}</p>
+
+          <div class="card-actions">
+            <button mat-stroked-button (click)="download(t)" [disabled]="!getQr(t.id)"
+                    matTooltip="Download PNG">
+              <mat-icon>download</mat-icon>
+            </button>
+            <button mat-raised-button color="primary" (click)="printCard(t)" [disabled]="!getQr(t.id)"
+                    matTooltip="Print this QR">
+              <mat-icon>print</mat-icon> Print
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading() && filteredTables().length === 0) {
+    <div class="empty-state">
+      <mat-icon>table_restaurant</mat-icon>
+      <p>No active tables found.</p>
+    </div>
+  }
+
+</div>

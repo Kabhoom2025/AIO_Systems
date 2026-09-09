@@ -1,0 +1,58 @@
+<div class="cart-page">
+  <div class="page-header">
+    <div class="eyebrow">Checkout</div>
+    <h1>Cart &amp; Checkout</h1>
+  </div>
+
+  @if (cart.cartItems().length === 0) {
+    <div class="empty">Your cart is empty. Browse the <a routerLink="/patient/store">Store</a> to add medicines.</div>
+  } @else {
+    <div class="cart-layout">
+      <div class="cart-items">
+        @for (i of cart.cartItems(); track i.medicineId) {
+          <div class="cart-item">
+            <div class="item-main">
+              <h3>{{ i.name }}</h3>
+              <div class="unit">₹{{ i.mrp | number:'1.2-2' }} / {{ i.unit }}</div>
+            </div>
+            <div class="item-controls">
+              <input type="number" min="1" [ngModel]="i.quantity"
+                     (ngModelChange)="cart.updateQuantity(i.medicineId, $event)" />
+              <span class="line-total">₹{{ (i.quantity * i.mrp) | number:'1.2-2' }}</span>
+              <button class="btn-remove" (click)="cart.remove(i.medicineId)">Remove</button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="summary-card">
+        <h2>Order Summary</h2>
+        <div class="summary-row"><span>Items</span><span>{{ cart.count() }}</span></div>
+        <div class="summary-row total"><span>Total</span><span>₹{{ cart.total() | number:'1.2-2' }}</span></div>
+
+        <label class="field">
+          <span>Pickup Location</span>
+          <select [(ngModel)]="branchId">
+            @for (b of branches(); track b.id) { <option [ngValue]="b.id">{{ b.name }}</option> }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Payment Method</span>
+          <select [(ngModel)]="paymentMethod">
+            <option value="Cash">Cash on Pickup</option>
+            <option value="Card">Card</option>
+            <option value="UPI">UPI</option>
+            <option value="Wallet">Wallet</option>
+          </select>
+        </label>
+
+        @if (errorMessage()) { <div class="error-msg">{{ errorMessage() }}</div> }
+
+        <button class="btn-primary" [disabled]="submitting()" (click)="placeOrder()">
+          {{ submitting() ? 'Placing order…' : 'Place Order' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

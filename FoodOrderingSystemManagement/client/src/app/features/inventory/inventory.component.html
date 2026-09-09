@@ -1,0 +1,341 @@
+<div class="inventory-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title">
+      <mat-icon>inventory_2</mat-icon>
+      <div>
+        <h1>Inventory</h1>
+        <p>Track stock levels, purchases, waste and expiry</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      New Item
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <mat-icon>inventory_2</mat-icon>
+      <div>
+        <span class="stat-value">{{ totalItems() }}</span>
+        <span class="stat-label">Total Items</span>
+      </div>
+    </div>
+    <div class="stat-card warn" [class.has-alerts]="lowStockCount() > 0">
+      <mat-icon>warning_amber</mat-icon>
+      <div>
+        <span class="stat-value">{{ lowStockCount() }}</span>
+        <span class="stat-label">Low Stock</span>
+      </div>
+    </div>
+    <div class="stat-card expiry" [class.has-alerts]="expiringCount() > 0">
+      <mat-icon>event</mat-icon>
+      <div>
+        <span class="stat-value">{{ expiringCount() }}</span>
+        <span class="stat-label">Expiring (30d)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search items</mat-label>
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Name, unit…" />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="searchTerm.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+
+    <app-barcode-scanner (scanned)="onBarcodeScanned($event)" />
+
+    <button class="filter-btn" [class.active]="mobilePanel()" (click)="toggleMobilePanel()" matTooltip="Open app on your phone or use USB camera">
+      <mat-icon>phone_iphone</mat-icon>
+      Mobile Access
+    </button>
+
+    <button class="filter-btn" (click)="autoFillBarcodes()" [disabled]="autoFilling()" matTooltip="Set barcode = item name for all items missing a barcode">
+      @if (autoFilling()) {
+        <mat-icon class="spin">autorenew</mat-icon>
+      } @else {
+        <mat-icon>qr_code_2</mat-icon>
+      }
+      Auto-fill Barcodes
+    </button>
+
+    <button class="filter-btn" (click)="downloadBarcodes()" matTooltip="Open printable barcode sheet for all items">
+      <mat-icon>print</mat-icon>
+      Print Barcodes
+    </button>
+
+    <button class="filter-btn" [class.active]="filterLow()" (click)="toggleLowFilter()" matTooltip="Show low-stock only">
+      <mat-icon>warning_amber</mat-icon>
+      Low Stock Only
+    </button>
+
+    <button class="filter-btn expiry-filter" [class.active]="filterExpiring()" (click)="toggleExpFilter()" matTooltip="Show items expiring within 30 days">
+      <mat-icon>event_busy</mat-icon>
+      Expiring Soon
+    </button>
+
+    <div class="toolbar-right">
+      <span class="count-badge">{{ filtered().length }} item{{ filtered().length !== 1 ? 's' : '' }}</span>
+      <div class="view-toggle">
+        <button class="view-btn" [class.active]="viewMode() === 'list'" (click)="setView('list')" matTooltip="List view">
+          <mat-icon>view_list</mat-icon>
+        </button>
+        <button class="view-btn" [class.active]="viewMode() === 'cards'" (click)="setView('cards')" matTooltip="Card view">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Access panel -->
+  @if (mobilePanel()) {
+    <div class="mobile-panel">
+      <div class="mp-col mp-qr">
+        <canvas #qrCanvas class="mp-canvas"></canvas>
+        <span class="mp-scan-hint">Scan with phone camera</span>
+      </div>
+
+      <div class="mp-col mp-info">
+        <p class="mp-section-label">Option 1 — Open app on phone</p>
+        <div class="mp-url-row">
+          <code class="mp-url">{{ appUrl }}</code>
+          <button class="mp-copy-btn" (click)="copyUrl()" matTooltip="Copy URL">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+        <p class="mp-note">Both devices must be on the same Wi-Fi. For camera access over HTTP, use ngrok (see below).</p>
+
+        <div class="mp-divider"></div>
+
+        <p class="mp-section-label">Option 2 — USB camera (DroidCam)</p>
+        <ol class="mp-steps">
+          <li>Install <strong>DroidCam</strong> app on Android phone</li>
+          <li>Install <strong>DroidCam Windows Client</strong> on laptop</li>
+          <li>Connect USB → enable <em>USB Debugging</em> on phone</li>
+          <li>Open DroidCam client → select <strong>USB</strong> → Start</li>
+          <li>Click <strong>Scan with Camera</strong> above — DroidCam appears in the camera list</li>
+        </ol>
+
+        <div class="mp-divider"></div>
+
+        <p class="mp-section-label">Option 3 — ngrok HTTPS tunnel</p>
+        <ol class="mp-steps">
+          <li>Install ngrok: <code>npm install -g ngrok</code></li>
+          <li>Run: <code>ngrok http 4200</code></li>
+          <li>Copy the <strong>https://xxxx.ngrok.io</strong> URL</li>
+          <li>Open on phone — camera works over HTTPS</li>
+        </ol>
+      </div>
+    </div>
+  }
+
+  <!-- Scrollable content area -->
+  <div class="inv-scroll-area">
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="44" />
+      <p>Loading inventory…</p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <mat-icon>inventory_2</mat-icon>
+      <h3>{{ searchTerm() || filterLow() || filterExpiring() ? 'No results found' : 'No inventory items yet' }}</h3>
+      <p>{{ searchTerm() || filterLow() || filterExpiring() ? 'Try clearing the search or filter.' : 'Click "New Item" to add your first inventory item.' }}</p>
+      @if (!searchTerm() && !filterLow() && !filterExpiring()) {
+        <button mat-raised-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon> New Item
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ═══ LIST VIEW ════════════════════════════════════════════════════════════ -->
+  @else if (viewMode() === 'list') {
+    <div class="inv-table">
+      <div class="table-head">
+        <span class="col-name">Item</span>
+        <span class="col-stock">Stock Level</span>
+        <span class="col-qty">Current / Min</span>
+        <span class="col-unit">Unit</span>
+        <span class="col-status">Status</span>
+        <span class="col-actions">Actions</span>
+      </div>
+
+      @for (item of filtered(); track item.id) {
+        <div class="table-row" [id]="'inv-item-' + item.id"
+             [class.low-stock]="item.isLowStock"
+             [class.inactive]="!item.isActive"
+             [class.barcode-highlight]="highlightedId() === item.id">
+
+          <span class="col-name">
+            <span class="item-name">{{ item.name }}</span>
+            @if (item.description) {
+              <span class="item-desc">{{ item.description }}</span>
+            }
+            @if (expiryStatus(item) === 'expired') {
+              <span class="expiry-badge expired"><mat-icon>error</mat-icon> Expired</span>
+            } @else if (expiryStatus(item) === 'expiring') {
+              <span class="expiry-badge expiring"><mat-icon>event_busy</mat-icon> Expires {{ item.expiryDate | date:'dd MMM' }}</span>
+            } @else if (expiryStatus(item) === 'ok') {
+              <span class="expiry-badge ok"><mat-icon>event_available</mat-icon> {{ item.expiryDate | date:'dd MMM yyyy' }}</span>
+            }
+          </span>
+
+          <span class="col-stock">
+            <div class="stock-bar-bg">
+              <div class="stock-bar-fill"
+                   [style.width.%]="stockBarWidth(item)"
+                   [style.background]="stockBarColor(item)"></div>
+            </div>
+          </span>
+
+          <span class="col-qty">
+            <span class="qty-current" [class.low]="item.isLowStock">{{ item.currentStock }}</span>
+            <span class="qty-sep">/</span>
+            <span class="qty-min">{{ item.minimumStock }}</span>
+          </span>
+
+          <span class="col-unit">
+            <span class="unit-badge">{{ item.unit }}</span>
+          </span>
+
+          <span class="col-status">
+            @if (!item.isActive) {
+              <span class="status-badge inactive"><mat-icon>block</mat-icon> Inactive</span>
+            } @else if (item.isLowStock) {
+              <span class="status-badge low"><mat-icon>warning_amber</mat-icon> Low Stock</span>
+            } @else {
+              <span class="status-badge ok"><mat-icon>check_circle</mat-icon> OK</span>
+            }
+          </span>
+
+          <span class="col-actions">
+            <button mat-icon-button (click)="openPurchase(item)" matTooltip="Purchase stock">
+              <mat-icon>shopping_cart</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openWaste(item)" matTooltip="Record waste">
+              <mat-icon>delete_sweep</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openTransfer(item)" matTooltip="Transfer stock">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openAdjust(item)" matTooltip="Adjust stock">
+              <mat-icon>tune</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openAudit(item)" matTooltip="View audit trail">
+              <mat-icon>history</mat-icon>
+            </button>
+            <button mat-icon-button color="primary" (click)="openEdit(item)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="confirmDelete(item)" matTooltip="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </span>
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══ CARDS VIEW ═══════════════════════════════════════════════════════════ -->
+  @else {
+    <div class="cards-grid">
+      @for (item of filtered(); track item.id) {
+        <div class="inv-card" [id]="'inv-item-' + item.id"
+             [class.low-stock]="item.isLowStock"
+             [class.inactive]="!item.isActive"
+             [class.barcode-highlight]="highlightedId() === item.id">
+
+          <div class="card-accent" [style.background]="stockBarColor(item)"></div>
+
+          <div class="card-body">
+            <div class="card-top">
+              <div class="card-name-wrap">
+                <span class="card-name">{{ item.name }}</span>
+                @if (item.description) {
+                  <span class="card-desc">{{ item.description }}</span>
+                }
+              </div>
+              <span class="unit-badge">{{ item.unit }}</span>
+            </div>
+
+            <!-- Expiry badge -->
+            @if (expiryStatus(item) === 'expired') {
+              <span class="expiry-badge expired card-expiry"><mat-icon>error</mat-icon> Expired</span>
+            } @else if (expiryStatus(item) === 'expiring') {
+              <span class="expiry-badge expiring card-expiry"><mat-icon>event_busy</mat-icon> Expires {{ item.expiryDate | date:'dd MMM' }}</span>
+            }
+
+            <div class="card-bar-wrap">
+              <div class="stock-bar-bg wide">
+                <div class="stock-bar-fill"
+                     [style.width.%]="stockBarWidth(item)"
+                     [style.background]="stockBarColor(item)"></div>
+              </div>
+              <div class="card-qty-row">
+                <span class="card-qty-label">Current</span>
+                <span class="card-qty-value" [class.low]="item.isLowStock">{{ item.currentStock }}</span>
+                <span class="card-qty-sep">of min</span>
+                <span class="card-qty-min">{{ item.minimumStock }}</span>
+              </div>
+            </div>
+
+            <div class="card-status-row">
+              @if (!item.isActive) {
+                <span class="status-badge inactive"><mat-icon>block</mat-icon> Inactive</span>
+              } @else if (item.isLowStock) {
+                <span class="status-badge low"><mat-icon>warning_amber</mat-icon> Low Stock</span>
+              } @else {
+                <span class="status-badge ok"><mat-icon>check_circle</mat-icon> In Stock</span>
+              }
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="card-action-btn purchase" (click)="openPurchase(item)" matTooltip="Purchase" matRipple>
+              <mat-icon>shopping_cart</mat-icon>
+            </button>
+            <button class="card-action-btn waste" (click)="openWaste(item)" matTooltip="Waste" matRipple>
+              <mat-icon>delete_sweep</mat-icon>
+            </button>
+            <button class="card-action-btn transfer" (click)="openTransfer(item)" matTooltip="Transfer" matRipple>
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <button class="card-action-btn adjust" (click)="openAdjust(item)" matTooltip="Adjust" matRipple>
+              <mat-icon>tune</mat-icon>
+            </button>
+            <button class="card-action-btn audit" (click)="openAudit(item)" matTooltip="Audit" matRipple>
+              <mat-icon>history</mat-icon>
+            </button>
+            <button class="card-action-btn edit" (click)="openEdit(item)" matTooltip="Edit" matRipple>
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button class="card-action-btn delete" (click)="confirmDelete(item)" matTooltip="Delete" matRipple>
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+  </div><!-- /inv-scroll-area -->
+
+</div>

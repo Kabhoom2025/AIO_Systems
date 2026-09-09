@@ -1,0 +1,102 @@
+<div class="page-header">
+  <h1>Reports</h1>
+</div>
+
+<div class="card">
+  <div class="report-picker">
+    @for (r of reports; track r.key) {
+      <button pButton type="button" [label]="r.label"
+              [class]="selected === r.key ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+              (click)="select(r.key)"></button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="empty-state"><p-progressSpinner styleClass="w-3rem h-3rem"></p-progressSpinner></div>
+  } @else if (selected === 'trial-balance' && trialBalance) {
+    <p-table [value]="trialBalance.lines" dataKey="code" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th style="text-align: right">Debit</th>
+          <th style="text-align: right">Credit</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td><code class="code-badge">{{ l.code }}</code></td>
+          <td>{{ l.name }}</td>
+          <td>{{ l.type }}</td>
+          <td class="num-cell">{{ l.debit | number: '1.2-2' }}</td>
+          <td class="num-cell">{{ l.credit | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr class="totals-row">
+          <td colspan="3">Totals</td>
+          <td class="num-cell">{{ trialBalance.totalDebit | number: '1.2-2' }}</td>
+          <td class="num-cell">{{ trialBalance.totalCredit | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="empty-cell">No ledger accounts yet.</td></tr>
+      </ng-template>
+    </p-table>
+  } @else if (selected === 'sales-order-summary' && salesOrderSummary) {
+    <p-table [value]="salesOrderSummary.rows" dataKey="status" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Status</th>
+          <th style="text-align: right">Count</th>
+          <th style="text-align: right">Total</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td>{{ r.status }}</td>
+          <td class="num-cell">{{ r.count }}</td>
+          <td class="num-cell">{{ r.total | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr class="totals-row">
+          <td>Grand Total</td>
+          <td></td>
+          <td class="num-cell">{{ salesOrderSummary.grandTotal | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="3" class="empty-cell">No sales orders yet.</td></tr>
+      </ng-template>
+    </p-table>
+  } @else if (selected === 'purchase-order-summary' && purchaseOrderSummary) {
+    <p-table [value]="purchaseOrderSummary.rows" dataKey="status" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Status</th>
+          <th style="text-align: right">Count</th>
+          <th style="text-align: right">Total</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td>{{ r.status }}</td>
+          <td class="num-cell">{{ r.count }}</td>
+          <td class="num-cell">{{ r.total | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr class="totals-row">
+          <td>Grand Total</td>
+          <td></td>
+          <td class="num-cell">{{ purchaseOrderSummary.grandTotal | number: '1.2-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="3" class="empty-cell">No purchase orders yet.</td></tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

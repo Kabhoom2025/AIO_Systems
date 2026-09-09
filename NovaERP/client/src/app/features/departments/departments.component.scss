@@ -1,0 +1,43 @@
+.actions-cell { display: flex; gap: 0.25rem; }
+
+.empty-cell {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem !important;
+}
+
+.code-badge {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 0.5rem;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    span { color: #475569; }
+    input, textarea { width: 100%; }
+  }
+  .col-span-2 { grid-column: span 2; }
+}
+
+.checkbox-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+  input[type="checkbox"] { width: auto !important; }
+}
+
+.mt-2 { margin-top: 0.5rem; }

@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Service' : 'Register Microservice' }}</h2>
+
+<mat-dialog-content class="form-grid">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="model.name" name="name" placeholder="FoodOrder.API" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Route Prefix (gateway)</mat-label>
+    <input matInput [(ngModel)]="model.routePrefix" name="routePrefix" placeholder="restaurant" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Backend URL</mat-label>
+    <input matInput [(ngModel)]="model.baseUrl" name="baseUrl" placeholder="http://localhost:5275" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Module Keys (CSV)</mat-label>
+    <input matInput [(ngModel)]="model.moduleKeys" name="moduleKeys" placeholder="restaurant" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Health Check Path</mat-label>
+    <input matInput [(ngModel)]="model.healthCheckPath" name="healthCheckPath" placeholder="/api/system-health" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Description</mat-label>
+    <input matInput [(ngModel)]="model.description" name="description" />
+  </mat-form-field>
+
+  @if (isEdit) {
+    <mat-slide-toggle [(ngModel)]="model.isActive" name="isActive">Active</mat-slide-toggle>
+  }
+
+  <h3 style="margin: 8px 0 0; font-size: 14px; font-weight: 600;">Apps Launcher (optional)</h3>
+  <p style="margin: 0 0 4px; font-size: 12px; color: rgba(0, 0, 0, 0.6);">
+    Fill these in to control this project's Run/Stop from the Apps page. Leave blank
+    for a routing/health-only entry.
+  </p>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Backend Working Directory</mat-label>
+    <input
+      matInput
+      [(ngModel)]="model.backendWorkingDirectory"
+      name="backendWorkingDirectory"
+      placeholder="C:\path\to\Backend.API"
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Backend Start Command</mat-label>
+    <input matInput [(ngModel)]="model.backendCommand" name="backendCommand" placeholder="dotnet run" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Frontend URL</mat-label>
+    <input matInput [(ngModel)]="model.frontendUrl" name="frontendUrl" placeholder="http://localhost:4200" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Frontend Working Directory</mat-label>
+    <input
+      matInput
+      [(ngModel)]="model.frontendWorkingDirectory"
+      name="frontendWorkingDirectory"
+      placeholder="C:\path\to\client"
+    />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Frontend Start Command</mat-label>
+    <input matInput [(ngModel)]="model.frontendCommand" name="frontendCommand" placeholder="npm start" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Docker Compose Service Name</mat-label>
+    <input
+      matInput
+      [(ngModel)]="model.dockerServiceName"
+      name="dockerServiceName"
+      placeholder="hrms-api"
+    />
+    <mat-hint>Service name in the repo-root docker-compose.yml. Leave blank to disable Docker mode for this app.</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Icon (Material icon name)</mat-label>
+    <input matInput [(ngModel)]="model.icon" name="icon" placeholder="dns" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Color</mat-label>
+    <input matInput type="color" [(ngModel)]="model.color" name="color" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Sort Order</mat-label>
+    <input matInput type="number" [(ngModel)]="model.sortOrder" name="sortOrder" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()">Save</button>
+</mat-dialog-actions>

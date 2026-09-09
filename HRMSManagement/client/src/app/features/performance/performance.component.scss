@@ -1,0 +1,104 @@
+.tab-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  min-height: 2.5rem;
+  .filter-group { display: flex; align-items: center; }
+}
+
+.mr-2  { margin-right: 0.5rem; }
+.mt-1  { margin-top: 0.25rem; }
+.mt-2  { margin-top: 0.5rem; }
+.mt-3  { margin-top: 0.75rem; }
+.mb-2  { margin-bottom: 0.5rem; }
+.w-36  { width: 9rem; }
+
+.actions-cell { display: flex; gap: 0.25rem; align-items: center; }
+
+.empty-cell { text-align: center; color: #64748b; padding: 2.5rem 1rem !important; }
+.text-muted  { color: #64748b; }
+.text-sm     { font-size: 0.8rem; }
+.font-semibold { font-weight: 600; }
+
+.progress-wrapper { min-width: 10rem; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding-top: 0.5rem;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    span { color: #475569; }
+    input, textarea { width: 100%; }
+  }
+  .col-span-2 { grid-column: span 2; }
+}
+
+.date-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #111827;
+  outline: none;
+  &:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+}
+
+.progress-form {
+  .goal-title-ref {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    background: #f0f4ff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border-left: 4px solid #6366f1;
+  }
+}
+
+.review-period-ref {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 1rem;
+}
+
+.review-context-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0f4ff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+
+  .emp-name { font-size: 1rem; font-weight: 700; color: #1e293b; }
+  .period-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-family: monospace;
+  }
+}
+
+.self-review-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  h5 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin: 0 0 0.5rem; }
+  p { font-size: 0.875rem; color: #334155; margin: 0; line-height: 1.6; }
+}

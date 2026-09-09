@@ -1,0 +1,105 @@
+<div class="medicines-page">
+  <div class="page-header">
+    <h2>Medicines</h2>
+    <div class="header-actions">
+      <button (click)="exportCsv()">Export CSV</button>
+      <button *appHasPermission="'medicines.create'" (click)="importFileInput.click()">Import CSV</button>
+      <input #importFileInput type="file" accept=".csv" hidden (change)="onImportFile($event)" />
+      <button *appHasPermission="'medicines.create'" class="btn-primary" (click)="openAdd()">+ Add Medicine</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading...</div>
+  } @else {
+    <div class="medicines-grid">
+      @for (m of medicines(); track m.id) {
+        <div class="medicine-card" [class.inactive]="!m.isActive">
+          <div class="card-header">
+            <div>
+              <h3>{{ m.name }}</h3>
+              <span class="generic">{{ m.genericName }}</span>
+            </div>
+            <span class="schedule-badge" [style.background]="scheduleColor(m.drugSchedule)">
+              {{ m.drugSchedule }}
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="info-row"><span>Category</span><b>{{ m.category }}</b></div>
+            <div class="info-row"><span>Pack</span><b>{{ m.packSize }} {{ m.packType }}</b></div>
+            <div class="info-row"><span>MRP</span><b>₹{{ m.mrp }}</b></div>
+            <div class="info-row stock" [class.low]="m.totalStock <= m.reorderLevel">
+              <span>Stock</span><b>{{ m.totalStock }} {{ m.unit }}</b>
+            </div>
+            <div class="info-row"><span>SKU / Barcode</span><b>{{ m.sku }} / {{ m.barcode }}</b></div>
+          </div>
+          <div class="card-actions">
+            <button (click)="openLabel(m)">Print Label</button>
+            <button *appHasPermission="'medicines.edit'" (click)="openEdit(m)">Edit</button>
+            <button *appHasPermission="'medicines.delete'" class="danger" (click)="delete(m.id)">Delete</button>
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="empty">No medicines found. Add one to get started.</div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h3>{{ editId() ? 'Edit' : 'Add' }} Medicine</h3>
+        <div class="form-grid">
+          <label>Name <input [(ngModel)]="form.name" /></label>
+          <label>Generic Name <input [(ngModel)]="form.genericName" /></label>
+          <label>Category
+            <select [(ngModel)]="form.category">
+              @for (c of categoryOptions; track c) { <option>{{ c }}</option> }
+            </select>
+          </label>
+          <label>Drug Schedule
+            <select [(ngModel)]="form.drugSchedule">
+              @for (s of scheduleOptions; track s) { <option>{{ s }}</option> }
+            </select>
+          </label>
+          <label>Pack Type <input [(ngModel)]="form.packType" placeholder="Strip, Bottle…" /></label>
+          <label>Pack Size <input [(ngModel)]="form.packSize" placeholder="10, 100ml…" /></label>
+          <label>Unit <input [(ngModel)]="form.unit" placeholder="Tab, ML…" /></label>
+          <label>Manufacturer <input [(ngModel)]="form.manufacturer" /></label>
+          <label>MRP (₹) <input type="number" [(ngModel)]="form.mrp" /></label>
+          <label>Purchase Price (₹) <input type="number" [(ngModel)]="form.purchasePrice" /></label>
+          <label>GST % <input type="number" [(ngModel)]="form.gstPercent" /></label>
+          <label>Reorder Level <input type="number" [(ngModel)]="form.reorderLevel" /></label>
+          <label>Rack Location <input [(ngModel)]="form.rackLocation" /></label>
+          @if (editId()) {
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="form.isActive" /> Active
+            </label>
+          }
+        </div>
+        <div class="dialog-actions">
+          <button (click)="showForm.set(false)">Cancel</button>
+          <button class="btn-primary" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (labelMedicine(); as m) {
+    <div class="dialog-overlay">
+      <div class="dialog label-dialog">
+        <div class="label-print-area">
+          <h4>{{ m.name }}</h4>
+          <div class="label-sub">{{ m.packSize }} {{ m.packType }} &middot; MRP ₹{{ m.mrp }}</div>
+          <svg id="label-barcode"></svg>
+          <canvas id="label-qr"></canvas>
+        </div>
+        <div class="dialog-actions no-print">
+          <button (click)="closeLabel()">Close</button>
+          <button class="btn-primary" (click)="printLabel()">Print</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
